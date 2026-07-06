@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ERS claims file",
+  "description": "Minimal claims-table format: atomic facts with provenance and conditional knowledge (P1, P2, P3 of ERS design v0.1). A claims file is a JSON object with a 'claims' array.",
+  "type": "object",
+  "required": ["source_artifact", "claims"],
+  "properties": {
+    "source_artifact": {
+      "type": "string",
+      "description": "What is being checked (KB node id, document, file) — the text the claims were extracted from."
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "statement", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "statement": {
+            "type": "string",
+            "description": "One atomic proposition, independently true or false. Decompose compounds."
+          },
+          "status": {
+            "enum": ["given", "derived", "assumed", "hypothesis"],
+            "description": "given = stated by the source artifact; derived = produced by a rule from other claims; assumed = temporary premise, withdrawable; hypothesis = one branch of an open alternative."
+          },
+          "derived_from": {
+            "type": "object",
+            "required": ["parents", "rule"],
+            "properties": {
+              "parents": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+              "rule": { "type": "string", "description": "Inference rule or procedure that produced this claim." }
+            },
+            "description": "REQUIRED when status=derived. Nothing appears without an explicit derivation."
+          },
+          "hypothesis_deps": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Ids of hypothesis/assumed claims this claim depends on. Derived claims inherit the union of their parents' deps; checker enforces closure."
+          },
+          "contradicts": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Ids of claims this claim is inconsistent with. Checker flags any pair where both are accepted (given/derived) on disjoint hypothesis branches... see checker for the exact rule."
+          },
+          "evidence_class": {
+            "enum": ["none", "empirical_sweep", "forced_by_intersection", "proof"],
+            "description": "How strongly the claim's verification stands. Upgrade only when the stronger form is in hand."
+          },
+          "reproducer": {
+            "type": "string",
+            "description": "Runnable artifact (file + command) that produces the verdict, or the literal string UNREPRODUCED. REQUIRED whenever evidence_class is present and not 'none'."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Encoding choices, don't-cares, falsification framing ('what reading would make this row wrong')."
+          }
+        }
+      }
+    }
+  }
+}
