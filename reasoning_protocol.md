@@ -62,6 +62,31 @@ the design documents are the roadmap for extensions.
   in-context state-tracking starts failing (multi-step derivations,
   case analyses, asserted tables). For shallow questions, skip it.
 
+## Contradiction resolution policy
+
+The checker DETECTS live contradictions (both sides accepted on the
+same hypothesis footing). Resolution is a policy, applied in order:
+
+1. LOCATE. Run `--explain` on both sides; the fault lies in the
+   premises, never in the derivation rows. Do not resolve by deleting
+   a derived claim — if its parents stand, it will simply be
+   re-derived.
+2. RETRACT BY EVIDENCE CLASS. Among the premises of the two chains,
+   prefer retracting the one with the lowest evidence class
+   (none < empirical_sweep < forced_by_intersection < proof).
+   Run `--retract` on the candidate FIRST to see the blast radius
+   before committing to it.
+3. FORK IF TIED. If the weakest premises on both sides have equal
+   evidence class, do not choose: convert both into a dual-hypothesis
+   pair (P5), move each chain's dependence into hypothesis_deps, and
+   let the contradiction become a branch-separated warning. The
+   decision is then owed to evidence, not to taste — record what
+   observation would discriminate.
+4. ENCODING SUSPECT LAST. If both premises hold strong evidence,
+   suspect the encoding step (a contradiction between two
+   well-verified claims usually means one row misreads its source).
+   Re-read both statements against the source artifact's text.
+
 ## Known failure modes for a fresh session (read before starting)
 
 - NARRATING THE PROTOCOL: writing a claims table, then "verifying" in
@@ -86,7 +111,10 @@ the design documents are the roadmap for extensions.
   provenance, P3 conditional knowledge from ERS design v0.1; nothing
   else).
 - `checker.py` — mechanical checks over a claims file. Run:
-  `python3 checker.py <claims.json>`; exit 0 = clean.
+  `python3 checker.py <claims.json>`; exit 0 = clean. Also:
+  `--retract ID` (simulate withdrawing a premise: transitive
+  lost-support report, read-only) and `--explain ID` (derivation
+  tree with status, evidence class, reproducers).
 - `worked_example/` — the originating instance: claims table for
   Perspective's subtraction_design node, the two checking harnesses,
   and the closed-form unreachability proof. Learn the pattern from
