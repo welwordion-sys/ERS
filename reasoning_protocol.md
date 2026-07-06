@@ -20,13 +20,35 @@ the design documents are the roadmap for extensions.
    asserting a test or verification result — its reproducer, or the
    literal string UNREPRODUCED.
 
-2. RE-IMPLEMENT FROM TEXT. Build the checking artifact using ONLY the
-   source artifact's own text, never memory of the conversation that
-   produced it. This doubles as a cold-read test: if the artifact
-   cannot be rebuilt from its own text, the artifact has a hole —
-   report the hole before patching it from memory.
+2. ENUMERATE REFERENTS (hard gate, BEFORE any code). List every
+   referent the claim depends on: each named value, state, symbol,
+   set, abbreviation, and cited artifact. For EACH, write down where
+   the artifact's own text defines it. Critically, for any value SET
+   you must sweep or enumerate (operand states, case keys, input
+   domains), confirm the artifact states its MEMBERS *and* that the
+   set is COMPLETE. "It names single and term" is not "the states are
+   {single, term}" — a set you can partially name but not bound is a
+   HOLE.
 
-3. CHECK MECHANICALLY. Run code, not prose:
+   If any referent is undefined, or any set is unbounded from the
+   text: STOP. Report the hole and halt. Do NOT supply the missing
+   value from the source file, from training, or from inference —
+   filling it silently is the dominant failure this gate exists to
+   catch, and a strong model fills holes so competently it does not
+   notice it did. Widening the artifact (adding the source file as an
+   explicit input) is allowed ONLY as a named decision, after the hole
+   is reported, not as a reflex. The gate does not pass until every
+   referent resolves from the declared artifact text.
+
+   Self-audit before proceeding: "Which values in my planned sweep did
+   NOT come verbatim from the artifact?" If the answer is not "none,"
+   you have not passed this gate.
+
+3. RE-IMPLEMENT FROM TEXT. Only once the gate passes: build the
+   checking artifact using ONLY the source artifact's own text, never
+   memory of the conversation that produced it.
+
+4. CHECK MECHANICALLY. Run code, not prose:
    - sweeps over input spaces (wider than the original claim's sweep
      where cheap),
    - brute-force derivation of asserted tables/case-analyses from
@@ -36,14 +58,14 @@ the design documents are the roadmap for extensions.
      provenance completeness, hypothesis-dependency closure,
      contradiction scan, reproducer presence).
 
-4. ESCALATE EVIDENCE. empirical sweep -> forced-by-intersection ->
+5. ESCALATE EVIDENCE. empirical sweep -> forced-by-intersection ->
    closed-form proof. Upgrade a claim's evidence class only when the
    stronger form is actually in hand. Record which class each verdict
    has. A proof found cheaply (e.g. an invariant argument over a
    sweep) is worth writing down; do not stop at "sweep passed" without
    asking whether the proof is one paragraph away.
 
-5. REPORT WITH MECHANISM. A verdict names WHAT was run (files, exact
+6. REPORT WITH MECHANISM. A verdict names WHAT was run (files, exact
    sweep ranges, what was brute-forced) and its evidence class. State
    explicitly which artifacts are committed vs session-scratch; scratch
    = UNREPRODUCED regardless of what it showed.
@@ -92,9 +114,23 @@ same hypothesis footing). Resolution is a policy, applied in order:
 - NARRATING THE PROTOCOL: writing a claims table, then "verifying" in
   prose. The table without the code run is theater. Counter: hard rule
   1 — no runnable artifact, no verdict.
-- CHECKING FROM MEMORY: re-implementing from the conversation instead
-  of the artifact text, which silently patches the artifact's holes
-  and defeats the cold-read. Counter: step 2 as written.
+- CHECKING FROM MEMORY / SILENT HOLE-FILLING: the dominant and most
+  deceptive failure. A capable model, asked to sweep a value set the
+  artifact only partially names, will competently supply the missing
+  members from the source file or its own knowledge, sweep the
+  completed space, and report a rigorous-looking verdict — without
+  noticing it invented the domain. The verdict may even be TRUE of the
+  world while being unsupported by the artifact; those two come apart
+  exactly when the model is strong enough to fill holes correctly,
+  which is the dangerous case. Observed instance: a guard node naming
+  operand states "single" and "term" was swept over 3 states (216
+  tuples) with the third state and the count never stated by the node;
+  the check "passed" but verified the source, not the artifact.
+  Counter: step 2 referent-enumeration gate, run BEFORE any code, with
+  the verbatim self-audit ("which swept values did not come from the
+  artifact?"). Prose alone does not stop this — the gate must be an
+  explicit pre-code step, because the failure is invisible from inside
+  a successful rebuild.
 - TRUSTING THE ASSERTED TABLE: verifying that code REPRODUCES a
   claimed table instead of DERIVING the table from ground truth. The
   first inherits the table's errors; the second finds them.
