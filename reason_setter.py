@@ -1,4 +1,4 @@
-"""ERS setter substrate v0.3 prototype.
+"""ERS setter substrate v0.4 prototype.
 
 Gatekeeper, not diary: state is mutated only through setter calls.
 Hard invariants (truth conditions, uncircumventable):
@@ -9,6 +9,8 @@ Hard invariants (truth conditions, uncircumventable):
   I5 assumption duality         — every assumed in commit closure: checked | branched | carried
                                   (carried is always legal, but must be declared; label reflects it)
   I6 commit-last ordering       — enforced by call sequence; state is frozen after commit
+  I7 side-finding disposition   — a check result naming a defect must dispose it
+                                  (fixed|filed|carried); added v0.4 from licensed failure LF1
 
 Everything else (discriminators, binary-goal duality, conditionals) is ADVISORY:
 warnings in the callback, never refusals.
@@ -51,6 +53,7 @@ class CheckEvent:
     method: str
     result: str                     # non-empty = actually performed
     outcome: str                    # survived | failed | branch_traced
+    side_findings: list = None      # I7: [{"finding": str, "disposition": fixed|filed|carried}]
 
 @dataclass
 class Callback:
@@ -116,6 +119,10 @@ class ReasonSetter:
     def _queue(self):
         """Ranked open frontier, computed from state."""
         q = []
+        for k in self.checks.values():
+            for f in (k.side_findings or []):
+                if f.get("disposition") not in ("fixed", "filed", "carried"):
+                    q.append((0, f"UNDISPOSED side-finding in {k.id}: {f.get('finding','?')} (I7)"))
         for c in self.claims.values():
             if c.status == "assumed" and c.negation_handling in (None, "carried"):
                 flip = "polarity unknown"
@@ -247,6 +254,7 @@ class ReasonSetter:
         fr = self._frozen("check")
         if fr: return fr
         known = self._known_ids()
+        _warn = []
         for d in events:
             if d["target"] not in known:
                 return self._cb(False, "check",
@@ -258,6 +266,11 @@ class ReasonSetter:
                     repair="perform the check and record what happened, or drop the event")
             ev = CheckEvent(**d)
             self.checks[ev.id] = ev
+            if not ev.side_findings and re.search(
+                    r"\b(defect|hazard|stale|contradicts|wrong|missing|unimplemented)\b",
+                    ev.result, re.IGNORECASE):
+                _warn.append(f"{ev.id}: result text names a possible defect but declares no "
+                             f"side_findings — declare + dispose, or rephrase (advisory, I7)")
             if ev.kind == "negation" and ev.target in self.claims:
                 cl = self.claims[ev.target]
                 if cl.status == "assumed":
@@ -265,7 +278,7 @@ class ReasonSetter:
                                             else "branched")
                     cl.negation_note = ev.result
         self._log.append(("check", [d["id"] for d in events]))
-        return self._cb(True, "check")
+        return self._cb(True, "check", warnings=_warn)
 
     def carry(self, claim_id, note):
         """Explicitly carry an assumption with negation unexplored. Always legal;
@@ -311,6 +324,16 @@ class ReasonSetter:
                 reason="no checked falsifier against the answer (I4)",
                 repair=f"run check() with kind=falsifier, target={answer_claim_id}, "
                        "non-empty result")
+
+        # I7 — every declared side-finding disposed
+        undisposed = [(k.id, f.get("finding","?")) for k in self.checks.values()
+                      for f in (k.side_findings or [])
+                      if f.get("disposition") not in ("fixed", "filed", "carried")]
+        if undisposed:
+            return self._cb(False, "commit",
+                reason=f"undisposed side-findings: {undisposed} (I7)",
+                repair="give each a disposition: fixed | filed | carried — silently "
+                       "absorbing a named defect is never legitimate")
 
         # I5 — every assumed in closure handled
         unhandled = [a for a in assumed

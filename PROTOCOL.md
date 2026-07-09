@@ -1,4 +1,4 @@
-# ERS Setter Substrate v0.3 — Session Protocol
+# ERS Setter Substrate v0.4 — Session Protocol
 
 Gatekeeper, not diary. State is mutated ONLY through setter calls; the setter
 refuses invalid moves and freezes after commit. Reason freely BETWEEN calls —
@@ -40,6 +40,10 @@ I1 referenced ids exist. I2 derived cites parents+rule. I3 assumed→given only
 via a check event. I4 commit needs a checked falsifier against the answer.
 I5 every assumed in commit closure is checked/branched/carried — skipping a
 negation is legal, hiding the skip is not. I6 commit is last; state freezes.
+I7 a check result naming a defect (in anything, including artifacts outside
+the work file) must declare it as a side_finding and dispose it: fixed |
+filed | carried. Silently absorbing a named defect into SURVIVED is never
+legitimate. (v0.4, from licensed failure LF1.)
 
 ## Advisory (warnings, never refusals)
 
