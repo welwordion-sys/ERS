@@ -1,4 +1,4 @@
-"""ERS setter substrate v0.4 prototype.
+"""ERS setter substrate v0.5 prototype.
 
 Gatekeeper, not diary: state is mutated only through setter calls.
 Hard invariants (truth conditions, uncircumventable):
@@ -11,6 +11,14 @@ Hard invariants (truth conditions, uncircumventable):
   I6 commit-last ordering       — enforced by call sequence; state is frozen after commit
   I7 side-finding disposition   — a check result naming a defect must dispose it
                                   (fixed|filed|carried); added v0.4 from licensed failure LF1
+  I8 revision provenance        — recharacterizing a prior claim requires quoting its prior
+                                  text verbatim (revises field); added v0.5 from LF5
+  I9 goal relevance              — commit requires a relevance check tying the answer's
+                                  evidence to goals; enforces existence of the connection,
+                                  not its correctness (semantic truth stays unverifiable
+                                  mechanically); added v0.5 from LF3
+  advisory: explanatory claims ("because"/"explains why") get a nudge to check against
+  a discriminating counter-case; LF4 — cannot be a hard gate, discrimination is semantic
 
 Everything else (discriminators, binary-goal duality, conditionals) is ADVISORY:
 warnings in the callback, never refusals.
@@ -38,6 +46,7 @@ class Claim:
     antecedents: list = None        # for conditionals (advisory)
     negation_handling: str = None   # for assumed: None(open) | checked | branched | carried
     negation_note: str = ""         # what the handling consisted of / what flips
+    revises: dict = None            # LF5: {"target": prior_claim_id, "prior_text": quoted, "why": str}
 
 @dataclass
 class Candidate:
@@ -179,7 +188,8 @@ class ReasonSetter:
                       derived_from=d.get("derived_from"),
                       antecedents=d.get("antecedents"),
                       negation_handling=d.get("negation_handling"),
-                      negation_note=d.get("negation_note", ""))
+                      negation_note=d.get("negation_note", ""),
+                      revises=d.get("revises"))
             if c.status not in VALID_STATUS:
                 return self._cb(False, "ground",
                     reason=f"{c.id}: invalid status {c.status!r}",
@@ -201,6 +211,16 @@ class ReasonSetter:
                         return self._cb(False, "ground",
                             reason=f"{c.id}: derivation missing parents or rule (I2)",
                             repair="each derivation entry needs parents:[...] and rule:str")
+            if c.revises:
+                tgt = c.revises.get("target")
+                if not c.revises.get("prior_text"):
+                    return self._cb(False, "ground",
+                        reason=f"{c.id}: revises {tgt} without quoting the prior text (I8)",
+                        repair="quote the prior committed statement verbatim before recharacterizing it")
+                if tgt not in self._known_ids() and tgt not in {x.id for x in staged}:
+                    return self._cb(False, "ground",
+                        reason=f"{c.id}: revises unknown id {tgt} (I1)",
+                        repair="target an existing claim")
             staged.append(c)
         # I1 across the batch (allow intra-batch references)
         known = self._known_ids() | {c.id for c in staged}
@@ -220,6 +240,10 @@ class ReasonSetter:
             if c.antecedents is None and re.search(
                     r"\b(if|then|implies)\b|=>", c.statement, re.IGNORECASE):
                 warnings.append(f"{c.id} looks conditional but declares no antecedents (advisory)")
+            if re.search(r"\b(because|therefore|explains why|accounts for|due to)\b",
+                         c.statement, re.IGNORECASE):
+                warnings.append(f"{c.id} explains why a property holds/varies — has this been "
+                                f"checked against a case where it should differ? (advisory, LF4)")
         self._log.append(("ground", [c.id for c in staged]))
         return self._cb(True, "ground", warnings=warnings)
 
@@ -314,6 +338,14 @@ class ReasonSetter:
             return self._cb(False, "commit",
                 reason=f"closure references missing claims {sorted(missing)} (I1/I2)",
                 repair="ground them or fix parent ids")
+
+        # I9 — relevance: cited evidence must be tied to the stated goal(s), not just internally coherent
+        if not any(k.kind == "relevance" and k.target in ({answer_claim_id} | closure) and k.result
+                   for k in self.checks.values()):
+            return self._cb(False, "commit",
+                reason="no relevance check connecting the answer's evidence to the stated goal(s) (I9)",
+                repair=f"run check(kind='relevance', target={answer_claim_id!r}, "
+                       f"result='<how the cited evidence bears on: {list(self.goals.values())}>')")
 
         # I4 — checked falsifier against the answer (or the candidate it realizes)
         targets = {answer_claim_id} | {c.id for c in self.candidates.values()

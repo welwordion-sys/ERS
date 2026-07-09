@@ -53,6 +53,11 @@ def case_b_honest_path():
         {"id": "k2", "kind": "falsifier", "target": "c4",
          "method": "recompute under both orders",
          "result": "holds under M only", "outcome": "survived"},
+        {"id": "k3", "kind": "relevance", "target": "c4",
+         "method": "connect evidence to goal",
+         "result": "goal asks for single-token result under order M; c4 states exactly that "
+                   "value and token-count under M, directly answering the goal (not a side fact)",
+         "outcome": "survived"},
     ])
     assert cb.ok
     cb = s.commit("c4", "assumed", ["c3"])

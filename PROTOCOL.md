@@ -1,4 +1,4 @@
-# ERS Setter Substrate v0.4 — Session Protocol
+# ERS Setter Substrate v0.5 — Session Protocol
 
 Gatekeeper, not diary. State is mutated ONLY through setter calls; the setter
 refuses invalid moves and freezes after commit. Reason freely BETWEEN calls —
@@ -45,10 +45,30 @@ the work file) must declare it as a side_finding and dispose it: fixed |
 filed | carried. Silently absorbing a named defect into SURVIVED is never
 legitimate. (v0.4, from licensed failure LF1.)
 
+I8 recharacterizing a prior claim requires a revises field quoting its
+prior text verbatim — enforces that the prior commitment was actually
+read, not that the new characterization is correct. (v0.5, from LF5.)
+
+I9 commit requires a relevance check tying the answers cited evidence
+to the stated goal(s) — enforces that the connection was declared, not
+that it holds. Internal coherence alone does not satisfy this. (v0.5, from LF3.)
+
+Advisory: claims using because/therefore/explains-why get a nudge to test
+the explanation against a case where the property should differ (LF4) —
+not a hard gate; discrimination is semantic and cant be verified mechanically.
+
 ## Advisory (warnings, never refusals)
 
 Discriminators when >1 candidate; conditional-looking statements without
 antecedents; obligation coverage. Override consciously, not silently.
+
+## Known limit — I9 gameability
+
+I9 requires a relevance check EXIST connecting the answer to the goal; it
+cannot verify the connection is real. A fabricated relevance claim
+("directly relevant to goal X") passes I9 exactly like a genuine one —
+worse than I8, whose quoted prior_text is at least glance-checkable by a
+reader. Self-audited 2026-07-08 (workfile_ers_selfaudit_v0_5.json).
 
 ## Known limit — do not overclaim
 
