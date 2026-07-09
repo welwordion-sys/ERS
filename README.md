@@ -1,11 +1,12 @@
 # ERS — Epistemic Reasoning Substrate
 
-Two instances live in this repo. **The setter (v0.3) is current.**
+Two instances live in this repo. **The setter (v0.4) is current.**
 
-## Current: setter substrate v0.3
+## Current: setter substrate v0.4
 
-- `reason_setter.py` — state mutated only through setter calls; six hard
-  invariants enforced at write time; ranked inquiry queue in every callback.
+- `reason_setter.py` — state mutated only through setter calls; seven hard
+  invariants enforced at write time (I7 side-finding disposition added in
+  v0.4 from licensed failure LF1); ranked inquiry queue in every callback.
 - `test_setter.py` — smoke tests (replays the cycle-3 false-commit shape).
 - `PROTOCOL.md` — **the protocol to follow.** Read this one.
 
