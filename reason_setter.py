@@ -36,6 +36,26 @@ from dataclasses import dataclass, field
 # ---------------------------------------------------------------- data
 
 VALID_STATUS = ("given", "assumed", "derived")
+DEFAULT_REGISTRY = "claims_registry.json"
+
+
+def _tokens(text):
+    return set(re.findall(r"[a-z0-9]+", text.lower()))
+
+
+def _load_registry(registry_path):
+    try:
+        with open(registry_path) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def _append_registry(registry_path, entries):
+    reg = _load_registry(registry_path)
+    reg.extend(entries)
+    with open(registry_path, "w") as f:
+        json.dump(reg, f, indent=2, ensure_ascii=False)
 
 @dataclass
 class Claim:
@@ -322,7 +342,8 @@ class ReasonSetter:
         self._log.append(("carry", claim_id))
         return self._cb(True, "carry")
 
-    def commit(self, answer_claim_id, evidence_label, assumptions_carried):
+    def commit(self, answer_claim_id, evidence_label, assumptions_carried,
+               registry_path=DEFAULT_REGISTRY):
         """The gate. Refuses unless I1-I5 hold for the answer's closure.
         On success state freezes (I6)."""
         fr = self._frozen("commit")
@@ -399,22 +420,53 @@ class ReasonSetter:
                 if self.claims[a].negation_handling == "carried"),
         }
         self._log.append(("commit", answer_claim_id))
+        _append_registry(registry_path, [
+            {"reg_id": f"{getattr(self, '_path', '<unsaved>')}::{cid}",
+             "claim_id": cid,
+             "statement": self.claims[cid].statement,
+             "status": self.claims[cid].status,
+             "negation_handling": self.claims[cid].negation_handling,
+             "derived_from": self.claims[cid].derived_from,
+             "source_path": getattr(self, "_path", "<unsaved>"),
+             "goals": list(self.goals.values())}
+            for cid in ({answer_claim_id} | closure)
+        ])
         return self._cb(True, "commit")
 
     # -------- persistence
 
     @classmethod
-    def prepare(cls, goal_statements, path, note=""):
+    def prepare(cls, goal_statements, path, note="", registry_path=DEFAULT_REGISTRY, top_n=5):
         """PREPARE: write the task to disk before any reasoning happens.
         Stage 'prepared' is a visible, checkable artifact — the task now
         exists independent of whether anyone finishes it. Call this FIRST,
-        before ground/propose/check, not after reasoning is done."""
+        before ground/propose/check, not after reasoning is done.
+
+        Also the static reuse-interface point: scores every entry in the
+        shared claims registry by plain keyword overlap against the goal(s)
+        and attaches the top matches as prior_candidates — surfaced, not
+        enforced. Nothing is refused; the point is that a session sees what
+        may already exist before it types anything fresh. Judging whether a
+        surfaced candidate is actually the same fact is left to the session,
+        same epistemic status as I9 (existence of the check is enforced,
+        correctness of the judgment is not)."""
         s = cls(goal_statements)
         s._prep_note = note
+        goal_words = set()
+        for g in s.goals.values():
+            goal_words |= _tokens(g)
+        scored = []
+        for entry in _load_registry(registry_path):
+            overlap = len(goal_words & _tokens(entry.get("statement", "")))
+            if overlap:
+                scored.append((overlap, entry))
+        scored.sort(key=lambda t: -t[0])
+        s._prior_candidates = [e for _, e in scored[:top_n]]
         s.save(path)
         return s
 
     def save(self, path):
+        self._path = path
         stage = "committed" if self.committed else (
             "in_progress" if (self.claims or self.candidates or self.checks)
             else "prepared")
@@ -422,6 +474,7 @@ class ReasonSetter:
             "stage": stage,
             "goals": self.goals,
             "prep_note": getattr(self, "_prep_note", ""),
+            "prior_candidates": getattr(self, "_prior_candidates", []),
             "claims": {k: v.__dict__ for k, v in self.claims.items()},
             "candidates": {k: v.__dict__ for k, v in self.candidates.items()},
             "checks": {k: v.__dict__ for k, v in self.checks.items()},
@@ -440,8 +493,10 @@ class ReasonSetter:
         with open(path) as f:
             blob = json.load(f)
         s = cls(list(blob["goals"].values()))
+        s._path = path
         s.goals = blob["goals"]
         s._prep_note = blob.get("prep_note", "")
+        s._prior_candidates = blob.get("prior_candidates", [])
         for cid, cd in blob.get("claims", {}).items():
             s.claims[cid] = Claim(**cd)
         for cid, cd in blob.get("candidates", {}).items():
@@ -459,6 +514,65 @@ class ReasonSetter:
         Alias for resume(): loads a prepared/in_progress file so the caller
         can proceed with ground/propose/check/commit."""
         return cls.resume(path)
+
+    def reuse(self, reg_id, local_id=None):
+        """The static-interface counterpart to prepare()'s surfacing: pull one
+        entry from the shared claims registry in verbatim — by the reg_id
+        shown in prepare()'s prior_candidates (or any reg_id in the registry
+        file, e.g. from a broader manual look) — preserving its true status
+        and negation_handling exactly like import_prior_commit does for a
+        single named file. Generalizes import_prior_commit so a session does
+        not need to already know which file a prior claim lives in; it only
+        needs the registry, which prepare() already showed it.
+        Nothing about matching/selection is automatic here: the session picks
+        the reg_id. Returns the new local claim id."""
+        entry = next((e for e in _load_registry(DEFAULT_REGISTRY)
+                      if e.get("reg_id") == reg_id), None)
+        if entry is None:
+            raise ValueError(f"{reg_id} not found in registry")
+        local_id = local_id or f"reused_{entry['claim_id']}"
+        cb = self.ground([{
+            "id": local_id,
+            "statement": entry["statement"],
+            "status": entry["status"],
+            "negation_handling": entry.get("negation_handling"),
+            "negation_note": f"[reused from {entry['source_path']}::{entry['claim_id']}]",
+        }])
+        if not cb.ok:
+            raise ValueError(f"reuse failed: {cb.reason}")
+        return local_id
+
+    def import_prior_commit(self, source_path, claim_id):
+        """LF6 fix: import a claim from a DIFFERENT (already committed) file
+        honestly — preserving its actual evidence status and negation
+        handling, instead of re-grounding it as a fresh 'given' (which
+        silently promotes assumed/derived claims and evades I3 across the
+        file boundary). Returns the new local claim id (prefixed to avoid
+        collision) so it can be used as a revises() target."""
+        with open(source_path) as f:
+            src = json.load(f)
+        src_claim = src.get("claims", {}).get(claim_id)
+        if src_claim is None:
+            raise ValueError(f"{claim_id} not found in {source_path}")
+        local_id = f"imported_{claim_id}"
+        was_in_commit = (src.get("committed") or {}).get("answer") == claim_id
+        carried = claim_id in (src.get("committed") or {}).get("assumptions_carried", [])
+        cb = self.ground([{
+            "id": local_id,
+            "statement": src_claim["statement"],
+            "status": src_claim["status"],   # honest: given/assumed/derived as it actually was
+            "derived_from": [{"parents": [f"imported_{p}" for p in d.get("parents", [])],
+                              "rule": d.get("rule", "") + " (imported, parents not re-grounded — "
+                                      "external provenance)"}
+                             for d in (src_claim.get("derived_from") or [])] or None,
+            "negation_handling": src_claim.get("negation_handling"),
+            "negation_note": src_claim.get("negation_note", "") +
+                (f" [imported from {source_path}, was in committed answer: {was_in_commit}, "
+                 f"carried: {carried}]" if src_claim["status"] == "assumed" else ""),
+        }])
+        if not cb.ok:
+            raise ValueError(f"import failed: {cb.reason}")
+        return local_id
 
     @staticmethod
     def audit_incomplete(paths):

@@ -104,6 +104,36 @@ not a hard gate; discrimination is semantic and cant be verified mechanically.
 Discriminators when >1 candidate; conditional-looking statements without
 antecedents; obligation coverage. Override consciously, not silently.
 
+## Cross-file revision (LF6)
+
+To revise a claim committed in a DIFFERENT file, use
+`import_prior_commit(source_path, claim_id)` — NOT a fresh ground() with
+copied text. It preserves the claim's actual status (given/assumed/derived)
+and negation_handling from its source, so an imported assumed-and-carried
+claim stays assumed-and-carried, not silently promoted to given. Re-
+grounding a prior claim's text as a new 'given' claim evades I3 across
+the file boundary — LF6, found 2026-07-08.
+
+## Reuse registry (v0.6)
+
+`import_prior_commit` requires already knowing which file a prior claim
+lives in. The registry closes that gap: every `commit()` auto-appends its
+answer's full claim closure to `claims_registry.json`. `prepare()` — the
+one sanctioned way to start a task — scores every registry entry by plain
+keyword overlap against the goal text and attaches the top matches as
+`prior_candidates`, before any reasoning happens. This is the static
+interface point: unavoidable because it lives inside the one entry point,
+not a step to remember.
+
+Nothing is auto-refused. Judging whether a surfaced candidate is really
+the same fact stays with the session — a mechanical string match would
+false-positive on honest paraphrase or coincidence, and a real semantic
+check is out of scope; this has the same epistemic status as I9 (existence
+of the surfacing is enforced, correctness of the judgment isn't). If one
+matches, pull it in with `reuse(reg_id)`, which behaves like
+`import_prior_commit` but reads from the registry instead of a named file.
+No new hard invariant, no new check kind — deliberately minimal.
+
 ## Known limit — I9 gameability
 
 I9 requires a relevance check EXIST connecting the answer to the goal; it
