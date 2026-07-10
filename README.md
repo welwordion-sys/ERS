@@ -1,14 +1,25 @@
 # ERS — Epistemic Reasoning Substrate
 
-Two instances live in this repo. **The setter (v0.4) is current.**
+Two instances live in this repo. **The setter (v0.5) is current.**
 
-## Current: setter substrate v0.4
+## Current: setter substrate v0.5
 
-- `reason_setter.py` — state mutated only through setter calls; seven hard
-  invariants enforced at write time (I7 side-finding disposition added in
-  v0.4 from licensed failure LF1); ranked inquiry queue in every callback.
+- `reason_setter.py` — state mutated only through setter calls; nine hard
+  invariants enforced at write time; ranked inquiry queue in every callback.
 - `test_setter.py` — smoke tests (replays the cycle-3 false-commit shape).
 - `PROTOCOL.md` — **the protocol to follow.** Read this one.
+
+**Default usage — prepare, then run:** the first action on any task is
+`ReasonSetter.prepare(goal, "task_name.json")`, which writes the task to
+disk before any reasoning happens (stage=prepared). Continue in the same
+session with ground/propose/check/commit; stage advances to in_progress,
+then committed. `ReasonSetter.audit_incomplete([...])` lists anything not
+committed — "forgot to use it" becomes a visible file state, not a silent
+omission.
+
+**Starters** (`export_starter`/`from_starter`) are a separate, costlier
+mechanism for handoff to a genuinely blind second session — reserved for
+validating the setter itself (blind-cycle promotion), not routine use.
 
 Stage: drafted. Not yet validated by a blind cycle. Do not treat as a
 standing order until promoted.
@@ -25,8 +36,9 @@ standing order until promoted.
 ## Which do I use?
 
 New work: setter. `from reason_setter import ReasonSetter`, follow
-`PROTOCOL.md`. The checker remains only as the predecessor the worked
-example depends on; it validates files the setter makes unnecessary.
+`PROTOCOL.md`, start with `prepare()`. The checker remains only as the
+predecessor the worked example depends on; it validates files the setter
+makes unnecessary.
 
 Key difference: the checker inspects a finished file (diary — can be
 backfilled); the setter refuses invalid moves at write time and freezes
