@@ -11,11 +11,12 @@ Two instances live in this repo. **The setter (v0.5) is current.**
 
 **Default usage — prepare, then run:** the first action on any task is
 `ReasonSetter.prepare(goal, "task_name.json")`, which writes the task to
-disk before any reasoning happens (stage=prepared). Continue in the same
-session with ground/propose/check/commit; stage advances to in_progress,
-then committed. `ReasonSetter.audit_incomplete([...])` lists anything not
-committed — "forgot to use it" becomes a visible file state, not a silent
-omission.
+disk before any reasoning happens (stage=prepared). Continue with
+`s, stage = ReasonSetter.run("task_name.json")`, then the normal
+ground/propose/check/commit calls; stage advances to in_progress, then
+committed. `ReasonSetter.audit_incomplete([...])` lists anything not
+committed — "forgot to use it" becomes a visible file state, not a
+silent omission.
 
 **Starters** (`export_starter`/`from_starter`) are a separate, costlier
 mechanism for handoff to a genuinely blind second session — reserved for
