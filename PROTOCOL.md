@@ -33,7 +33,12 @@ of whether anyone finishes it. Continue in the SAME session with normal
 ground/propose/check/commit, saving to the same path — stage advances to
 in_progress, then committed.
 
-A later session (or an end-of-session audit) calls:
+Continue with:
+
+    s, stage = ReasonSetter.run("task_name.json")
+
+then the normal ground/propose/check/commit calls. A later session (or an
+end-of-session audit) calls:
 
     ReasonSetter.audit_incomplete(["task_name.json", ...])
 

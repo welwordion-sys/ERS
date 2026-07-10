@@ -453,6 +453,13 @@ class ReasonSetter:
         s._log = blob.get("call_log", [])
         return s, blob.get("stage")
 
+    @classmethod
+    def run(cls, path):
+        """Named counterpart to prepare() — the 'run' half of prepare/run.
+        Alias for resume(): loads a prepared/in_progress file so the caller
+        can proceed with ground/propose/check/commit."""
+        return cls.resume(path)
+
     @staticmethod
     def audit_incomplete(paths):
         """Session-end/audit helper: which ERS files never reached commit."""
