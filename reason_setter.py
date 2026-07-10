@@ -403,9 +403,25 @@ class ReasonSetter:
 
     # -------- persistence
 
+    @classmethod
+    def prepare(cls, goal_statements, path, note=""):
+        """PREPARE: write the task to disk before any reasoning happens.
+        Stage 'prepared' is a visible, checkable artifact — the task now
+        exists independent of whether anyone finishes it. Call this FIRST,
+        before ground/propose/check, not after reasoning is done."""
+        s = cls(goal_statements)
+        s._prep_note = note
+        s.save(path)
+        return s
+
     def save(self, path):
+        stage = "committed" if self.committed else (
+            "in_progress" if (self.claims or self.candidates or self.checks)
+            else "prepared")
         blob = {
+            "stage": stage,
             "goals": self.goals,
+            "prep_note": getattr(self, "_prep_note", ""),
             "claims": {k: v.__dict__ for k, v in self.claims.items()},
             "candidates": {k: v.__dict__ for k, v in self.candidates.items()},
             "checks": {k: v.__dict__ for k, v in self.checks.items()},
@@ -415,3 +431,86 @@ class ReasonSetter:
         }
         with open(path, "w") as f:
             json.dump(blob, f, indent=2, ensure_ascii=False)
+        return stage
+
+    @classmethod
+    def resume(cls, path):
+        """RUN continues from a prepared/in_progress file. Loads goal +
+        whatever state exists; caller proceeds with propose/check/commit."""
+        with open(path) as f:
+            blob = json.load(f)
+        s = cls(list(blob["goals"].values()))
+        s.goals = blob["goals"]
+        s._prep_note = blob.get("prep_note", "")
+        for cid, cd in blob.get("claims", {}).items():
+            s.claims[cid] = Claim(**cd)
+        for cid, cd in blob.get("candidates", {}).items():
+            s.candidates[cid] = Candidate(**cd)
+        for kid, kd in blob.get("checks", {}).items():
+            s.checks[kid] = CheckEvent(**kd)
+        s.obligations.update(blob.get("obligations", {}))
+        s.committed = blob.get("committed")
+        s._log = blob.get("call_log", [])
+        return s, blob.get("stage")
+
+    @staticmethod
+    def audit_incomplete(paths):
+        """Session-end/audit helper: which ERS files never reached commit."""
+        incomplete = []
+        for p in paths:
+            try:
+                with open(p) as f:
+                    blob = json.load(f)
+                if blob.get("stage") != "committed":
+                    incomplete.append((p, blob.get("stage"), blob.get("goals")))
+            except (FileNotFoundError, json.JSONDecodeError):
+                continue
+        return incomplete
+
+    def export_starter(self, path, instructions=""):
+        """Handoff artifact for a SEPARATE session: goal + given/derived facts
+        ONLY. No candidates, no assumed claims, no partial commit — a receiving
+        session must propose and discriminate for itself, so no pre-formed
+        answer exists to backfill toward."""
+        if self.candidates:
+            raise ValueError("starter must not carry candidates — the receiving "
+                             "session generates its own or it's just theater with "
+                             "extra steps")
+        assumed_leak = [c.id for c in self.claims.values() if c.status == "assumed"]
+        if assumed_leak:
+            raise ValueError(f"starter must not carry assumed claims {assumed_leak} — "
+                             "only given facts and their pure derivations belong in a "
+                             "starter; assumptions are the receiving session's to make")
+        blob = {
+            "kind": "ers_starter",
+            "goals": self.goals,
+            "given_facts": {k: v.__dict__ for k, v in self.claims.items()
+                            if v.status in ("given", "derived")},
+            "obligations": self.obligations,
+            "instructions": instructions or (
+                "Your task is to complete this ERS work file, not to reason "
+                "freely about the goal. Fetch reason_setter.py + PROTOCOL.md "
+                "from https://github.com/welwordion-sys/ERS (verify version "
+                "string, v0.5+). Load these given_facts via ground(), then "
+                "propose() your own candidates — do not accept a pre-formed "
+                "answer from elsewhere as a candidate without discriminating "
+                "it against at least one alternative. check(), then commit()."
+            ),
+        }
+        with open(path, "w") as f:
+            json.dump(blob, f, indent=2, ensure_ascii=False)
+
+    @classmethod
+    def from_starter(cls, path):
+        """Receiving side: load a starter, goal + facts only, ready for propose()."""
+        with open(path) as f:
+            blob = json.load(f)
+        if blob.get("kind") != "ers_starter":
+            raise ValueError("not an ers_starter file")
+        s = cls(list(blob["goals"].values()))
+        s.goals = blob["goals"]
+        cb = s.ground([{**v} for v in blob["given_facts"].values()])
+        if not cb.ok:
+            raise ValueError(f"starter facts failed to ground: {cb.reason}")
+        s.obligations.update(blob.get("obligations", {}))
+        return s, blob.get("instructions", "")

@@ -20,6 +20,43 @@ each call is a phase checkpoint, not a per-thought tax.
    the closure handled (checked/branched/carried), declared closure exact.
 8. `s.save(path)` — the file includes the call log; write order is evidence.
 
+## Prepare, then run — the task IS the file
+
+Do not remember to use the ERS mid-task. Instead, the first action on any
+gate-tier task is:
+
+    s = ReasonSetter.prepare(goal, "task_name.json", note="...")
+
+This writes the file to disk immediately, stage=prepared, before any
+reasoning happens. The task now exists as a checkable artifact independent
+of whether anyone finishes it. Continue in the SAME session with normal
+ground/propose/check/commit, saving to the same path — stage advances to
+in_progress, then committed.
+
+A later session (or an end-of-session audit) calls:
+
+    ReasonSetter.audit_incomplete(["task_name.json", ...])
+
+which lists every file NOT at stage=committed. "Forgot to use the ERS"
+becomes impossible to hide: either the file was never prepared (visible
+gap in the disposition table) or it was prepared and abandoned (visible
+in the audit). This does not by itself stop reasoning-in-prose-then-
+backfilling within one sitting — only a genuinely separate blind reader
+(see starters, below) catches that. Prepare/run fixes forgetting; it does
+not fix backfilling.
+
+## Handoff: ERS starters (a stronger, costlier tool — for blind validation,
+not routine use)
+
+Instead of telling a session to use the ERS, give it a starter file whose
+task IS the ERS: `export_starter(path)` on the initiating side writes
+goal + given/derived facts only — no candidates, no assumptions. The
+receiving session loads it with `ReasonSetter.from_starter(path)` and its
+job is narrowly propose -> check -> commit. There is nothing to forget:
+the task has no other shape. Guards refuse export if a candidate or an
+assumed claim would leak through — those are the receiving session's to
+generate, or the whole point is defeated.
+
 ## The callback
 
 Every call returns: ok, reason+repair on refusal, warnings (advisory layer),
