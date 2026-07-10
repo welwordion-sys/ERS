@@ -1,1 +1,327 @@
-
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Design and specify the v0.6 ERS session-package architecture that fixes cross-file unconnectedness (LF6) at its root.",
+    "g2": "Enforce reuse of claims/facts/reasoning already made, by providing a static interface point that ERS preparation/filling must go through — not an optional helper a session can forget to call."
+  },
+  "prep_note": "Refined per Sven 2026-07-10: primary goal is reuse-enforcement via a static interface point at prepare/ground time, not merely a bigger namespace.",
+  "claims": {
+    "f1": {
+      "id": "f1",
+      "statement": "current reuse path is import_prior_commit(source_path, claim_id): correct when used, but opt-in — a session must already know the source file exists and its claim id",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f2": {
+      "id": "f2",
+      "statement": "the practical failure mode (LF6 origin) was a session re-grounding a claim's text as a fresh 'given' claim in a new file instead of importing it, discarding its true assumed/derived status",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f3": {
+      "id": "f3",
+      "statement": "I3/I5/I6 (no silent promotion, assumption duality, commit-last freeze) are defined against ONE ReasonSetter instance's self.committed / self.claims, not across instances",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f4": {
+      "id": "f4",
+      "statement": "one-decision-per-file is an established KB convention (ers.work_file_commit_procedure) that supports git diffing and per-node ers_work_files citation",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "a1": {
+      "id": "a1",
+      "statement": "achieving reuse-enforcement requires merging all claims into one shared namespace/global freeze (candidate A), rather than an additive registry layer that leaves per-file boundaries intact (candidate B)",
+      "status": "assumed",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": "branched",
+      "negation_note": "negation holds: reuse-enforcement needs a fixed lookup point plus a refusal rule at ground()-time, not a merged namespace. Merging (candA) only shares state within one live instance; the real gap is cross-SESSION (a brand new instance, per f3), which a registry file solves without touching I3/I5/I6 at all. a1 as stated is FALSE.",
+      "revises": null
+    },
+    "f5": {
+      "id": "f5",
+      "statement": "a real semantic-duplicate compiler is out of scope; a cheap one throttles too hard by matching only exact/near-exact text",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f6": {
+      "id": "f6",
+      "statement": "judging whether two claims are 'the same fact' reliably requires LLM reasoning, not string matching alone",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f7": {
+      "id": "f7",
+      "statement": "Python cannot fully prevent direct construction of a class; 'gate-only instantiation' can be made the sanctioned path and documented as such, but not made physically impossible in-language",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "answer": {
+      "id": "answer",
+      "statement": "v0.6 reuse-enforcement design: (1) every commit() auto-appends its committed claims to a shared claims_registry.json; (2) prepare() -- the sole sanctioned task-start point -- mechanically token/keyword-overlaps the goal text against the registry and attaches matches as prior_candidates before writing the prepared file; (3) reuse(reg_id) pulls a chosen candidate in with its true status/negation_handling verbatim, generalizing import_prior_commit; (4) no hard refusal on duplicate text -- sameness judgment stays with the session, same epistemic status as I9; (5) I3/I5/I6 and one-file-per-decision are untouched.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "f1",
+            "f2",
+            "f3",
+            "f4",
+            "f5",
+            "f6",
+            "f7"
+          ],
+          "rule": "candC (proposed, not a claim) survived its falsifier and all three obligations; candA broke o1-o3; candB's hard-refusal mechanism was falsified by k4 -- this claim states candC's design as the answer"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "candA": {
+      "id": "candA",
+      "statement": "Candidate A: single shared namespace across goals/files, commit() freezes per-closure instead of globally — literally merge state so there is no file boundary to cross.",
+      "discriminator": "solves reuse only WITHIN one running instance's lifetime; a NEW session starting a NEW instance (the actual LF6 scenario) still has zero shared state unless the merged file itself is reloaded — same cross-session gap, just a bigger single file. Also requires reworking I3/I5/I6 scoping (violates o2 unless proven necessary)."
+    },
+    "candB": {
+      "id": "candB",
+      "statement": "Candidate B: keep files separate (f4 preserved); add a claims_registry.json that EVERY commit() appends its committed claim(s) to automatically; add ReasonSetter.reuse(reg_id) as the static interface point pulling status/negation_handling verbatim from the registry (generalizes import_prior_commit from opt-in to registry-backed); add a new hard check in ground(): a 'given'/'assumed' claim whose statement text near-duplicates a registry entry is REFUSED unless brought in via reuse(), forcing the reuse path structurally.",
+      "discriminator": "does not touch I3/I5/I6 scoping at all — registry is a new layer alongside existing per-instance invariants; reuse is enforced by refusal-on-duplicate at ground() time, not by session memory or discipline."
+    },
+    "candC": {
+      "id": "candC",
+      "statement": "Candidate C: prepare() is the ONLY sanctioned way to start a new task (already true by PROTOCOL convention; now load-bearing). Before it writes the prepared file, it mechanically token/keyword-overlaps the goal text against every statement in claims_registry.json and attaches whatever it finds as prior_candidates in the task file and callback -- this step is mechanical, cheap, and cannot be skipped since it is inside prepare() itself. Judging whether any surfaced candidate is truly the SAME fact is left to the session (LLM), same epistemic status as I9's relevance check: existence of the check is enforced, correctness of the judgment is not. Nothing is ever auto-refused; ground()ing a claim that duplicates a registry entry the session chose not to reuse() is legal but SURFACED, and reuse() stays the path of least resistance because the candidates are already in front of the session before it types anything.",
+      "discriminator": "unlike candB, never blocks honest independent re-derivation (no false-positive refusal, per k4) because nothing is mechanically refused -- the enforcement is 'you were shown it', not 'you cannot avoid it'; weaker than candB on paper but candB's stronger claim did not survive."
+    }
+  },
+  "checks": {
+    "k1": {
+      "id": "k1",
+      "kind": "negation",
+      "target": "a1",
+      "method": "trace whether merging is actually necessary for g2, given f1-f4",
+      "result": "negation holds: reuse-enforcement needs a fixed lookup point plus a refusal rule at ground()-time, not a merged namespace. Merging (candA) only shares state within one live instance; the real gap is cross-SESSION (a brand new instance, per f3), which a registry file solves without touching I3/I5/I6 at all. a1 as stated is FALSE.",
+      "outcome": "branch_traced",
+      "side_findings": null
+    },
+    "k2": {
+      "id": "k2",
+      "kind": "obligation",
+      "target": "candA",
+      "method": "check o1/o2/o3 against candA",
+      "result": "o1 fails: still requires session to know/reload the merged file — no stronger than today. o2 fails outright: per-closure freeze requires redefining I3/I5/I6 scoping (f3). o3 fails: 'single namespace' is definitionally the opposite of per-file.",
+      "outcome": "failed",
+      "side_findings": null
+    },
+    "k3": {
+      "id": "k3",
+      "kind": "obligation",
+      "target": "candB",
+      "method": "check o1/o2/o3 against candB",
+      "result": "o1 holds: duplicate-text ground() is a hard refusal, not a discipline reminder — reuse becomes the only way through, not merely the correct way. o2 holds: registry is additive, I3/I5/I6 untouched (f3 stays true of each instance). o3 holds: files stay separate (f4); registry is a side-channel index, not a merged state file.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k4": {
+      "id": "k4",
+      "kind": "falsifier",
+      "target": "candB",
+      "method": "attempt to construct a legitimate case where duplicate-refusal in ground() blocks honest work",
+      "result": "exact-duplicate refusal false-positives on independent paraphrase/coincidence — superseded below by candC, which surfaces instead of refusing",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "exact-text refusal in candB is unsound as a hard gate",
+          "disposition": "fixed"
+        }
+      ]
+    },
+    "k5": {
+      "id": "k5",
+      "kind": "relevance",
+      "target": "candB",
+      "method": "connect candB's design to g1 and g2",
+      "result": "g2 (reuse enforcement via static interface): reuse() + ground()-time refusal IS the static interface point — the only sanctioned path, not an optional helper. g1 (fixes LF6 at its root): registry auto-population at commit() means a session no longer needs to KNOW a prior file exists to benefit from it — closes LF6's actual gap (locating the source), which import_prior_commit alone did not.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k6": {
+      "id": "k6",
+      "kind": "obligation",
+      "target": "candC",
+      "method": "check o1/o2/o3 against candC",
+      "result": "o1 holds, weaker sense: nothing is refused, but reuse is surfaced before any typing happens (built into prepare(), the sole entry point) -- path of least resistance, not physical impossibility of skipping it. o2 holds fully: no change to I3/I5/I6. o3 holds fully: files stay separate, registry is a side index.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k7": {
+      "id": "k7",
+      "kind": "falsifier",
+      "target": "candC",
+      "method": "attempt to find a case where surfacing fails to prevent the LF6 failure mode",
+      "result": "a session could still ignore the surfaced prior_candidates list and re-type a claim anyway -- surfacing does not physically stop it. This is the honest limit, not a flaw unique to candC: it is the same 'guarantees support existed, not that it was load-bearing' limit already recorded for the whole substrate. Declared here as a known limit, not a defect to fix, since no mechanical check can force an LLM's judgment without becoming either candB's false-positive problem or an out-of-scope semantic compiler (f5).",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k8": {
+      "id": "k8",
+      "kind": "relevance",
+      "target": "candC",
+      "method": "connect candC to g1 and g2",
+      "result": "g2: prepare() surfacing prior_candidates IS the static interface point -- mandatory, not optional, at the one place a task can start. g1: registry auto-population at commit() closes LF6's real gap (a session not knowing/finding the source file) without reworking I3/I5/I6, honoring f3/f4.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k9": {
+      "id": "k9",
+      "kind": "falsifier",
+      "target": "answer",
+      "method": "re-verify the answer's 5 points each still hold given f1-f7 and the k4/k7 findings",
+      "result": "(1)-(5) each traced back to a specific given/check: (1)+(3) from f1/f2 (today's gap is locating+honestly importing prior work); (2) from f6/f7 (mandatory surfacing at the one entry point, not a skippable helper); (4) directly required by k4's finding (hard refusal is unsound) and f5 (no cheap compiler); (5) required by o2/o3, matches f3/f4. No point contradicts f1-f7 or the k4/k7 findings.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k10": {
+      "id": "k10",
+      "kind": "relevance",
+      "target": "answer",
+      "method": "connect answer to g1 and g2",
+      "result": "g1 (fix LF6 at root): point (1)+(3) mean a session no longer needs to know/locate the source file -- the actual LF6 gap. g2 (static interface point, enforced not optional): point (2) is exactly that -- built into the sole entry point, not an add-on.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "o1": "reuse must be the path of least resistance, not merely legal (a session must not be able to easily re-derive/retype a claim that already exists committed elsewhere)",
+    "o2": "the fix must not require redefining I3/I5/I6 freeze semantics unless g2 is provably unreachable without that",
+    "o3": "one-decision-per-file convention (f4) must survive"
+  },
+  "committed": {
+    "answer": "answer",
+    "statement": "v0.6 reuse-enforcement design: (1) every commit() auto-appends its committed claims to a shared claims_registry.json; (2) prepare() -- the sole sanctioned task-start point -- mechanically token/keyword-overlaps the goal text against the registry and attaches matches as prior_candidates before writing the prepared file; (3) reuse(reg_id) pulls a chosen candidate in with its true status/negation_handling verbatim, generalizing import_prior_commit; (4) no hard refusal on duplicate text -- sameness judgment stays with the session, same epistemic status as I9; (5) I3/I5/I6 and one-file-per-decision are untouched.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "f1",
+        "f2",
+        "f3",
+        "f4",
+        "a1"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        "o1",
+        "o2",
+        "o3"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "candA",
+        "candB"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k1",
+        "k2",
+        "k3",
+        "k4",
+        "k5"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k4"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "f5",
+        "f6",
+        "f7"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "candC"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k6",
+        "k7",
+        "k8"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "answer"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "answer"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k9",
+        "k10"
+      ]
+    ],
+    [
+      "commit",
+      "answer"
+    ]
+  ]
+}
