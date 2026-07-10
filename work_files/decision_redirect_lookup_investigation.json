@@ -1,0 +1,155 @@
+{
+  "goals": {
+    "g1": "Is apply_compound's redirect-owner lookup (inherit-only, dropping when no inherit match) correct, or does it need a mapping_in fallback for merged-but-surviving inputs?"
+  },
+  "claims": {
+    "c1": {
+      "id": "c1",
+      "statement": "the end-to-end 3-match test's negation check flagged that redirect target equaled the original id in every case, unable to distinguish correct lookup from stale-fallback bug",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c2": {
+      "id": "c2",
+      "statement": "hypothesized a mapping_in fallback for a possible 'merged but alive' input state, implemented it",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c3": {
+      "id": "c3",
+      "statement": "tested compile_core directly: delete and inherit-values exhaustively partition all inputs, confirmed on a 2-input-1-output fan-in pattern -- no third surviving-but-not-inherited state exists",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c4": {
+      "id": "c4",
+      "statement": "given c3, the mapping_in fallback would incorrectly resurrect a genuinely-deleted fan-in-loser -- reverted it",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c5": {
+      "id": "c5",
+      "statement": "re-ran the original 3-match end-to-end test after reverting: identical correct result, no regression",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c6": {
+      "id": "c6",
+      "statement": "constructed the actual drop-path case (crossing onto a fan-in-loser): consumed correctly includes it, resulting graph has zero edges -- crossing dropped cleanly, no resurrection",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c7": {
+      "id": "c7",
+      "statement": "DECISION: the original inherit-only redirect lookup is correct as written. The investigated mapping_in fallback was empirically disproven and reverted. The DROP path is now validated by an executed test, closing the negation flagged after the first end-to-end run -- not by finding a substitution case, but by confirming none exists at this schema level (only inherit-unchanged or drop are possible outcomes).",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ],
+          "rule": "the partition proof (c3) shows no third state is reachable, so the only two redirect outcomes are identity-preserved-via-inherit or dropped-via-delete, both now executed and confirmed correct"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    }
+  },
+  "candidates": {
+    "ans": {
+      "id": "ans",
+      "statement": "The original inherit-only redirect lookup was correct. A plausible mapping_in fallback was investigated, empirically disproven, and reverted. The DROP path is now validated end-to-end, closing the earlier negation.",
+      "discriminator": "only candidate"
+    }
+  },
+  "checks": {
+    "k1": {
+      "id": "k1",
+      "kind": "falsifier",
+      "target": "c7",
+      "method": "tested compile_core's partition property directly on a hand-built fan-in pattern",
+      "result": "confirmed exhaustive partition, no third state",
+      "outcome": "survived"
+    },
+    "k2": {
+      "id": "k2",
+      "kind": "falsifier",
+      "target": "c7",
+      "method": "ran the actual drop-path scenario end-to-end",
+      "result": "crossing dropped cleanly, zero edges, correct consumed set",
+      "outcome": "survived"
+    },
+    "k3": {
+      "id": "k3",
+      "kind": "negation",
+      "target": "c1",
+      "method": "check whether the original identity-substitution gap is resolved or just reframed",
+      "result": "resolved: no substitution case exists at this level; only inherit-unchanged or drop, both now validated",
+      "outcome": "branch_traced"
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "c7",
+    "statement": "DECISION: the original inherit-only redirect lookup is correct as written. The investigated mapping_in fallback was empirically disproven and reverted. The DROP path is now validated by an executed test, closing the negation flagged after the first end-to-end run -- not by finding a substitution case, but by confirming none exists at this schema level (only inherit-unchanged or drop are possible outcomes).",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "ans"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k1",
+        "k2",
+        "k3"
+      ]
+    ],
+    [
+      "commit",
+      "c7"
+    ]
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "goals": {
+    "g1": "What order must the compound orchestrator resolve matches' output_maps in, and what does it do when a redirect's owner disposed of the shared node with no surviving output?"
+  },
+  "claims": {
+    "c1": {
+      "id": "c1",
+      "statement": "a redirect entry (i, out_node_i) -> owner means we need owner's resolved output_map -- specifically which of owner's own output nodes inherits from whichever input was bound to the shared real node",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c2": {
+      "id": "c2",
+      "statement": "output_map for a match can only be computed once its own forced_born overrides are known AND once any match it depends on via its own redirects is already resolved -- redirect edges define a dependency: i must resolve AFTER owner(i)",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c3": {
+      "id": "c3",
+      "statement": "in all 4 tests run so far, no owner was itself a crosser, so a naive fixed order was sufficient and not chain-stress-tested",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c5": {
+      "id": "c5",
+      "statement": "if owner's core.inherit has no output claiming the input bound to the shared real node, that node has no surviving identity after owner resolves -- the crossing target genuinely ceased to exist and must be DROPPED, not reattached to the stale node",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c6": {
+      "id": "c6",
+      "statement": "dropping a crossing to a deleted target matches the framework's language of routing SURVIVING identity, never preserving a connection to a node no output represents anymore",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c4": {
+      "id": "c4",
+      "statement": "DECISION: order via topological sort of the dependency graph (edge owner->i for each redirect (i,_)->owner); cycle detection raises rather than guessing. When owner's inherit has no claim on the shared node, drop the redirected crossing instead of reattaching to the stale pre-fire identity.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "c1",
+            "c2",
+            "c3",
+            "c5",
+            "c6"
+          ],
+          "rule": "topo sort generalizes the already-validated fixed order to arbitrary chain depth without new per-depth logic; cycles are a real (if pathological) reachable case per redirect's own definition, so failing loudly beats guessing"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    }
+  },
+  "candidates": {
+    "ans": {
+      "id": "ans",
+      "statement": "Order via topological sort of the redirect dependency graph, cycle detection raises. Drop redirected crossings whose owner has no surviving inherit claim on the shared node.",
+      "discriminator": "only candidate"
+    }
+  },
+  "checks": {
+    "k1": {
+      "id": "k1",
+      "kind": "obligation",
+      "target": "c4",
+      "method": "does topo-sort reduce to the fixed order already validated in tests 1-4 with no chain?",
+      "result": "yes -- owner->crosser edges only, no owner-of-owner edges, topo sort trivially reproduces the already-validated order",
+      "outcome": "survived"
+    },
+    "k2": {
+      "id": "k2",
+      "kind": "falsifier",
+      "target": "c4",
+      "method": "check whether a redirect cycle is reachable given detect_overlaps/resolve_compound's actual contract, or definitionally impossible",
+      "result": "reachable in principle (X crosses into Y's region and Y crosses into X's region in the same firing) -- not excluded by the current contract, so cycle detection is live code, not dead code",
+      "outcome": "survived"
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "c4",
+    "statement": "DECISION: order via topological sort of the dependency graph (edge owner->i for each redirect (i,_)->owner); cycle detection raises rather than guessing. When owner's inherit has no claim on the shared node, drop the redirected crossing instead of reattaching to the stale pre-fire identity.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c5",
+        "c6",
+        "c4"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "ans"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k1",
+        "k2"
+      ]
+    ],
+    [
+      "commit",
+      "c4"
+    ]
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "goals": {
+    "g1": "Can Compound Match Resolution reuse each rule's precomputed schema outputs (SchemaCore/EditsArtifact/FragmentArtifact) for an overlap zone, or must a new/merged transition graph be authored and translated per overlap zone?"
+  },
+  "claims": {
+    "c1": {
+      "id": "c1",
+      "statement": "SchemaCore.inherit/.born/.boundary_grab/.internal_edges are compiled ONCE from a single rule's OWN graph2, with no reference to any other rule's graph2 or bindings",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c2": {
+      "id": "c2",
+      "statement": "the compiled artifacts are binding-independent: the same SchemaCore/EditsArtifact/FragmentArtifact is reused across every firing of that rule; only the binding dict varies per fire",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c3": {
+      "id": "c3",
+      "statement": "_read_boundary_externals reads a rule's boundary_grab crossings LIVE before that rule's own teardown, with no knowledge of whether another rule will also transform the outside node",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c4": {
+      "id": "c4",
+      "statement": "rebuild() strips ALL edges off its own surviving real nodes unconditionally, then rebuilds only its own internal_edges plus its own saved boundary crossings",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c5": {
+      "id": "c5",
+      "statement": "compile_core's inherit-claim loop is injective only within one rule's own output_nodes, with no arbitration against a different rule mapping the same real node",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c6": {
+      "id": "c6",
+      "statement": "Compound Match Resolution's boundary_of_one_inside_other case: a boundary node under rule A that is transformed by rule B",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c7": {
+      "id": "c7",
+      "statement": "Compound Match Resolution's overlapping_nodes case: a real node matched as an input by both rule A and rule B",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c8": {
+      "id": "c8",
+      "statement": "naive sequential single-rule apply drops rule A's crossing edge when rule B later strips the shared node's edges, since B's compiled schema has no entry for A's edge",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "c3",
+            "c4"
+          ],
+          "rule": "sequential single-rule apply composition"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c9": {
+      "id": "c9",
+      "statement": "naive sequential apply lets two rules' inherit decisions collide on the same real id; the framework requires one to be forced-born, a decision neither compiled artifact encodes alone",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "c5",
+            "c7"
+          ],
+          "rule": "injective-inherit is only intra-rule"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c10": {
+      "id": "c10",
+      "statement": "the KB framework frames the mechanism as an extension of the current triple formalism, not a new substrate requirement, and never describes generating a new pattern/graph2 per overlap",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c11": {
+      "id": "c11",
+      "statement": "both rebuild() and layer_apply_schema() already compute output_map: schema output Node -> real Node purely from that rule's own binding+inherit/born (schema.py 366-407, 505-516)",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c12": {
+      "id": "c12",
+      "statement": "DECISION: precompiled per-rule schema artifacts are REUSED unmodified; a new apply-time compound orchestrator sits above them -- collects all boundary externals across the whole firing set before any teardown, resolves inherit-collisions and crossing-redirections using each rule's own output_map, then writes the combined layer once. No new/authored transition graph (graph2) is needed per overlap zone; the fix lives entirely in apply-time orchestration, not pattern authoring.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "c1",
+            "c2",
+            "c8",
+            "c9",
+            "c10",
+            "c11"
+          ],
+          "rule": "reuse-plus-orchestrator resolves both concrete failure modes (c8,c9) using information already available per-rule (c11), consistent with the framework's own stated formalism (c10)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    }
+  },
+  "candidates": {
+    "ans_reuse": {
+      "id": "ans_reuse",
+      "statement": "Reuse precompiled artifacts + new apply-time compound orchestrator; no new graph2 per overlap.",
+      "discriminator": "matches c10/c11"
+    },
+    "ans_new_graph": {
+      "id": "ans_new_graph",
+      "statement": "Author/translate a new merged graph2 per overlap zone.",
+      "discriminator": "contradicts c10"
+    }
+  },
+  "checks": {
+    "k1": {
+      "id": "k1",
+      "kind": "falsifier",
+      "target": "c12",
+      "method": "grep schema.py for output_map computation sites",
+      "result": "confirmed: rebuild() computes output_map at 366-407, layer_apply_schema() at 505-516, both purely from binding+inherit/born -- no new pattern object needed",
+      "outcome": "survived"
+    },
+    "k2": {
+      "id": "k2",
+      "kind": "obligation",
+      "target": "c12",
+      "method": "o1 check against c10 text",
+      "result": "c12's shape (routing/timing/arbitration layer) matches c10's description of the fix as routing/threading, not new-pattern generation",
+      "outcome": "survived"
+    },
+    "k3": {
+      "id": "k3",
+      "kind": "obligation",
+      "target": "c12",
+      "method": "o2 check c12 resolves c8 and c9 concretely",
+      "result": "c8 resolved by reading all boundary externals up front across the whole firing set before any rule's edge-strip, redirecting via the transforming rule's own output_map. c9 resolved by an explicit forced-born override decided by the ranked overlap algorithm before either rule's identity-resolution runs. Both are apply-time changes only.",
+      "outcome": "survived"
+    }
+  },
+  "obligations": {
+    "o1": "must not contradict c10",
+    "o2": "must actually resolve c8 and c9, not merely gesture at them"
+  },
+  "committed": {
+    "answer": "c12",
+    "statement": "DECISION: precompiled per-rule schema artifacts are REUSED unmodified; a new apply-time compound orchestrator sits above them -- collects all boundary externals across the whole firing set before any teardown, resolves inherit-collisions and crossing-redirections using each rule's own output_map, then writes the combined layer once. No new/authored transition graph (graph2) is needed per overlap zone; the fix lives entirely in apply-time orchestration, not pattern authoring.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "c11",
+        "c12"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "ans_reuse",
+        "ans_new_graph"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        "o1",
+        "o2"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k1",
+        "k2",
+        "k3"
+      ]
+    ],
+    [
+      "commit",
+      "c12"
+    ]
+  ]
+}

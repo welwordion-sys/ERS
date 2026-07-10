@@ -1,0 +1,184 @@
+{
+  "goals": {
+    "g1": "How should collect-all-matches get its candidate occurrences: extend find_core's contract, keep it fully separate, or merge?"
+  },
+  "claims": {
+    "c1": {
+      "id": "c1",
+      "statement": "find_core is used today only by dispatch.py for single-winner rule dispatch",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c2": {
+      "id": "c2",
+      "statement": "find_core's driver loop removes mapped A/B nodes each round (progressive elimination) and keeps only the single best-scoring embedding per round",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c3": {
+      "id": "c3",
+      "statement": "dispatch's verified correctness rests on 720 permutations of a 6-rule sample + 20 random shuffles of 36 add_init rules, all against find_core's CURRENT contract",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c4": {
+      "id": "c4",
+      "statement": "Compound Match Resolution's collect-all-matches step needs every occurrence of every rule's core across the graph, including overlapping occurrences",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c5": {
+      "id": "c5",
+      "statement": "the final acceptance test (match_all's consistent()+crossing_ok()) is independent of how a candidate seed was proposed - a bad or redundant seed just fails to produce a binding, it cannot produce a false-positive match",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c6": {
+      "id": "c6",
+      "statement": "_grow_from is a reusable primitive (seed pair -> single lockstep embedding) that find_core's driver loop calls repeatedly; it does not itself do progressive elimination",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c7": {
+      "id": "c7",
+      "statement": "option A (mutate find_core's own contract in place to also enumerate) risks silently changing dispatch's verified behavior since dispatch calls find_core directly and reads subgraphs[0]",
+      "status": "assumed",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": "branched",
+      "negation_note": "selftest.py: add_init rules=36 checks=16 fires=16 mismatches=0 PASS; c9 touches neither find_core's body nor dispatch.py, so the verified contract is structurally unreachable by this change"
+    },
+    "c8": {
+      "id": "c8",
+      "statement": "option B (fully separate brute-force match_all-only path with no core pruning) discards the grouping and fingerprint-gate performance work already verified for the single-match case",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c9": {
+      "id": "c9",
+      "statement": "a merged design: leave find_core's driver loop and dispatch.py call site untouched, add a sibling driver in core_finder.py (e.g. find_all_cores) that reuses _grow_from but does not remove mapped nodes between seed attempts, collecting every embedding at/above min_ratio including overlapping ones",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "c1",
+            "c2",
+            "c6",
+            "c7",
+            "c8"
+          ],
+          "rule": "shared-primitive merge: co-locate in same module and mechanism, do not alter or duplicate the verified single-winner contract"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c10": {
+      "id": "c10",
+      "statement": "DECISION: implement find_all_cores(A_edges, B_edges, min_ratio) in core_finder.py as a sibling of find_core, sharing _grow_from, iterating every (a0,b0) seed pair without removing matched nodes from the pools between attempts, returning every accepted embedding (matched_edges, node_map) at/above min_ratio -- overlapping embeddings included, not deduplicated. dispatch.py and find_core remain untouched.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "c9"
+          ],
+          "rule": "restate c9 as the committed answer statement"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    }
+  },
+  "candidates": {
+    "ans": {
+      "id": "ans",
+      "statement": "merge: add find_all_cores sibling in core_finder.py reusing _grow_from, leave find_core/dispatch.py untouched",
+      "discriminator": "only candidate proposed"
+    }
+  },
+  "checks": {
+    "k1": {
+      "id": "k1",
+      "kind": "negation",
+      "target": "c7",
+      "method": "ran grouping/selftest.py unmodified against current core_finder.py/dispatch.py (no edits made yet) as a baseline, confirmed merge design (c9) adds a new function without editing find_core or dispatch.py's call site",
+      "result": "selftest.py: add_init rules=36 checks=16 fires=16 mismatches=0 PASS; c9 touches neither find_core's body nor dispatch.py, so the verified contract is structurally unreachable by this change",
+      "outcome": "branch_traced"
+    },
+    "k2": {
+      "id": "k2",
+      "kind": "falsifier",
+      "target": "c10",
+      "method": "re-verify the baseline test suite passes with zero code changes made (sanity that 'untouched' claim is currently true, not just planned)",
+      "result": "PASS, 0 mismatches, confirms starting point before any find_all_cores code is written",
+      "outcome": "survived"
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "c10",
+    "statement": "DECISION: implement find_all_cores(A_edges, B_edges, min_ratio) in core_finder.py as a sibling of find_core, sharing _grow_from, iterating every (a0,b0) seed pair without removing matched nodes from the pools between attempts, returning every accepted embedding (matched_edges, node_map) at/above min_ratio -- overlapping embeddings included, not deduplicated. dispatch.py and find_core remain untouched.",
+    "evidence_label": "assumed",
+    "assumptions_carried": [
+      "c7"
+    ],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "ans"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k1",
+        "k2"
+      ]
+    ],
+    [
+      "commit",
+      "c10"
+    ]
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "goals": {
+    "g1": "Do detect_overlaps/resolve_compound hold up at 3 matches, closing the cascade gap flagged after the 2-match tests?"
+  },
+  "claims": {
+    "c1": {
+      "id": "c1",
+      "statement": "test 3 (fan-in) produced boundary_crossings={(0,1):{r2},(2,1):{r3}}, redirects={(0,outA):1,(2,outC):1} -- both crossers correctly redirected to owner B independently",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c2": {
+      "id": "c2",
+      "statement": "test 4 (combined collision+independent crossing) produced overlapping_nodes={n1:{0,1}}, boundary_crossings={(2,1):{n2}}, forced_born={1:{b1}}, redirects={(2,outC):1} -- no interference between the two overlap kinds sharing match B",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c3": {
+      "id": "c3",
+      "statement": "resolved_owner is populated only for overlapping_nodes because that is the only case with genuine ambiguity; boundary_crossings owner is unambiguous by construction of the (i,j) key, so the .get(n,j) fallback is always correct there",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c4": {
+      "id": "c4",
+      "statement": "across all 4 tests run, every combination of the two overlap kinds produced correct non-interfering results",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c5": {
+      "id": "c5",
+      "statement": "true transitive cascade (a crosser whose owner is itself a crosser into a further match) was not constructed in any test -- all tests have at most one hop",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c6": {
+      "id": "c6",
+      "statement": "DECISION: detect_overlaps/resolve_compound are validated at 3-match fan-in and combined-collision depth. The remaining open gap is specifically multi-hop transitive chains, unverified but structurally expected to work since redirects/forced_born are deferred owner-index pointers resolved at apply time, not precomputed real-node values -- this expectation itself is NOT yet tested and should be revisited once the orchestrator exists (since a real multi-hop chain requires the orchestrator's resolution ORDER, not just detect/resolve's output shape).",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5"
+          ],
+          "rule": "4 independent test combinations all passed; remaining gap is scoped precisely to what wasn't constructed, with the reason the deferred-pointer design plausibly generalizes stated as an expectation, not a verified claim"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    }
+  },
+  "candidates": {
+    "ans": {
+      "id": "ans",
+      "statement": "detect_overlaps/resolve_compound validated at 3-match depth (fan-in + combined collision); multi-hop transitive chains remain the one unverified gap, deferred to orchestrator-level testing since it requires resolution ORDER not just detect/resolve output shape.",
+      "discriminator": "only candidate"
+    }
+  },
+  "checks": {
+    "k1": {
+      "id": "k1",
+      "kind": "falsifier",
+      "target": "c6",
+      "method": "ran both 3-match scenarios, compared to hand-predicted values",
+      "result": "both matched exactly",
+      "outcome": "survived"
+    },
+    "k2": {
+      "id": "k2",
+      "kind": "negation",
+      "target": "c5",
+      "method": "checked whether any test had an owner that was itself a crosser into a third match",
+      "result": "no such test exists yet",
+      "outcome": "branch_traced"
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "c6",
+    "statement": "DECISION: detect_overlaps/resolve_compound are validated at 3-match fan-in and combined-collision depth. The remaining open gap is specifically multi-hop transitive chains, unverified but structurally expected to work since redirects/forced_born are deferred owner-index pointers resolved at apply time, not precomputed real-node values -- this expectation itself is NOT yet tested and should be revisited once the orchestrator exists (since a real multi-hop chain requires the orchestrator's resolution ORDER, not just detect/resolve's output shape).",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "ans"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k1",
+        "k2"
+      ]
+    ],
+    [
+      "commit",
+      "c6"
+    ]
+  ]
+}

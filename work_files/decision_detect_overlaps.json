@@ -1,0 +1,148 @@
+{
+  "goals": {
+    "g1": "Does detect_overlaps() correctly implement Compound Match Resolution's step 1 (find all overlapping match regions), covering both the overlapping_nodes case and the boundary_of_one_inside_other case, without authoring a new graph2 (per decision_schema_reuse)?"
+  },
+  "claims": {
+    "c1": {
+      "id": "c1",
+      "statement": "detect_overlaps reuses _read_boundary_externals (existing, unmodified) to read each match's live boundary-crossing targets against the SAME base_graph, read-only, no teardown -- consistent with decision_schema_reuse",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c2": {
+      "id": "c2",
+      "statement": "region_of[n] accumulates every match index whose OWN binding.values() includes real node n -- the framework's overlapping_nodes case when len>=2",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c3": {
+      "id": "c3",
+      "statement": "boundary_crossings[(i,j)] is populated only when node n is in match i's boundary_touches AND in match j's region_of AND i != j -- exactly the framework's boundary_of_one_inside_other definition",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c4": {
+      "id": "c4",
+      "statement": "hand-built test 1 (B bound to A's own-region node r2) produced overlapping_nodes={r2:{0,1}}, boundary_crossings={} -- correct classification",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c5": {
+      "id": "c5",
+      "statement": "hand-built test 2 (B bound to A's live crossing target r3, outside A's region) produced overlapping_nodes={}, boundary_crossings={(0,1):{r3}} -- correct classification",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c6": {
+      "id": "c6",
+      "statement": "degree counts distinct match indices touching a node via region OR boundary, matching the framework's rank-by-overlap-degree requirement",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c7": {
+      "id": "c7",
+      "statement": "nodes touched by only one match were correctly excluded from both dicts and got degree 1 in both tests",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c8": {
+      "id": "c8",
+      "statement": "detect_overlaps correctly implements Compound Match Resolution step 1 for both the overlapping_nodes and boundary_of_one_inside_other cases, reusing existing per-rule schema machinery with no new graph2 authored.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6",
+            "c7"
+          ],
+          "rule": "two independent hand-built scenarios each isolate one classification branch and both matched the framework's definitions with no cross-contamination"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    }
+  },
+  "candidates": {
+    "ans": {
+      "id": "ans",
+      "statement": "detect_overlaps correctly implements Compound Match Resolution step 1 for both the overlapping_nodes and boundary_of_one_inside_other cases, reusing existing per-rule schema machinery with no new graph2 authored.",
+      "discriminator": "only candidate"
+    }
+  },
+  "checks": {
+    "k1": {
+      "id": "k1",
+      "kind": "falsifier",
+      "target": "c8",
+      "method": "constructed and ran two distinct hand-built scenarios exercising each classification branch separately and inspected the returned dicts directly",
+      "result": "test1: overlapping_nodes={r2:{0,1}}, boundary_crossings={}. test2: overlapping_nodes={}, boundary_crossings={(0,1):{r3}}. Both match the framework's definitions exactly",
+      "outcome": "survived"
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "c8",
+    "statement": "detect_overlaps correctly implements Compound Match Resolution step 1 for both the overlapping_nodes and boundary_of_one_inside_other cases, reusing existing per-rule schema machinery with no new graph2 authored.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7",
+        "c8"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "ans"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k1"
+      ]
+    ],
+    [
+      "commit",
+      "c8"
+    ]
+  ]
+}

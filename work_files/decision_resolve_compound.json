@@ -1,0 +1,146 @@
+{
+  "goals": {
+    "g1": "Does resolve_compound() correctly implement Compound Match Resolution step 2 (rank overlaps by degree, resolve inherit-collisions to forced-born, redirect boundary crossings to the owning match)?"
+  },
+  "claims": {
+    "c1": {
+      "id": "c1",
+      "statement": "for overlapping_nodes, resolve_compound picks a deterministic winner (lowest match index) to keep inherit rights and forces every other match on that node to mint fresh (born) for its own output instead -- an override layered on the compiled EditsArtifact, itself untouched",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c2": {
+      "id": "c2",
+      "statement": "for boundary_crossings, resolve_compound redirects match i's crossing out_node to resolve through owning match j's output identity at apply time, found by matching the actual live crossing target against the overlap's node set, not by re-checking binding[in_node]",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c3": {
+      "id": "c3",
+      "statement": "test 1 (overlapping_nodes) produced forced_born={1:{b_input}}, redirects={}, resolved_owner={r2:0} -- correct",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c4": {
+      "id": "c4",
+      "statement": "test 2 (boundary_crossings) produced forced_born={}, redirects={(0,out1):1}, resolved_owner={} -- correct",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c5": {
+      "id": "c5",
+      "statement": "the two test outcomes show no cross-contamination between the two resolution branches",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c6": {
+      "id": "c6",
+      "statement": "ranking-by-degree currently only affects iteration order not outcome, because neither test scenario exercises a chained/transitive overlap -- cascade behavior is unverified past this depth",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "c7": {
+      "id": "c7",
+      "statement": "DECISION: resolve_compound correctly resolves both overlap cases at the depth tested (2 matches, 1 overlap node each), producing forced_born/redirects/resolved_owner an apply-time orchestrator needs. Transitive/cascading multi-node overlaps are explicitly UNVERIFIED and carried forward as an open risk before this is used on real multi-rule firings.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ],
+          "rule": "both classification branches verified independently and cleanly separated; cascade scope explicitly bounded, not silently assumed safe"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    }
+  },
+  "candidates": {
+    "ans": {
+      "id": "ans",
+      "statement": "resolve_compound correctly resolves both overlap cases at the depth tested (2 matches, 1 overlap node each), producing forced_born/redirects/resolved_owner an apply-time orchestrator needs. Transitive/cascading multi-node overlaps are explicitly UNVERIFIED and carried forward as an open risk before this is used on real multi-rule firings.",
+      "discriminator": "only candidate"
+    }
+  },
+  "checks": {
+    "k1": {
+      "id": "k1",
+      "kind": "falsifier",
+      "target": "c7",
+      "method": "ran both hand-built scenarios and inspected forced_born/redirects/resolved_owner directly against hand-predicted values before execution",
+      "result": "test1 and test2 both matched predictions exactly, no branch produced output in the other's territory",
+      "outcome": "survived"
+    },
+    "k2": {
+      "id": "k2",
+      "kind": "negation",
+      "target": "c6",
+      "method": "checked whether either test scenario contained a third match or a node overlapping two distinct already-resolved nodes",
+      "result": "neither test constructed a chained/cascading case -- c6 is a scope limitation, not a verified property",
+      "outcome": "branch_traced"
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "c7",
+    "statement": "DECISION: resolve_compound correctly resolves both overlap cases at the depth tested (2 matches, 1 overlap node each), producing forced_born/redirects/resolved_owner an apply-time orchestrator needs. Transitive/cascading multi-node overlaps are explicitly UNVERIFIED and carried forward as an open risk before this is used on real multi-rule firings.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6",
+        "c7"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "ans"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k1",
+        "k2"
+      ]
+    ],
+    [
+      "commit",
+      "c7"
+    ]
+  ]
+}
