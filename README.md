@@ -18,6 +18,13 @@ committed. `ReasonSetter.audit_incomplete([...])` lists anything not
 committed — "forgot to use it" becomes a visible file state, not a
 silent omission.
 
+**Reuse registry (v0.6):** `prepare()` also surfaces possible prior matches
+from the shared `claims_registry.json` (keyword overlap against the goal)
+as `prior_candidates` — pull one in with `reuse(reg_id)`, which preserves
+its true status/negation_handling verbatim. Nothing is auto-refused;
+picking one is a judgment call, same epistemic status as the goal-relevance
+check (I9). `commit()` auto-populates the registry, so this needs no setup.
+
 **Starters** (`export_starter`/`from_starter`) are a separate, costlier
 mechanism for handoff to a genuinely blind second session — reserved for
 validating the setter itself (blind-cycle promotion), not routine use.
