@@ -1,0 +1,271 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Implement the isomorphism check (refined_classifier's final, still-unbuilt piece): choose an anchor from a CONFIRMED-unchanged node (not from match_all's arbitrary resolution), use it to seed a structural correspondence, materialize ('build') the reconstructed candidate layer, and compare it against the retained previous layer (base_graph)."
+  },
+  "prep_note": "Sven's hints, this session. Prepared before any design/coding.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_lf6_repair.json::corrected_resolve_reverse_compound_v2",
+      "claim_id": "corrected_resolve_reverse_compound_v2",
+      "statement": "resolve_reverse_compound is redesigned, no ordering/enumeration: (1) OV_forward = detect_overlaps run against the known forward matches+base graph (parameter-free) -- already known/recorded, exactly as footprint_is_consistent already correctly uses S_forward. (2) OV_reverse = detect_overlaps run on collect_reversed_matches's output against the result graph (also parameter-free). (3) Compare OV_forward and OV_reverse structurally. If they DIFFER, that mismatch IS a non-reversibility signal -- cheap, no isomorphism check needed. (4) If IDENTICAL, the correspondence is DIRECTLY IMPLIED by the topological match -- no ownership ambiguity remains. Proceed straight to the isomorphism check. resolve_compound (the tie-break function) is NOT NEEDED on the reverse side at all.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "own_inconsistency",
+            "sven_signal_1",
+            "sven_signal_2",
+            "imported_code_resolve_compound_signature"
+          ],
+          "rule": "using forward's known, recorded structure as ground truth eliminates the need for any ownership-resolution/enumeration on the reverse side"
+        }
+      ],
+      "source_path": "/home/claude/ers_lf6_repair.json",
+      "goals": [
+        "Repair LF6 violation in ers_reverse_overlap_correction.json: the revises targets (answer_reverse_overlap, answer_structure) were re-grounded as fresh 'given' claims to satisfy I1, silently promoting their true status (derived) -- redo using import_prior_commit, which preserves actual status/negation_handling, and re-derive the same corrected conclusions against the properly-imported claims."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_verified.json::fix_verified",
+      "claim_id": "fix_verified",
+      "statement": "Re-ran the EXACT ph_all_four test case that previously found zero matches (imported_test_found_zero_matches). After implementing the physical-switch fix (imported_fix_design: build_reversed_graph2's confirmed_crossings parameter, collect_reversed_matches passing base_graph+forward binding through to _read_boundary_externals per firing): per_rule_multiplicity is now {0: 1} (was {0: 0}), exactly 1 reversed match found, resolve_reverse_compound reports consistent=True. Verified by actual execution against the identical rule and base graph that failed before, not a different/easier test case.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_fix_design",
+            "imported_test_found_zero_matches"
+          ],
+          "rule": "re-running the same failing case after implementing the designed fix and observing the failure resolve is direct empirical confirmation"
+        }
+      ],
+      "source_path": "/home/claude/ers_physical_switch_verified.json",
+      "goals": [
+        "Verify and record the physical-switch fix's actual test result: does re-running the exact ph_all_four case that previously found zero matches now succeed?"
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_fix.json::fix_design",
+      "claim_id": "fix_design",
+      "statement": "build_reversed_operation should become PER-BINDING, not per-rule: instead of build_reversed_graph2 constructing new-input categories from the blanket boundary_grab declaration (set(preserve.get(old_out))), it should use confirmed = _read_boundary_externals(operation.schema.edits, binding, base_graph) for the SPECIFIC firing being checked, and derive new-input categories from confirmed[old_out]'s actual (type,direction) pairs only -- a direct, per-firing exchange of the ALREADY-VERIFIED crossings, not a blanket requirement of everything merely declared possible.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "sven_physical_switch",
+            "code_read_boundary_externals_is_the_and_check"
+          ],
+          "rule": "the mechanism computing the AND's confirmed side already exists (forward direction); reuse it directly to build the per-firing reversed pattern instead of the blanket declared set"
+        }
+      ],
+      "source_path": "/home/claude/ers_physical_switch_fix.json",
+      "goals": [
+        "Fix the ph_all_four zero-match bug using Sven's physical-switch idea: when a crossing's existence AND declaration both hold (confirmed per the actual firing via _read_boundary_externals), directly exchange the placeholder mapping between the input and mapped-output sides, per binding -- rather than requiring a fixed, static, blanket set of categories (all 4 of ph_all_four) that may not all be present in any given real firing."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_verified.json::imported_fix_design",
+      "claim_id": "imported_fix_design",
+      "statement": "build_reversed_operation should become PER-BINDING, not per-rule: instead of build_reversed_graph2 constructing new-input categories from the blanket boundary_grab declaration (set(preserve.get(old_out))), it should use confirmed = _read_boundary_externals(operation.schema.edits, binding, base_graph) for the SPECIFIC firing being checked, and derive new-input categories from confirmed[old_out]'s actual (type,direction) pairs only -- a direct, per-firing exchange of the ALREADY-VERIFIED crossings, not a blanket requirement of everything merely declared possible.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_sven_physical_switch",
+            "imported_code_read_boundary_externals_is_the_and_check"
+          ],
+          "rule": "the mechanism computing the AND's confirmed side already exists (forward direction); reuse it directly to build the per-firing reversed pattern instead of the blanket declared set (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_physical_switch_verified.json",
+      "goals": [
+        "Verify and record the physical-switch fix's actual test result: does re-running the exact ph_all_four case that previously found zero matches now succeed?"
+      ]
+    }
+  ],
+  "claims": {
+    "sven_hints": {
+      "id": "sven_hints",
+      "statement": "Sven (direct, this session): choose an anchor from an unchanged node -- not resolved via match, i.e. not derived from whatever binding match_all happened to produce -- and use one of its nodes as anchor. Build and compare the layer.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "rebuild_is_reusable_for_reconstruction": {
+      "id": "rebuild_is_reusable_for_reconstruction",
+      "statement": "rebuild(graph, edits, binding) (schema.py) applies ANY compiled schema's edits against ANY graph+binding -- it does not know or care whether the schema represents a 'forward' or 'reversed' operation. The reversed operation built by build_reversed_graph2/build_reversed_operation is a fully compiled OperationDefinition with its own .schema.edits. Therefore rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) can MATERIALIZE the candidate reconstruction by reusing the exact same, already-proven mechanism used for every forward firing test today -- no new materialization logic needs to be written.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "anchor_source_is_confirmed_unchanged_not_arbitrary": {
+      "id": "anchor_source_is_confirmed_unchanged_not_arbitrary",
+      "statement": "The anchor must come from the CONFIRMED-unchanged set (compute_unchanged_candidates + per-firing confirmed crossings, already built in reverse_footprint_lightweight) -- NOT from an arbitrary node that match_all's binding happens to include. A confirmed-unchanged node's real id is verified identical in both base_graph and result_graph BY CONSTRUCTION (it survived with provably no change), which is exactly what makes it usable as a zero-search, known-correct seed for growing a correspondence -- an arbitrary matched node has no such guarantee.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "isomorphism_design": {
+      "id": "isomorphism_design",
+      "statement": "ADOPTED: cand_bfs_direct_comparison, WITH the falsifier's correction incorporated: (1) build the candidate reconstruction via rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) -- reusing the proven mechanism, no new materialization logic. (2) Pick anchor from the CONFIRMED-unchanged set (not from an arbitrary match_all binding). (3) BFS-grow a correspondence from the anchor: for INHERITED/confirmed-unchanged real nodes, compare incident edges by DIRECT real-id equality (same physical node, by construction). For BORN/reconstructed nodes (freshly minted, no shared id with base_graph possible), compare STRUCTURALLY instead -- find whether some node in base_graph, adjacent to the already-confirmed correspondence, has matching edge structure relative to what's already anchored; require this structural match, not id equality, for born positions specifically. (4) Require full coverage: every node in both the reconstruction and base_graph must be reached by the BFS; unreached/disconnected nodes are a coverage gap, not a silent pass. Rejected: cand_seeded_match_all (failed its falsifier -- derive_match_view requires graph2-specific scaffolding a plain materialized graph doesn't have; a confirmed blocker, not an inconvenience).",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "sven_hints",
+            "rebuild_is_reusable_for_reconstruction",
+            "anchor_source_is_confirmed_unchanged_not_arbitrary"
+          ],
+          "rule": "adopt the candidate that survived its falsifier, incorporating the real correction it surfaced (born nodes need structural not id-based matching), and reject the one shown to have a concrete, confirmed blocker"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "cand_bfs_direct_comparison": {
+      "id": "cand_bfs_direct_comparison",
+      "statement": "Build the candidate reconstruction via rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) (reusing the proven mechanism). Pick an anchor from the CONFIRMED-unchanged set. Grow a correspondence via BFS from the anchor: at each visited real node, compare its incident edge set DIRECTLY (same real node ids on both sides, since confirmed-unchanged/inherited nodes share real identity by construction) between the reconstructed graph and the retained previous layer (base_graph). Extend to neighbors; fail on any edge-set mismatch; require the visited set to cover ALL nodes in both graphs (disconnected/unreached nodes are a coverage gap, not silently passed).",
+      "discriminator": "Direct real-id comparison is a STRONGER, more literal check than abstract isomorphism-up-to-relabeling -- appropriate here because confirmed-unchanged/inherited nodes are claimed to be the SAME physical node, not merely structurally equivalent under some relabeling. Simple to implement and reason about correctly."
+    },
+    "cand_seeded_match_all": {
+      "id": "cand_seeded_match_all",
+      "statement": "Treat the reconstructed graph as a graph2-like pattern and use match_all's existing seed_map parameter, seeding it with {anchor: anchor}, to let the proven VF2-based matcher discover the rest of the correspondence against the retained layer.",
+      "discriminator": "Reuses more existing infrastructure in principle, but match_all's input_graph is expected to be graph2-shaped (derive_match_view expects placeholders/markers/bind_targets) -- a plain materialized reconstruction graph is not in that shape, so this would require nontrivial adaptation, not a direct drop-in reuse."
+    }
+  },
+  "checks": {
+    "chk_falsifier_bfs": {
+      "id": "chk_falsifier_bfs",
+      "kind": "falsifier",
+      "target": "cand_bfs_direct_comparison",
+      "method": "could direct real-id comparison wrongly FAIL a case that IS actually reversible, e.g. if a born/reconstructed node's id genuinely differs from the retained layer's corresponding node (since born nodes are minted fresh, not id-preserved)?",
+      "result": "Real, important subtlety: born positions (reconstructed-but-not-inherited) will NOT share a real id with anything in base_graph by construction -- rebuild() mints a fresh id for born nodes. Direct id-based comparison would need to treat born-reconstructed nodes specially: not require id equality, only require that SOME node in base_graph has matching edge structure relative to already-confirmed neighbors (structural correspondence, not id equality, for born positions specifically). This must be handled explicitly, not silently assumed away.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "born/reconstructed nodes need structural (not id-based) correspondence matching during the BFS growth, since they are freshly minted and will never share a real id with base_graph",
+          "disposition": "fixed"
+        }
+      ]
+    },
+    "chk_falsifier_seeded_match_all": {
+      "id": "chk_falsifier_seeded_match_all",
+      "kind": "falsifier",
+      "target": "cand_seeded_match_all",
+      "method": "is there a concrete blocker confirmed, or just a plausible-sounding adaptation cost?",
+      "result": "Concrete: derive_match_view (already read this session and earlier) requires graph2's specific structure (placeholders via self-loop signature, markers via operational self-loop, input/output classification via operational edge direction) -- a plain materialized PerspectiveGraph from rebuild() has none of this scaffolding. Using it as match_all's input_graph would require constructing an entirely separate graph2-like wrapper around the materialized result, which is not a seed_map-only adaptation -- confirmed blocker, not merely inconvenient.",
+      "outcome": "failed",
+      "side_findings": null
+    },
+    "chk_falsifier_isomorphism_design": {
+      "id": "chk_falsifier_isomorphism_design",
+      "kind": "falsifier",
+      "target": "isomorphism_design",
+      "method": "does the zero-anchor case (no confirmed-unchanged nodes at all) have a defined, honest behavior, or would this design silently do something wrong there?",
+      "result": "Not silently wrong, but not solved either: with zero anchors, there's no seed to grow from at all -- this design cannot run and must explicitly report 'cannot verify, no anchor available' rather than attempt any comparison. This is the same zero-anchor degenerate case flagged as carried/unresolved back in ers_reversibility_anchor_worklog.json -- still not resolved here, must be reported honestly as a distinct outcome, not folded into either True or False.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "zero-anchor case has no defined comparison path in this design; must return a distinct 'unverifiable' outcome rather than defaulting to pass or fail",
+          "disposition": "fixed"
+        }
+      ]
+    },
+    "chk_relevance_isomorphism_design": {
+      "id": "chk_relevance_isomorphism_design",
+      "kind": "relevance",
+      "target": "isomorphism_design",
+      "method": "connect the evidence to this session's stated goal",
+      "result": "Goal: implement the isomorphism check using an anchor from confirmed-unchanged nodes, building and comparing the layer. isomorphism_design directly specifies exactly this, incorporating the falsifier's real correction.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "isomorphism_design",
+    "statement": "ADOPTED: cand_bfs_direct_comparison, WITH the falsifier's correction incorporated: (1) build the candidate reconstruction via rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) -- reusing the proven mechanism, no new materialization logic. (2) Pick anchor from the CONFIRMED-unchanged set (not from an arbitrary match_all binding). (3) BFS-grow a correspondence from the anchor: for INHERITED/confirmed-unchanged real nodes, compare incident edges by DIRECT real-id equality (same physical node, by construction). For BORN/reconstructed nodes (freshly minted, no shared id with base_graph possible), compare STRUCTURALLY instead -- find whether some node in base_graph, adjacent to the already-confirmed correspondence, has matching edge structure relative to what's already anchored; require this structural match, not id equality, for born positions specifically. (4) Require full coverage: every node in both the reconstruction and base_graph must be reached by the BFS; unreached/disconnected nodes are a coverage gap, not a silent pass. Rejected: cand_seeded_match_all (failed its falsifier -- derive_match_view requires graph2-specific scaffolding a plain materialized graph doesn't have; a confirmed blocker, not an inconvenience).",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "sven_hints",
+        "rebuild_is_reusable_for_reconstruction",
+        "anchor_source_is_confirmed_unchanged_not_arbitrary"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "cand_bfs_direct_comparison",
+        "cand_seeded_match_all"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_bfs",
+        "chk_falsifier_seeded_match_all"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "isomorphism_design"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_isomorphism_design",
+        "chk_relevance_isomorphism_design"
+      ]
+    ],
+    [
+      "commit",
+      "isomorphism_design"
+    ]
+  ]
+}

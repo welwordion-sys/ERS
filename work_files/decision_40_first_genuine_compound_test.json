@@ -1,0 +1,228 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Build a genuine two-rule overlapping compound test (not synthetic single-rule): two matches whose overlap is a real boundary_crossings case (one match's live crossing target is inside another match's own matched region), fired via two ordered rebuild() calls (read before write, avoiding the need for full apply_compound redirect logic). Run it through collect_reversed_matches and resolve_reverse_compound (both already written generically over matches:list, no length-1 assumption) to see whether they actually work for N>1, and determine what check_isomorphism_anchored needs to handle the N=2 case (it currently hard-gates on len(matches)==1)."
+  },
+  "prep_note": "Test before wiring, per Sven's ordering. Prepared before any construction.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_checker_continuation.json::footprint_wiring_answer",
+      "claim_id": "footprint_wiring_answer",
+      "statement": "ADOPTED: cand_lightweight_aggregate, scoped to the no-overlap case (matches this session's tested coverage). S_forward comes directly from a REAL forward firing via apply_compound's own return value (result['born']|result['changed']) -- no new code needed there. S_reverse_implied is computed by a new lightweight function: for the reversed matches (no overlaps case), born = reversed schema's core.born positions mapped through the reversed output_map, changed = incident-set comparison before/after for survived positions -- mirroring apply_compound's aggregation without the full LayeredGraph/registry integration (cand_reuse_apply_compound_dryrun failed its falsifier: no PerspectiveGraph-to-LayeredGraph adapter exists, real unbuilt integration work). SCOPE LIMIT, carried: this lightweight version does not incorporate resolve_compound's redirect logic, so it is only confirmed adequate for the no-overlap case already tested -- a genuine compound/overlapping reverse firing would need more.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "apply_compound_returns_aggregates",
+            "layered_graph_integration_needed"
+          ],
+          "rule": "adopt the candidate that survived its falsifier (self-contained, no new untested integration surface) over the one that failed (requires building an adapter that doesn't exist), while honestly scoping the adopted candidate's own limit"
+        }
+      ],
+      "source_path": "/home/claude/ers_checker_continuation.json",
+      "goals": [
+        "Continue the reversibility checker implementation: wire footprint_is_consistent to real apply_compound aggregates (S_forward/S_reverse_implied), build a reverse_fire orchestrator tying collect_reversed_matches + resolve_reverse_compound + footprint_is_consistent together, and determine what the isomorphism-to-retained-previous-layer check actually requires to implement against real graphs."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_reverse_fire_implemented.json::imported_footprint_wiring_answer",
+      "claim_id": "imported_footprint_wiring_answer",
+      "statement": "ADOPTED: cand_lightweight_aggregate, scoped to the no-overlap case (matches this session's tested coverage). S_forward comes directly from a REAL forward firing via apply_compound's own return value (result['born']|result['changed']) -- no new code needed there. S_reverse_implied is computed by a new lightweight function: for the reversed matches (no overlaps case), born = reversed schema's core.born positions mapped through the reversed output_map, changed = incident-set comparison before/after for survived positions -- mirroring apply_compound's aggregation without the full LayeredGraph/registry integration (cand_reuse_apply_compound_dryrun failed its falsifier: no PerspectiveGraph-to-LayeredGraph adapter exists, real unbuilt integration work). SCOPE LIMIT, carried: this lightweight version does not incorporate resolve_compound's redirect logic, so it is only confirmed adequate for the no-overlap case already tested -- a genuine compound/overlapping reverse firing would need more.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_apply_compound_returns_aggregates",
+            "imported_layered_graph_integration_needed"
+          ],
+          "rule": "adopt the candidate that survived its falsifier (self-contained, no new untested integration surface) over the one that failed (requires building an adapter that doesn't exist), while honestly scoping the adopted candidate's own limit (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_reverse_fire_implemented.json",
+      "goals": [
+        "Record the reverse_fire orchestrator implementation and its first end-to-end test result, including the honest scope limits (coarse footprint approximation, no-overlap-only, no isomorphism check, stand-in S_forward since no apply_compound/LayeredGraph adapter exists)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_verified.json::fix_verified",
+      "claim_id": "fix_verified",
+      "statement": "Re-ran the EXACT ph_all_four test case that previously found zero matches (imported_test_found_zero_matches). After implementing the physical-switch fix (imported_fix_design: build_reversed_graph2's confirmed_crossings parameter, collect_reversed_matches passing base_graph+forward binding through to _read_boundary_externals per firing): per_rule_multiplicity is now {0: 1} (was {0: 0}), exactly 1 reversed match found, resolve_reverse_compound reports consistent=True. Verified by actual execution against the identical rule and base graph that failed before, not a different/easier test case.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_fix_design",
+            "imported_test_found_zero_matches"
+          ],
+          "rule": "re-running the same failing case after implementing the designed fix and observing the failure resolve is direct empirical confirmation"
+        }
+      ],
+      "source_path": "/home/claude/ers_physical_switch_verified.json",
+      "goals": [
+        "Verify and record the physical-switch fix's actual test result: does re-running the exact ph_all_four case that previously found zero matches now succeed?"
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_reverse_fire_implemented.json::implemented_and_tested",
+      "claim_id": "implemented_and_tested",
+      "statement": "Implemented in reverse_compound.py: reverse_footprint_lightweight (coarse S_reverse_implied, over-approximates by including ALL survived positions not just changed ones -- explicitly documented as capable of producing false mismatches, not swept under) and reverse_fire (orchestrator: collect_reversed_matches -> per-rule-multiplicity check -> resolve_reverse_compound -> footprint_is_consistent -> stops, correctly refusing to claim 'reversible: True' since the isomorphism check does not exist). Tested end to end for the first time: using rebuild()'s output_map as a stand-in S_forward (no apply_compound/LayeredGraph adapter exists, per imported_layered_graph_integration_needed), the full pipeline ran, footprint and overlap checks both passed, and the result correctly reports 'unresolved' rather than 'reversible: True' -- verified by actual execution, not asserted.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_footprint_wiring_answer",
+            "imported_apply_compound_returns_aggregates",
+            "imported_layered_graph_integration_needed"
+          ],
+          "rule": "implement per the committed design, test against the same single-rule case already exercised this session, and report exactly what passed and what remains explicitly unresolved"
+        }
+      ],
+      "source_path": "/home/claude/ers_reverse_fire_implemented.json",
+      "goals": [
+        "Record the reverse_fire orchestrator implementation and its first end-to-end test result, including the honest scope limits (coarse footprint approximation, no-overlap-only, no isomorphism check, stand-in S_forward since no apply_compound/LayeredGraph adapter exists)."
+      ]
+    }
+  ],
+  "claims": {
+    "overlap_construction_plan": {
+      "id": "overlap_construction_plan",
+      "statement": "Construct a genuine boundary_crossings overlap (not overlapping_nodes/fan-in, which would need real identity-ownership arbitration this session explicitly avoids building): base graph has node R (self-loop STRUCTURAL) and node S (self-loop STRUCTURAL) with an edge S->R (STRUCTURAL). Rule A matches R alone (declares no crossings needed -- self-loop is fully internal). Rule B matches S alone, declares crossing (STRUCTURAL,'out'), whose real target is R. detect_overlaps([(opA,bindingA),(opB,bindingB)], base) should show boundary_touches[1]={R} (match B's live crossing touches R) and region_of[R]={0} (match A's own bound region includes R) -> boundary_crossings[(1,0)]={R} -- a genuine, real overlap.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "firing_order_plan": {
+      "id": "firing_order_plan",
+      "statement": "Fire rule B FIRST via rebuild() (reads R's live structure as an external crossing target before R is touched at all), THEN fire rule A via rebuild() (transforms R). This ordering avoids needing apply_compound's redirect logic -- rule B never writes to R, only reads it live once, before rule A's teardown/rebuild of R happens.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "own_construction_bug_found": {
+      "id": "own_construction_bug_found",
+      "statement": "Initial test attempt found the S->R edge missing after both firings, and per_match_multiplicity showed {0:2, 1:0} -- ambiguity and a lost match. Debugged (not assumed): the bug was in MY test construction, not the pipeline -- rule A's output-side boundary declaration used g2A.add_edge(out_R2, phA, STRUCTURAL) (node->ph = 'out' by convention) when 'in' was intended; the fix was phA->out_R2 (ph->node = 'in'). Confirmed via schemaA.edits.boundary_grab showing the wrong direction before the fix, correct direction after.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "compound_pipeline_verified": {
+      "id": "compound_pipeline_verified",
+      "statement": "After fixing the construction bug: fired rule B then rule A (read-before-write ordering, no apply_compound/redirect logic used) against a base graph with a genuine boundary_crossings overlap (rule B's crossing target R is inside rule A's own matched region). Result: forward firing correctly preserved the S->R edge this time. per_match_multiplicity = {0:1, 1:1} (no ambiguity). resolve_reverse_compound reported consistent:True (genuine overlap correctly matched between forward and reverse). reverse_footprint_lightweight + footprint_is_consistent also passed (both real nodes confirmed unchanged, correctly a subset of s_forward). This is the FIRST genuine multi-match compound test run today, and three of the four pipeline stages (collect, overlap, footprint) verified working correctly for it.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "own_construction_bug_found",
+            "overlap_construction_plan",
+            "firing_order_plan"
+          ],
+          "rule": "once the construction bug is fixed, the actual pipeline components (already written generically, no length-1 assumption in collect_reversed_matches or resolve_reverse_compound) work correctly against a real overlapping case"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "isomorphism_still_gated": {
+      "id": "isomorphism_still_gated",
+      "statement": "check_isomorphism_anchored still hard-gates on len(matches)!=1, returning 'unverifiable' -- NOT tested for this N=2 case. This remains the one piece confirmed still needing work: composing rebuild() calls for multiple matches onto one growing reconstruction rather than independent copies.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_compound_verified": {
+      "id": "chk_falsifier_compound_verified",
+      "kind": "falsifier",
+      "target": "compound_pipeline_verified",
+      "method": "is this test genuinely a compound/overlapping case, or could it be trivially reduced to two independent, non-interacting single-rule tests that happen not to exercise real overlap logic?",
+      "result": "Genuinely overlapping, confirmed by detect_overlaps' own output: boundary_crossings showed a real (1,0):{R} entry -- rule B's live crossing target IS inside rule A's own matched region, the exact overlap type Compound Match Resolution's framework distinguishes. This is not reducible to two independent tests; the overlap comparison in resolve_reverse_compound had real, non-trivial data to compare (not two empty dicts).",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "chk_relevance_compound_verified": {
+      "id": "chk_relevance_compound_verified",
+      "kind": "relevance",
+      "target": "compound_pipeline_verified",
+      "method": "connect the evidence to this session's stated goal",
+      "result": "Goal: build a genuine two-rule overlapping test and see whether existing generic code works for N>1. Directly reports this, including the honest account of the construction bug found along the way and the one piece (isomorphism) still not extended.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "compound_pipeline_verified",
+    "statement": "After fixing the construction bug: fired rule B then rule A (read-before-write ordering, no apply_compound/redirect logic used) against a base graph with a genuine boundary_crossings overlap (rule B's crossing target R is inside rule A's own matched region). Result: forward firing correctly preserved the S->R edge this time. per_match_multiplicity = {0:1, 1:1} (no ambiguity). resolve_reverse_compound reported consistent:True (genuine overlap correctly matched between forward and reverse). reverse_footprint_lightweight + footprint_is_consistent also passed (both real nodes confirmed unchanged, correctly a subset of s_forward). This is the FIRST genuine multi-match compound test run today, and three of the four pipeline stages (collect, overlap, footprint) verified working correctly for it.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "overlap_construction_plan",
+        "firing_order_plan"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "own_construction_bug_found",
+        "compound_pipeline_verified",
+        "isomorphism_still_gated"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_compound_verified",
+        "chk_relevance_compound_verified"
+      ]
+    ],
+    [
+      "commit",
+      "compound_pipeline_verified"
+    ]
+  ]
+}

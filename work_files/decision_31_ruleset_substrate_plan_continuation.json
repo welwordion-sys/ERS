@@ -1,0 +1,317 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Continue the reversibility checker implementation: wire footprint_is_consistent to real apply_compound aggregates (S_forward/S_reverse_implied), build a reverse_fire orchestrator tying collect_reversed_matches + resolve_reverse_compound + footprint_is_consistent together, and determine what the isomorphism-to-retained-previous-layer check actually requires to implement against real graphs."
+  },
+  "prep_note": "Continuation of decision_19's plan, steps 4-5. Prepared before any design/coding reasoning.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_lf6_repair.json::corrected_resolve_reverse_compound_v2",
+      "claim_id": "corrected_resolve_reverse_compound_v2",
+      "statement": "resolve_reverse_compound is redesigned, no ordering/enumeration: (1) OV_forward = detect_overlaps run against the known forward matches+base graph (parameter-free) -- already known/recorded, exactly as footprint_is_consistent already correctly uses S_forward. (2) OV_reverse = detect_overlaps run on collect_reversed_matches's output against the result graph (also parameter-free). (3) Compare OV_forward and OV_reverse structurally. If they DIFFER, that mismatch IS a non-reversibility signal -- cheap, no isomorphism check needed. (4) If IDENTICAL, the correspondence is DIRECTLY IMPLIED by the topological match -- no ownership ambiguity remains. Proceed straight to the isomorphism check. resolve_compound (the tie-break function) is NOT NEEDED on the reverse side at all.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "own_inconsistency",
+            "sven_signal_1",
+            "sven_signal_2",
+            "imported_code_resolve_compound_signature"
+          ],
+          "rule": "using forward's known, recorded structure as ground truth eliminates the need for any ownership-resolution/enumeration on the reverse side"
+        }
+      ],
+      "source_path": "/home/claude/ers_lf6_repair.json",
+      "goals": [
+        "Repair LF6 violation in ers_reverse_overlap_correction.json: the revises targets (answer_reverse_overlap, answer_structure) were re-grounded as fresh 'given' claims to satisfy I1, silently promoting their true status (derived) -- redo using import_prior_commit, which preserves actual status/negation_handling, and re-derive the same corrected conclusions against the properly-imported claims."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::test_succeeds_explicit_category",
+      "claim_id": "test_succeeds_explicit_category",
+      "statement": "Re-tested with an explicit single-category output declaration (STRUCTURAL-out only, matching what's actually present) instead of ph_all_four: collect_reversed_matches correctly finds exactly 1 match against the real fired result, and resolve_reverse_compound correctly reports consistent=True (no overlaps for a single-rule firing, trivially consistent OV_forward==OV_reverse==empty set). Verified by actual execution, not assumption.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_verified.json::fix_verified",
+      "claim_id": "fix_verified",
+      "statement": "Re-ran the EXACT ph_all_four test case that previously found zero matches (imported_test_found_zero_matches). After implementing the physical-switch fix (imported_fix_design: build_reversed_graph2's confirmed_crossings parameter, collect_reversed_matches passing base_graph+forward binding through to _read_boundary_externals per firing): per_rule_multiplicity is now {0: 1} (was {0: 0}), exactly 1 reversed match found, resolve_reverse_compound reports consistent=True. Verified by actual execution against the identical rule and base graph that failed before, not a different/easier test case.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_fix_design",
+            "imported_test_found_zero_matches"
+          ],
+          "rule": "re-running the same failing case after implementing the designed fix and observing the failure resolve is direct empirical confirmation"
+        }
+      ],
+      "source_path": "/home/claude/ers_physical_switch_verified.json",
+      "goals": [
+        "Verify and record the physical-switch fix's actual test result: does re-running the exact ph_all_four case that previously found zero matches now succeed?"
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_lf6_repair.json::own_inconsistency",
+      "claim_id": "own_inconsistency",
+      "statement": "footprint_is_consistent (earlier today) correctly compares reverse-implied structure against S_forward -- forward's KNOWN, RECORDED transformation footprint (born|changed from the actual firing). resolve_reverse_compound's design contradicted this without noticing: it assumed forward's ownership/overlap structure must NOT be used, and instead blindly enumerated N! tie-break orderings on the reverse side alone.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_lf6_repair.json",
+      "goals": [
+        "Repair LF6 violation in ers_reverse_overlap_correction.json: the revises targets (answer_reverse_overlap, answer_structure) were re-grounded as fresh 'given' claims to satisfy I1, silently promoting their true status (derived) -- redo using import_prior_commit, which preserves actual status/negation_handling, and re-derive the same corrected conclusions against the properly-imported claims."
+      ]
+    }
+  ],
+  "claims": {
+    "imported_test_found_zero_matches": {
+      "id": "imported_test_found_zero_matches",
+      "statement": "End-to-end test (synthetic bijective rule, real firing via rebuild()): collect_reversed_matches found ZERO matches against the actual fired result, where exactly one was expected. Debugged: the forward rule's output side used ph_all_four (blanket 'preserve all 4 categories if present'), but the REAL firing only actually had 1 of those 4 categories present (STRUCTURAL-out to the external node X) -- the other 3 (STRUCTURAL-in, OPERATIONAL-out, OPERATIONAL-in) were declared-but-absent, which ph_all_four's own docstring says is harmless ('a keep-filter, not a degree count').",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_root_cause_and_rule_misapplied": {
+      "id": "imported_root_cause_and_rule_misapplied",
+      "statement": "build_reversed_graph2's category transposition (old-output boundary_grab -> new-input expected_crossing, count=1 per declared category, the AND-rule) is valid for EXPLICIT single-category specs the rule author knows are guaranteed present (verified empirically across 83 real rule instances in ers_reversed_placeholders_and_rule_worklog.json) -- but INVALID when transposing a BLANKET ph_all_four declaration, which declares all 4 categories as POSSIBLE without guaranteeing all 4 are present in any given real firing. The reversed pattern's exact-degree matcher then requires all 4, but the real fired node only has 1, so match_all correctly returns no match -- a genuine construction defect, not a test-setup mistake.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_test_found_zero_matches"
+          ],
+          "rule": "an exact-equality matcher requiring N declared categories fails whenever fewer than N are actually present, and ph_all_four explicitly does not guarantee all N are present (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_test_succeeds_explicit_category": {
+      "id": "imported_test_succeeds_explicit_category",
+      "statement": "Re-tested with an explicit single-category output declaration (STRUCTURAL-out only, matching what's actually present) instead of ph_all_four: collect_reversed_matches correctly finds exactly 1 match against the real fired result, and resolve_reverse_compound correctly reports consistent=True (no overlaps for a single-rule firing, trivially consistent OV_forward==OV_reverse==empty set). Verified by actual execution, not assumption.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_implementation_status": {
+      "id": "imported_implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_test_succeeds_explicit_category",
+            "imported_root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "apply_compound_returns_aggregates": {
+      "id": "apply_compound_returns_aggregates",
+      "statement": "apply_compound (schema.py, read this session) already returns {'layer_key', 'provenance', 'born', 'consumed', 'changed', 'output_maps'} -- S_forward = result['born'] | result['changed'] is directly available from a real forward firing's return value, no new computation needed.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "layered_graph_integration_needed": {
+      "id": "layered_graph_integration_needed",
+      "statement": "apply_compound's signature is (lg: LayeredGraph, registry, base_layer, new_layer, matches) -- it operates within the layers.py LayeredGraph/registry/LayerRecord apparatus, which no test this session has touched (all tests used plain PerspectiveGraph + schema.rebuild()/match_cut_at_edge directly). Getting S_reverse_implied by literally reusing apply_compound as a dry-run for the reversed matches would require wrapping the result_graph into a LayeredGraph and providing a registry -- new integration surface, not yet exercised.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "footprint_wiring_answer": {
+      "id": "footprint_wiring_answer",
+      "statement": "ADOPTED: cand_lightweight_aggregate, scoped to the no-overlap case (matches this session's tested coverage). S_forward comes directly from a REAL forward firing via apply_compound's own return value (result['born']|result['changed']) -- no new code needed there. S_reverse_implied is computed by a new lightweight function: for the reversed matches (no overlaps case), born = reversed schema's core.born positions mapped through the reversed output_map, changed = incident-set comparison before/after for survived positions -- mirroring apply_compound's aggregation without the full LayeredGraph/registry integration (cand_reuse_apply_compound_dryrun failed its falsifier: no PerspectiveGraph-to-LayeredGraph adapter exists, real unbuilt integration work). SCOPE LIMIT, carried: this lightweight version does not incorporate resolve_compound's redirect logic, so it is only confirmed adequate for the no-overlap case already tested -- a genuine compound/overlapping reverse firing would need more.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "apply_compound_returns_aggregates",
+            "layered_graph_integration_needed"
+          ],
+          "rule": "adopt the candidate that survived its falsifier (self-contained, no new untested integration surface) over the one that failed (requires building an adapter that doesn't exist), while honestly scoping the adopted candidate's own limit"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "cand_reuse_apply_compound_dryrun": {
+      "id": "cand_reuse_apply_compound_dryrun",
+      "statement": "Wrap result_graph into a LayeredGraph (single base layer = the result), call apply_compound(lg, registry, that_layer, scratch_layer, reversed_matches) as a dry-run, read back result['born']|result['changed'] as S_reverse_implied. Reuses apply_compound's exact, proven aggregation logic unchanged.",
+      "discriminator": "Highest fidelity to the real forward mechanism (same code path), but requires new integration with LayeredGraph/registry/LayerRecord machinery not touched anywhere this session -- unknown surface, real risk of friction (roster setup, registry requirements, etc.) that could cost significant time to get working."
+    },
+    "cand_lightweight_aggregate": {
+      "id": "cand_lightweight_aggregate",
+      "statement": "Write a small, purpose-built function that computes an equivalent born/changed aggregate directly from the reversed matches' output_maps and bindings, without invoking apply_compound or LayeredGraph at all -- mirroring apply_compound's aggregation logic (survived/born/changed via incident-set comparison) but scoped only to what footprint_is_consistent needs (a set of positions), not a full layer write.",
+      "discriminator": "No new integration surface (stays within the plain PerspectiveGraph tests already exercised this session), but duplicates part of apply_compound's logic in a second place -- risk of the duplicate silently drifting out of sync with the real aggregation semantics if apply_compound is ever changed."
+    }
+  },
+  "checks": {
+    "chk_falsifier_dryrun": {
+      "id": "chk_falsifier_dryrun",
+      "kind": "falsifier",
+      "target": "cand_reuse_apply_compound_dryrun",
+      "method": "check concretely: does a helper exist to seed a LayeredGraph's layer-0 from a plain PerspectiveGraph (needed before apply_compound could be called on result_graph at all)?",
+      "result": "No such helper exists (checked layers.py and schema.py for 'layer 0'/'import'/'from_graph'/'seed' -- none found). Building one (adopt_node per node, populate edge dict, set_roster, instantiate LayerRegistry) is real, unbuilt integration work, not a small wrapper -- confirms the friction concern is not speculative.",
+      "outcome": "failed",
+      "side_findings": null
+    },
+    "chk_falsifier_lightweight": {
+      "id": "chk_falsifier_lightweight",
+      "kind": "falsifier",
+      "target": "cand_lightweight_aggregate",
+      "method": "can a lightweight aggregate correctly replicate apply_compound's born/changed semantics without the full compound overlap resolution (forced_born, redirects) that makes apply_compound's aggregation nontrivial in the first place?",
+      "result": "For the SINGLE-rule case already tested this session (no overlaps), born/changed reduces to: born = reversed schema's core.born mapped through output_map, changed = compare incident sets before/after -- straightforward, no forced_born/redirect complexity needed since there are no overlaps to resolve. For a genuine multi-rule overlapping case, this lightweight version would need to ALSO replicate resolve_compound's redirect logic to get forced_born right -- not yet needed for what's tested, but a real limit for compound firings, consistent with resolve_reverse_compound already existing separately to handle overlaps.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "lightweight aggregate is only confirmed adequate for the no-overlap case; a genuine compound/overlapping firing would need it to also incorporate resolve_compound's redirect logic, not yet built",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "chk_falsifier_answer": {
+      "id": "chk_falsifier_answer",
+      "kind": "falsifier",
+      "target": "footprint_wiring_answer",
+      "method": "does this answer overclaim -- e.g. imply the compound case is handled when it isn't?",
+      "result": "No -- explicitly scoped to the no-overlap case and names the compound gap (missing redirect logic) as carried, not solved.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "chk_relevance_answer": {
+      "id": "chk_relevance_answer",
+      "kind": "relevance",
+      "target": "footprint_wiring_answer",
+      "method": "connect footprint_wiring_answer's evidence to this session's stated goal",
+      "result": "Goal: wire footprint_is_consistent to real apply_compound aggregates. This directly does that for S_forward (apply_compound's real return value) and provides a scoped, honest path for S_reverse_implied. Addresses the goal.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "footprint_wiring_answer",
+    "statement": "ADOPTED: cand_lightweight_aggregate, scoped to the no-overlap case (matches this session's tested coverage). S_forward comes directly from a REAL forward firing via apply_compound's own return value (result['born']|result['changed']) -- no new code needed there. S_reverse_implied is computed by a new lightweight function: for the reversed matches (no overlaps case), born = reversed schema's core.born positions mapped through the reversed output_map, changed = incident-set comparison before/after for survived positions -- mirroring apply_compound's aggregation without the full LayeredGraph/registry integration (cand_reuse_apply_compound_dryrun failed its falsifier: no PerspectiveGraph-to-LayeredGraph adapter exists, real unbuilt integration work). SCOPE LIMIT, carried: this lightweight version does not incorporate resolve_compound's redirect logic, so it is only confirmed adequate for the no-overlap case already tested -- a genuine compound/overlapping reverse firing would need more.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "imported_test_found_zero_matches"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_root_cause_and_rule_misapplied"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_test_succeeds_explicit_category"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_implementation_status"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "apply_compound_returns_aggregates",
+        "layered_graph_integration_needed"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "cand_reuse_apply_compound_dryrun",
+        "cand_lightweight_aggregate"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_dryrun",
+        "chk_falsifier_lightweight"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "footprint_wiring_answer"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_answer",
+        "chk_relevance_answer"
+      ]
+    ],
+    [
+      "commit",
+      "footprint_wiring_answer"
+    ]
+  ]
+}

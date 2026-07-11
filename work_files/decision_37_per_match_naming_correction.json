@@ -1,0 +1,175 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Correct the misleading name per_rule_multiplicity: verify it's actually keyed per match instance (positional index into matches), not per distinct rule identity, and rename it accordingly."
+  },
+  "prep_note": "Sven caught the imprecise name. Prepared before checking/renaming.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_verified.json::fix_verified",
+      "claim_id": "fix_verified",
+      "statement": "Re-ran the EXACT ph_all_four test case that previously found zero matches (imported_test_found_zero_matches). After implementing the physical-switch fix (imported_fix_design: build_reversed_graph2's confirmed_crossings parameter, collect_reversed_matches passing base_graph+forward binding through to _read_boundary_externals per firing): per_rule_multiplicity is now {0: 1} (was {0: 0}), exactly 1 reversed match found, resolve_reverse_compound reports consistent=True. Verified by actual execution against the identical rule and base graph that failed before, not a different/easier test case.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_fix_design",
+            "imported_test_found_zero_matches"
+          ],
+          "rule": "re-running the same failing case after implementing the designed fix and observing the failure resolve is direct empirical confirmation"
+        }
+      ],
+      "source_path": "/home/claude/ers_physical_switch_verified.json",
+      "goals": [
+        "Verify and record the physical-switch fix's actual test result: does re-running the exact ph_all_four case that previously found zero matches now succeed?"
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_workfile_procedure_compliance.json::version_heterogeneity",
+      "claim_id": "version_heterogeneity",
+      "statement": "kb_procedure's version_note: work files should record which setter VERSION produced them; a version bump does not retroactively re-verify earlier files. Verified empirically (checked each file for version-specific markers, not memory of conversation order): 15 files ran under v0.4 (no prepare/run workflow) -- ers_reversibility_mechanics through ers_setter_gap_candidates_worklog and ers_supersession_audit/ers_where_it_failed/ers_corrected_locus/ers_incremental_caveat/ers_footprint_precheck/ers_footprint_implementation/ers_outside_match_signal. 5 files ran under v0.5 (prepare+revises, no registry): ers_reversibility_check_completion, ers_reverse_overlap_resolution, ers_compose_reversed_compound, ers_reverse_overlap_correction, ers_resolved_ruleset_as_anchor. 5 files ran under v0.6 (registry/prior_candidates): ers_and_rule_dropped_condition, ers_implementation, ers_lf6_repair, ers_physical_switch_fix, ers_physical_switch_verified. This heterogeneity was not flagged inline in most of today's individual work files and needs stating explicitly in the README index, not smoothed over.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_workfile_procedure_compliance.json",
+      "goals": [
+        "Apply ers.work_file_commit_procedure to today's ~20 local ERS work files: they must be committed to the ERS GitHub repo under work_files/, named decision_<topic>.json, with a README.md index for a batch -- not left as local-container-only files, and the perspective KB node (reversibility_classifier_design) must reference them by filename, not describe them as local-only."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::test_succeeds_explicit_category",
+      "claim_id": "test_succeeds_explicit_category",
+      "statement": "Re-tested with an explicit single-category output declaration (STRUCTURAL-out only, matching what's actually present) instead of ph_all_four: collect_reversed_matches correctly finds exactly 1 match against the real fired result, and resolve_reverse_compound correctly reports consistent=True (no overlaps for a single-rule firing, trivially consistent OV_forward==OV_reverse==empty set). Verified by actual execution, not assumption.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_fix.json::code_read_boundary_externals_is_the_and_check",
+      "claim_id": "code_read_boundary_externals_is_the_and_check",
+      "statement": "_read_boundary_externals(edits, binding, graph) (schema.py) ALREADY implements the correct AND for the forward direction: for each output node's DECLARED boundary_grab category, it reads LIVE (per this specific binding, before teardown) whether a real edge actually exists via graph.edges_from/edges_to, returning ONLY the confirmed-present (out_node -> [(type,direction,outside_node)]) categories -- declared-and-existing, not merely declared.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_physical_switch_fix.json",
+      "goals": [
+        "Fix the ph_all_four zero-match bug using Sven's physical-switch idea: when a crossing's existence AND declaration both hold (confirmed per the actual firing via _read_boundary_externals), directly exchange the placeholder mapping between the input and mapped-output sides, per binding -- rather than requiring a fixed, static, blanket set of categories (all 4 of ph_all_four) that may not all be present in any given real firing."
+      ]
+    }
+  ],
+  "claims": {
+    "sven_naming_question": {
+      "id": "sven_naming_question",
+      "statement": "Sven (direct, this session): per_rule_mult, what do you mean per rule?",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "code_confirms_per_match": {
+      "id": "code_confirms_per_match",
+      "statement": "Confirmed by reading collect_reversed_matches: the dict is keyed by idx, the positional index into the matches list (per match instance/binding), not by rule/operation identity. Two firings of the SAME rule at different bindings get two separate entries, never merged. Because build_reversed_operation uses per-binding confirmed_crossings (the physical-switch fix), two instances of the same rule can even produce different reversed graph2 objects -- reinforcing that this is per-instance, not per-rule, in two distinct ways.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "renamed": {
+      "id": "renamed",
+      "statement": "Renamed per_rule_multiplicity -> per_match_multiplicity throughout reverse_compound.py (definition, docstring, both call sites in reverse_fire). Verified: syntax OK, and the existing single-rule regression test still passes with the same result after the rename.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "sven_naming_question",
+            "code_confirms_per_match"
+          ],
+          "rule": "a name that invites the exact misreading Sven caught should be corrected, not just explained around"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_renamed": {
+      "id": "chk_falsifier_renamed",
+      "kind": "falsifier",
+      "target": "renamed",
+      "method": "did the rename miss any occurrence, leaving a stale per_rule_ reference anywhere in the file?",
+      "result": "grep confirmed zero remaining 'per_rule' occurrences in reverse_compound.py after the rename -- all 6 occurrences (definition, docstring x2, both call sites, dict comprehension) consistently updated.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "chk_relevance_renamed": {
+      "id": "chk_relevance_renamed",
+      "kind": "relevance",
+      "target": "renamed",
+      "method": "connect renamed's evidence to this session's stated goal",
+      "result": "Goal: verify and correct the misleading name. Directly confirms the naming issue and reports the completed, verified rename.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "renamed",
+    "statement": "Renamed per_rule_multiplicity -> per_match_multiplicity throughout reverse_compound.py (definition, docstring, both call sites in reverse_fire). Verified: syntax OK, and the existing single-rule regression test still passes with the same result after the rename.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "sven_naming_question",
+        "code_confirms_per_match",
+        "renamed"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_renamed",
+        "chk_relevance_renamed"
+      ]
+    ],
+    [
+      "commit",
+      "renamed"
+    ]
+  ]
+}

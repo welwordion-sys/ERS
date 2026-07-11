@@ -1,0 +1,257 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Record the step 4 fix: replaced the flattened overlap-signature comparison with direct comparison of detect_overlaps' own precise output, and verify no regression against the existing test."
+  },
+  "prep_note": "Implements ers_step4_intent_check.json's finding. Prepared before recording the result.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_step4_intent_check.json::step4_was_malformed",
+      "claim_id": "step4_was_malformed",
+      "statement": "Confirming Sven's assessment: step 4 as originally implemented (_overlap_topology_signature-based) was needlessly coarse -- it discarded already-available, already-correctly-keyed pairing information from detect_overlaps' own output for no benefit, replacing a precise, cheap, directly-available comparison with a weaker approximation. This was not a necessary simplification; it was an oversight.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "direct_comparison_valid"
+          ],
+          "rule": "a weaker check adopted in place of an available precise one, with no offsetting benefit (not cheaper, not simpler to implement), is a defect, not a design tradeoff"
+        }
+      ],
+      "source_path": "/home/claude/ers_step4_intent_check.json",
+      "goals": [
+        "Determine what step 4 (OV_forward vs OV_reverse comparison) was actually supposed to test, whether the current flat-node-set implementation achieves it, and whether it's redundant with step 2's already-established positional correspondence between forward and reverse matches."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_workfile_procedure_compliance.json::version_heterogeneity",
+      "claim_id": "version_heterogeneity",
+      "statement": "kb_procedure's version_note: work files should record which setter VERSION produced them; a version bump does not retroactively re-verify earlier files. Verified empirically (checked each file for version-specific markers, not memory of conversation order): 15 files ran under v0.4 (no prepare/run workflow) -- ers_reversibility_mechanics through ers_setter_gap_candidates_worklog and ers_supersession_audit/ers_where_it_failed/ers_corrected_locus/ers_incremental_caveat/ers_footprint_precheck/ers_footprint_implementation/ers_outside_match_signal. 5 files ran under v0.5 (prepare+revises, no registry): ers_reversibility_check_completion, ers_reverse_overlap_resolution, ers_compose_reversed_compound, ers_reverse_overlap_correction, ers_resolved_ruleset_as_anchor. 5 files ran under v0.6 (registry/prior_candidates): ers_and_rule_dropped_condition, ers_implementation, ers_lf6_repair, ers_physical_switch_fix, ers_physical_switch_verified. This heterogeneity was not flagged inline in most of today's individual work files and needs stating explicitly in the README index, not smoothed over.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_workfile_procedure_compliance.json",
+      "goals": [
+        "Apply ers.work_file_commit_procedure to today's ~20 local ERS work files: they must be committed to the ERS GitHub repo under work_files/, named decision_<topic>.json, with a README.md index for a batch -- not left as local-container-only files, and the perspective KB node (reversibility_classifier_design) must reference them by filename, not describe them as local-only."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_lf6_repair.json::corrected_resolve_reverse_compound_v2",
+      "claim_id": "corrected_resolve_reverse_compound_v2",
+      "statement": "resolve_reverse_compound is redesigned, no ordering/enumeration: (1) OV_forward = detect_overlaps run against the known forward matches+base graph (parameter-free) -- already known/recorded, exactly as footprint_is_consistent already correctly uses S_forward. (2) OV_reverse = detect_overlaps run on collect_reversed_matches's output against the result graph (also parameter-free). (3) Compare OV_forward and OV_reverse structurally. If they DIFFER, that mismatch IS a non-reversibility signal -- cheap, no isomorphism check needed. (4) If IDENTICAL, the correspondence is DIRECTLY IMPLIED by the topological match -- no ownership ambiguity remains. Proceed straight to the isomorphism check. resolve_compound (the tie-break function) is NOT NEEDED on the reverse side at all.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "own_inconsistency",
+            "sven_signal_1",
+            "sven_signal_2",
+            "imported_code_resolve_compound_signature"
+          ],
+          "rule": "using forward's known, recorded structure as ground truth eliminates the need for any ownership-resolution/enumeration on the reverse side"
+        }
+      ],
+      "source_path": "/home/claude/ers_lf6_repair.json",
+      "goals": [
+        "Repair LF6 violation in ers_reverse_overlap_correction.json: the revises targets (answer_reverse_overlap, answer_structure) were re-grounded as fresh 'given' claims to satisfy I1, silently promoting their true status (derived) -- redo using import_prior_commit, which preserves actual status/negation_handling, and re-derive the same corrected conclusions against the properly-imported claims."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::test_succeeds_explicit_category",
+      "claim_id": "test_succeeds_explicit_category",
+      "statement": "Re-tested with an explicit single-category output declaration (STRUCTURAL-out only, matching what's actually present) instead of ph_all_four: collect_reversed_matches correctly finds exactly 1 match against the real fired result, and resolve_reverse_compound correctly reports consistent=True (no overlaps for a single-rule firing, trivially consistent OV_forward==OV_reverse==empty set). Verified by actual execution, not assumption.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    }
+  ],
+  "claims": {
+    "imported_sven_original_intent": {
+      "id": "imported_sven_original_intent",
+      "statement": "The design step 4 traces back to (ers_lf6_repair.json, corrected_resolve_reverse_compound_v2): Sven's original insight was 'the existence of any compound/overlap structure in reverse matching that did not exist in the actual forward firing is itself a non-reversibility signal' -- an intent about WHICH SPECIFIC MATCHES overlap (does the same PAIR of matches that overlapped forward also overlap in reverse, at the corresponding node), not merely whether some node happens to appear in both sides' overlap sets.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_step2_already_fixes_correspondence": {
+      "id": "imported_step2_already_fixes_correspondence",
+      "statement": "Step 2 (per_match_multiplicity check, verified exactly-1 match per instance) ALREADY establishes a fixed 1:1 positional correspondence between matches[i] and reversed_matches[i] before step 4 runs -- reversed_matches[i] is not independently discovered, it is built directly from matches[i] via collect_reversed_matches. This means step 4 does NOT need to solve 'which reverse match corresponds to which forward match' -- that question is already answered by construction, index by index.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_detect_overlaps_already_has_pairing": {
+      "id": "imported_detect_overlaps_already_has_pairing",
+      "statement": "detect_overlaps' raw return already contains exactly the pairing information needed: overlapping_nodes is {real_node: set of match indices}, boundary_crossings is {(i,j): set of real nodes}. Confirmed by reading the actual code (schema.py). _overlap_topology_signature discarded this by extracting only .keys()/.values(), replacing precise pairing data with a bare set membership check -- unnecessary information loss, not a required simplification.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_direct_comparison_valid": {
+      "id": "imported_direct_comparison_valid",
+      "statement": "Given step 2's already-established guarantee (exactly one reversed match per forward match, hence reversed_matches has the SAME LENGTH and POSITIONAL correspondence as matches, index i means the same thing in both), and real node id identity being preserved across base_graph/result_graph for survived/inherited nodes (rebuild's max-id-preservation) -- ov_forward['overlapping_nodes'] and ov_reverse['overlapping_nodes'] can be compared DIRECTLY for equality (same real node keys, same index-set values), and likewise ov_forward['boundary_crossings'] vs ov_reverse['boundary_crossings'] directly by (i,j) key. No index-remapping or node-remapping logic is needed -- both correspondences already hold by construction.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_detect_overlaps_already_has_pairing",
+            "imported_step2_already_fixes_correspondence"
+          ],
+          "rule": "when both the index correspondence and the node-identity correspondence already hold by construction, the precise comparison is just direct dict equality on the raw detect_overlaps output -- no need to build any intermediate flattened signature at all (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_step4_was_malformed": {
+      "id": "imported_step4_was_malformed",
+      "statement": "Confirming Sven's assessment: step 4 as originally implemented (_overlap_topology_signature-based) was needlessly coarse -- it discarded already-available, already-correctly-keyed pairing information from detect_overlaps' own output for no benefit, replacing a precise, cheap, directly-available comparison with a weaker approximation. This was not a necessary simplification; it was an oversight.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_direct_comparison_valid"
+          ],
+          "rule": "a weaker check adopted in place of an available precise one, with no offsetting benefit (not cheaper, not simpler to implement), is a defect, not a design tradeoff (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "fixed_and_tested": {
+      "id": "fixed_and_tested",
+      "statement": "Replaced _overlap_topology_signature-based comparison in resolve_reverse_compound with direct equality comparison of ov_forward/ov_reverse's overlapping_nodes and boundary_crossings dicts, exactly as detect_overlaps already returns them -- no flattening, no information loss. Verified: syntax OK, existing single-rule regression test still passes with the same 'unresolved' result as before (this test has no overlaps, so both old and new comparisons trivially agree here -- the fix's actual benefit would show in a genuine multi-match overlapping case, still untested).",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_direct_comparison_valid",
+            "imported_step4_was_malformed"
+          ],
+          "rule": "implement the precise comparison derived from the prior session's finding and verify it against the same regression test already used throughout today"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_fixed": {
+      "id": "chk_falsifier_fixed",
+      "kind": "falsifier",
+      "target": "fixed_and_tested",
+      "method": "does this fix overclaim -- e.g. imply it's been verified against a real overlapping/compound case, when only the no-overlap regression test was run?",
+      "result": "No -- explicitly states the regression test has no overlaps, so it can't demonstrate the fix's actual discriminating power; only that nothing broke. A genuine multi-match overlapping test is still needed and named as untested, not implied to be covered.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "chk_relevance_fixed": {
+      "id": "chk_relevance_fixed",
+      "kind": "relevance",
+      "target": "fixed_and_tested",
+      "method": "connect the evidence to this session's stated goal",
+      "result": "Goal: implement and verify the step 4 fix. Directly reports the code change and the (limited) verification performed.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "fixed_and_tested",
+    "statement": "Replaced _overlap_topology_signature-based comparison in resolve_reverse_compound with direct equality comparison of ov_forward/ov_reverse's overlapping_nodes and boundary_crossings dicts, exactly as detect_overlaps already returns them -- no flattening, no information loss. Verified: syntax OK, existing single-rule regression test still passes with the same 'unresolved' result as before (this test has no overlaps, so both old and new comparisons trivially agree here -- the fix's actual benefit would show in a genuine multi-match overlapping case, still untested).",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "imported_sven_original_intent"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_step2_already_fixes_correspondence"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_detect_overlaps_already_has_pairing"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_direct_comparison_valid"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_step4_was_malformed"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "fixed_and_tested"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_fixed",
+        "chk_relevance_fixed"
+      ]
+    ],
+    [
+      "commit",
+      "fixed_and_tested"
+    ]
+  ]
+}

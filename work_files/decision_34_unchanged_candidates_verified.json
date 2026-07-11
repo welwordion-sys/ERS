@@ -1,0 +1,243 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Record the compute_unchanged_candidates implementation and its two-case verification (spectrum mismatch correctly excluded for ph_all_four; spectrum match correctly included for the explicit single-category rule)."
+  },
+  "prep_note": "Continuation of ers_schema_precompute_unchanged.json. Prepared before recording the test.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_schema_precompute_unchanged.json::combined_design",
+      "claim_id": "combined_design",
+      "statement": "Two-part precomputation, correctly scoped: (1) STATIC, schema-level, computed once per rule (new function compute_unchanged_candidates(graph2)): a node is a CANDIDATE-unchanged node iff (a) bijectively mapped (out_node in core.inherit -- already guaranteed injective, no new work) AND (b) its declared spectrum matches: internal-edges-touching-in_node union expected_crossing-categories-touching-in_node (input side) EQUALS internal-edges-touching-out_node union boundary_grab-categories-touching-out_node (output side). (2) PER-FIRING, using the already-built _read_boundary_externals: a candidate node is CONFIRMED-unchanged for a specific firing iff its confirmed crossings (exists AND declared) exactly match its declared crossings (i.e. nothing was merely-declared-but-absent for this firing, closing the ph_all_four-style gap). (3) CONNECTIVITY: confirmed-unchanged nodes connected to other confirmed-unchanged nodes extend the anchor region transitively -- flood-fill outward from any confirmed-unchanged node through edges to other confirmed-unchanged nodes.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "sven_precompute_idea",
+            "code_inherit_already_bijective",
+            "connectivity_propagation_matches_anchor_intent"
+          ],
+          "rule": "combine the free static part (bijective, already computed) with a new static spectrum-match narrowing, and require per-firing confirmation to close the declared-vs-actual gap already found this session"
+        }
+      ],
+      "source_path": "/home/claude/ers_schema_precompute_unchanged.json",
+      "goals": [
+        "Determine whether SchemaCore/compile_core could precompute, statically from graph2, which nodes are bijectively mapped (clean 1:1 inherit, no fan-in/fan-out), have an unchanged edge spectrum (same internal+crossing (type,direction) categories before/after), and are transitively connected to other such nodes -- to replace reverse_footprint_lightweight's coarse over-approximation with a precise, schema-level unchanged/changed distinction."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::test_succeeds_explicit_category",
+      "claim_id": "test_succeeds_explicit_category",
+      "statement": "Re-tested with an explicit single-category output declaration (STRUCTURAL-out only, matching what's actually present) instead of ph_all_four: collect_reversed_matches correctly finds exactly 1 match against the real fired result, and resolve_reverse_compound correctly reports consistent=True (no overlaps for a single-rule firing, trivially consistent OV_forward==OV_reverse==empty set). Verified by actual execution, not assumption.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::root_cause_and_rule_misapplied",
+      "claim_id": "root_cause_and_rule_misapplied",
+      "statement": "build_reversed_graph2's category transposition (old-output boundary_grab -> new-input expected_crossing, count=1 per declared category, the AND-rule) is valid for EXPLICIT single-category specs the rule author knows are guaranteed present (verified empirically across 83 real rule instances in ers_reversed_placeholders_and_rule_worklog.json) -- but INVALID when transposing a BLANKET ph_all_four declaration, which declares all 4 categories as POSSIBLE without guaranteeing all 4 are present in any given real firing. The reversed pattern's exact-degree matcher then requires all 4, but the real fired node only has 1, so match_all correctly returns no match -- a genuine construction defect, not a test-setup mistake.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_found_zero_matches"
+          ],
+          "rule": "an exact-equality matcher requiring N declared categories fails whenever fewer than N are actually present, and ph_all_four explicitly does not guarantee all N are present"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_verified.json::fix_verified",
+      "claim_id": "fix_verified",
+      "statement": "Re-ran the EXACT ph_all_four test case that previously found zero matches (imported_test_found_zero_matches). After implementing the physical-switch fix (imported_fix_design: build_reversed_graph2's confirmed_crossings parameter, collect_reversed_matches passing base_graph+forward binding through to _read_boundary_externals per firing): per_rule_multiplicity is now {0: 1} (was {0: 0}), exactly 1 reversed match found, resolve_reverse_compound reports consistent=True. Verified by actual execution against the identical rule and base graph that failed before, not a different/easier test case.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_fix_design",
+            "imported_test_found_zero_matches"
+          ],
+          "rule": "re-running the same failing case after implementing the designed fix and observing the failure resolve is direct empirical confirmation"
+        }
+      ],
+      "source_path": "/home/claude/ers_physical_switch_verified.json",
+      "goals": [
+        "Verify and record the physical-switch fix's actual test result: does re-running the exact ph_all_four case that previously found zero matches now succeed?"
+      ]
+    }
+  ],
+  "claims": {
+    "imported_sven_precompute_idea": {
+      "id": "imported_sven_precompute_idea",
+      "statement": "Sven (direct, this session): the schema already precomputes various things from graph2 -- did I consider having it also precompute which nodes are bijectively mapped, whether their edge spectrum is unchanged, and whether they're connected to other such nodes, to distinguish unchanged from changed nodes properly?",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_code_inherit_already_bijective": {
+      "id": "imported_code_inherit_already_bijective",
+      "statement": "compile_core's inherit assignment (schema.py) is already documented and constructed as INJECTIVE: 'each input may be inherited by AT MOST ONE output (a real node cannot become two outputs)'. core.inherit's domain (its keys, the out_nodes with an inherit entry) IS already exactly the set of bijectively-mapped nodes -- this part of Sven's idea requires NO new computation, it already exists.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_connectivity_propagation_matches_anchor_intent": {
+      "id": "imported_connectivity_propagation_matches_anchor_intent",
+      "statement": "Propagating 'unchanged' status to nodes connected to other confirmed-unchanged nodes is exactly the ANCHOR mechanism's original intent (ers_reversibility_anchor: unchanged nodes as known-identity anchors, growing correspondence outward) -- but built on a PRECISE, schema-derivable foundation (bijective + matching declared spectrum) instead of the coarse over-approximation in reverse_footprint_lightweight (which currently treats ALL touched positions as equally 'changed', explicitly flagged as capable of false mismatches).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_combined_design": {
+      "id": "imported_combined_design",
+      "statement": "Two-part precomputation, correctly scoped: (1) STATIC, schema-level, computed once per rule (new function compute_unchanged_candidates(graph2)): a node is a CANDIDATE-unchanged node iff (a) bijectively mapped (out_node in core.inherit -- already guaranteed injective, no new work) AND (b) its declared spectrum matches: internal-edges-touching-in_node union expected_crossing-categories-touching-in_node (input side) EQUALS internal-edges-touching-out_node union boundary_grab-categories-touching-out_node (output side). (2) PER-FIRING, using the already-built _read_boundary_externals: a candidate node is CONFIRMED-unchanged for a specific firing iff its confirmed crossings (exists AND declared) exactly match its declared crossings (i.e. nothing was merely-declared-but-absent for this firing, closing the ph_all_four-style gap). (3) CONNECTIVITY: confirmed-unchanged nodes connected to other confirmed-unchanged nodes extend the anchor region transitively -- flood-fill outward from any confirmed-unchanged node through edges to other confirmed-unchanged nodes.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_sven_precompute_idea",
+            "imported_code_inherit_already_bijective",
+            "imported_connectivity_propagation_matches_anchor_intent"
+          ],
+          "rule": "combine the free static part (bijective, already computed) with a new static spectrum-match narrowing, and require per-firing confirmation to close the declared-vs-actual gap already found this session (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "implemented_and_tested_unchanged_candidates": {
+      "id": "implemented_and_tested_unchanged_candidates",
+      "statement": "Implemented compute_unchanged_candidates in reversed_rule.py (plus helpers _input_internal_edges, _node_spectrum): for each core.inherit pair (already guaranteed injective/bijective, no new work there), compares declared (type,direction) spectrum between input and output side, returning candidates only where they match EXACTLY. Tested against two cases: (1) the ph_all_four toy rule (output declares 4 categories, input declares 1) -- correctly returns EMPTY (spectra genuinely differ, not just presence). (2) an explicit single-category rule (both sides declare exactly (STRUCTURAL,'out')) -- correctly returns the (in_A, out_B) pair as a candidate. Both verified by actual execution.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_combined_design",
+            "imported_sven_precompute_idea",
+            "imported_code_inherit_already_bijective"
+          ],
+          "rule": "implement per the committed combined design and verify both the negative (mismatch) and positive (match) case against real graph2 examples already used this session"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_unchanged_candidates": {
+      "id": "chk_falsifier_unchanged_candidates",
+      "kind": "falsifier",
+      "target": "implemented_and_tested_unchanged_candidates",
+      "method": "is this still just NECESSARY-not-sufficient as designed, or does the implementation accidentally overclaim sufficiency somewhere (e.g. in a docstring or return value name that implies confirmed rather than candidate)?",
+      "result": "Checked: function is explicitly named compute_UNCHANGED_CANDIDATES (not compute_unchanged), and its docstring states 'NECESSARY, NOT SUFFICIENT' explicitly, directing callers to combine with per-firing confirmed crossings. No part of the implementation claims more than candidate status.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "chk_relevance_unchanged_candidates": {
+      "id": "chk_relevance_unchanged_candidates",
+      "kind": "relevance",
+      "target": "implemented_and_tested_unchanged_candidates",
+      "method": "connect the evidence to this session's stated goal",
+      "result": "Goal: record the implementation and its two-case verification. Directly reports both, addressing the goal.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "implemented_and_tested_unchanged_candidates",
+    "statement": "Implemented compute_unchanged_candidates in reversed_rule.py (plus helpers _input_internal_edges, _node_spectrum): for each core.inherit pair (already guaranteed injective/bijective, no new work there), compares declared (type,direction) spectrum between input and output side, returning candidates only where they match EXACTLY. Tested against two cases: (1) the ph_all_four toy rule (output declares 4 categories, input declares 1) -- correctly returns EMPTY (spectra genuinely differ, not just presence). (2) an explicit single-category rule (both sides declare exactly (STRUCTURAL,'out')) -- correctly returns the (in_A, out_B) pair as a candidate. Both verified by actual execution.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "imported_sven_precompute_idea"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_code_inherit_already_bijective"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_connectivity_propagation_matches_anchor_intent"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_combined_design"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "implemented_and_tested_unchanged_candidates"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_unchanged_candidates",
+        "chk_relevance_unchanged_candidates"
+      ]
+    ],
+    [
+      "commit",
+      "implemented_and_tested_unchanged_candidates"
+    ]
+  ]
+}

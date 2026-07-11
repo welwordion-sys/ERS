@@ -1,0 +1,197 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Wire the validated apply_compound stub into the full reverse_fire pipeline: (1) compute S_forward via apply_compound on the real matches/base_graph, replacing the rebuild()-output_map stand-in. (2) Replace reverse_footprint_lightweight's hand-rolled per-match logic with apply_compound on reversed_matches/result_graph, giving S_reverse_implied AND the reconstructed graph in one call. (3) Rewrite check_isomorphism_anchored to use this reconstruction directly, removing the len(matches)!=1 gate since apply_compound already generalizes to N matches. (4) Regression-test the single-rule case and run the previously-blocked two-rule compound case through the complete pipeline for the first time."
+  },
+  "prep_note": "Working to completion, per Sven. Prepared before any implementation.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_reverse_fire_implemented.json::implemented_and_tested",
+      "claim_id": "implemented_and_tested",
+      "statement": "Implemented in reverse_compound.py: reverse_footprint_lightweight (coarse S_reverse_implied, over-approximates by including ALL survived positions not just changed ones -- explicitly documented as capable of producing false mismatches, not swept under) and reverse_fire (orchestrator: collect_reversed_matches -> per-rule-multiplicity check -> resolve_reverse_compound -> footprint_is_consistent -> stops, correctly refusing to claim 'reversible: True' since the isomorphism check does not exist). Tested end to end for the first time: using rebuild()'s output_map as a stand-in S_forward (no apply_compound/LayeredGraph adapter exists, per imported_layered_graph_integration_needed), the full pipeline ran, footprint and overlap checks both passed, and the result correctly reports 'unresolved' rather than 'reversible: True' -- verified by actual execution, not asserted.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_footprint_wiring_answer",
+            "imported_apply_compound_returns_aggregates",
+            "imported_layered_graph_integration_needed"
+          ],
+          "rule": "implement per the committed design, test against the same single-rule case already exercised this session, and report exactly what passed and what remains explicitly unresolved"
+        }
+      ],
+      "source_path": "/home/claude/ers_reverse_fire_implemented.json",
+      "goals": [
+        "Record the reverse_fire orchestrator implementation and its first end-to-end test result, including the honest scope limits (coarse footprint approximation, no-overlap-only, no isomorphism check, stand-in S_forward since no apply_compound/LayeredGraph adapter exists)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_lf6_repair.json::corrected_resolve_reverse_compound_v2",
+      "claim_id": "corrected_resolve_reverse_compound_v2",
+      "statement": "resolve_reverse_compound is redesigned, no ordering/enumeration: (1) OV_forward = detect_overlaps run against the known forward matches+base graph (parameter-free) -- already known/recorded, exactly as footprint_is_consistent already correctly uses S_forward. (2) OV_reverse = detect_overlaps run on collect_reversed_matches's output against the result graph (also parameter-free). (3) Compare OV_forward and OV_reverse structurally. If they DIFFER, that mismatch IS a non-reversibility signal -- cheap, no isomorphism check needed. (4) If IDENTICAL, the correspondence is DIRECTLY IMPLIED by the topological match -- no ownership ambiguity remains. Proceed straight to the isomorphism check. resolve_compound (the tie-break function) is NOT NEEDED on the reverse side at all.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "own_inconsistency",
+            "sven_signal_1",
+            "sven_signal_2",
+            "imported_code_resolve_compound_signature"
+          ],
+          "rule": "using forward's known, recorded structure as ground truth eliminates the need for any ownership-resolution/enumeration on the reverse side"
+        }
+      ],
+      "source_path": "/home/claude/ers_lf6_repair.json",
+      "goals": [
+        "Repair LF6 violation in ers_reverse_overlap_correction.json: the revises targets (answer_reverse_overlap, answer_structure) were re-grounded as fresh 'given' claims to satisfy I1, silently promoting their true status (derived) -- redo using import_prior_commit, which preserves actual status/negation_handling, and re-derive the same corrected conclusions against the properly-imported claims."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_isomorphism_check.json::isomorphism_design",
+      "claim_id": "isomorphism_design",
+      "statement": "ADOPTED: cand_bfs_direct_comparison, WITH the falsifier's correction incorporated: (1) build the candidate reconstruction via rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) -- reusing the proven mechanism, no new materialization logic. (2) Pick anchor from the CONFIRMED-unchanged set (not from an arbitrary match_all binding). (3) BFS-grow a correspondence from the anchor: for INHERITED/confirmed-unchanged real nodes, compare incident edges by DIRECT real-id equality (same physical node, by construction). For BORN/reconstructed nodes (freshly minted, no shared id with base_graph possible), compare STRUCTURALLY instead -- find whether some node in base_graph, adjacent to the already-confirmed correspondence, has matching edge structure relative to what's already anchored; require this structural match, not id equality, for born positions specifically. (4) Require full coverage: every node in both the reconstruction and base_graph must be reached by the BFS; unreached/disconnected nodes are a coverage gap, not a silent pass. Rejected: cand_seeded_match_all (failed its falsifier -- derive_match_view requires graph2-specific scaffolding a plain materialized graph doesn't have; a confirmed blocker, not an inconvenience).",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "sven_hints",
+            "rebuild_is_reusable_for_reconstruction",
+            "anchor_source_is_confirmed_unchanged_not_arbitrary"
+          ],
+          "rule": "adopt the candidate that survived its falsifier, incorporating the real correction it surfaced (born nodes need structural not id-based matching), and reject the one shown to have a concrete, confirmed blocker"
+        }
+      ],
+      "source_path": "/home/claude/ers_isomorphism_check.json",
+      "goals": [
+        "Implement the isomorphism check (refined_classifier's final, still-unbuilt piece): choose an anchor from a CONFIRMED-unchanged node (not from match_all's arbitrary resolution), use it to seed a structural correspondence, materialize ('build') the reconstructed candidate layer, and compare it against the retained previous layer (base_graph)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_isomorphism_implemented.json::imported_isomorphism_design",
+      "claim_id": "imported_isomorphism_design",
+      "statement": "ADOPTED: cand_bfs_direct_comparison, WITH the falsifier's correction incorporated: (1) build the candidate reconstruction via rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) -- reusing the proven mechanism, no new materialization logic. (2) Pick anchor from the CONFIRMED-unchanged set (not from an arbitrary match_all binding). (3) BFS-grow a correspondence from the anchor: for INHERITED/confirmed-unchanged real nodes, compare incident edges by DIRECT real-id equality (same physical node, by construction). For BORN/reconstructed nodes (freshly minted, no shared id with base_graph possible), compare STRUCTURALLY instead -- find whether some node in base_graph, adjacent to the already-confirmed correspondence, has matching edge structure relative to what's already anchored; require this structural match, not id equality, for born positions specifically. (4) Require full coverage: every node in both the reconstruction and base_graph must be reached by the BFS; unreached/disconnected nodes are a coverage gap, not a silent pass. Rejected: cand_seeded_match_all (failed its falsifier -- derive_match_view requires graph2-specific scaffolding a plain materialized graph doesn't have; a confirmed blocker, not an inconvenience).",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_sven_hints",
+            "imported_rebuild_is_reusable_for_reconstruction",
+            "imported_anchor_source_is_confirmed_unchanged_not_arbitrary"
+          ],
+          "rule": "adopt the candidate that survived its falsifier, incorporating the real correction it surfaced (born nodes need structural not id-based matching), and reject the one shown to have a concrete, confirmed blocker (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_isomorphism_implemented.json",
+      "goals": [
+        "Record the implemented check_isomorphism_anchored and its two-case test: positive case (genuine match) returns reversible:True with a confirmed anchor; negative case (deliberately corrupted retained layer) correctly returns reversible:False with the exact edge mismatch, confirming the check can genuinely fail, not just default to True."
+      ]
+    }
+  ],
+  "claims": {
+    "apply_compound_gives_exact_unchanged": {
+      "id": "apply_compound_gives_exact_unchanged",
+      "statement": "apply_compound's real 'changed' set (base_incident != result_incident, an EXACT structural comparison already computed) makes 'survived - changed' the PRECISE, authoritative answer to 'which nodes are unchanged' -- more precise than compute_unchanged_candidates' static declared-spectrum heuristic (which was explicitly NECESSARY-not-sufficient, requiring a separate per-firing confirmed-crossings check to close the gap). Once apply_compound is used on both forward and reverse sides, the anchor for check_isomorphism_anchored can be picked directly from (survived - changed), no separate compute_unchanged_candidates call needed for correctness (it may still have value as a cheap static pre-filter before running the heavier apply_compound, but is not required for THIS wiring).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "wiring_plan": {
+      "id": "wiring_plan",
+      "statement": "(1) compute_s_forward(matches, base_graph): stub=PlainGraphLayeredStub(base_graph); result=apply_compound(stub,registry,'base','new',matches); return result['born']|result['changed']. (2) compute_reverse_reconstruction(reversed_matches, result_graph): same pattern, returns (recon_graph via stub.materialize_result('new'), s_reverse_implied=result['born']|result['changed'], unchanged_survivors=survived-changed for anchor selection). (3) check_isomorphism_anchored rewritten to take recon_graph + unchanged_survivors directly (no per-match rebuild(), no len(matches)==1 gate) -- BFS from an unchanged_survivors anchor exactly as before, comparing recon_graph against base_graph. (4) A redirect cycle (apply_compound raising ValueError) on the REVERSE side is itself caught and reported as reversible:False (an unresolvable reverse structure is a genuine non-reversibility signal, not a crash) -- on the FORWARD side no new cycle risk exists since it recomputes an already-successful historical firing.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "apply_compound_gives_exact_unchanged"
+          ],
+          "rule": "use the newly-validated stub for both forward and reverse aggregation, simplifying anchor selection to the exact answer apply_compound already computes"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_wiring_plan": {
+      "id": "chk_falsifier_wiring_plan",
+      "kind": "falsifier",
+      "target": "wiring_plan",
+      "method": "does using apply_compound on the reverse side risk a different kind of false result -- e.g. could a redirect cycle on the reverse side occur even for a GENUINELY reversible ruleset, making this too strict?",
+      "result": "Plausible but not yet observed: a redirect cycle means the reversed matches' mutual crossing structure cannot be resolved into any single coherent order -- if the FORWARD firing was itself acyclic (which it must have been, since it fired successfully), does REVERSING it necessarily preserve acyclicity? Not proven either way this session; declaring as a carried, untested risk rather than assumed safe.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "whether reversing an acyclic forward compound structure can ever introduce a NEW redirect cycle on the reverse side (making a genuinely reversible ruleset falsely rejected) is untested",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "chk_relevance_wiring_plan": {
+      "id": "chk_relevance_wiring_plan",
+      "kind": "relevance",
+      "target": "wiring_plan",
+      "method": "connect the evidence to this session's stated goal",
+      "result": "Goal: wire the stub into the full pipeline, simplify anchor selection, remove the N=1 gate. wiring_plan directly specifies all four parts of this.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "wiring_plan",
+    "statement": "(1) compute_s_forward(matches, base_graph): stub=PlainGraphLayeredStub(base_graph); result=apply_compound(stub,registry,'base','new',matches); return result['born']|result['changed']. (2) compute_reverse_reconstruction(reversed_matches, result_graph): same pattern, returns (recon_graph via stub.materialize_result('new'), s_reverse_implied=result['born']|result['changed'], unchanged_survivors=survived-changed for anchor selection). (3) check_isomorphism_anchored rewritten to take recon_graph + unchanged_survivors directly (no per-match rebuild(), no len(matches)==1 gate) -- BFS from an unchanged_survivors anchor exactly as before, comparing recon_graph against base_graph. (4) A redirect cycle (apply_compound raising ValueError) on the REVERSE side is itself caught and reported as reversible:False (an unresolvable reverse structure is a genuine non-reversibility signal, not a crash) -- on the FORWARD side no new cycle risk exists since it recomputes an already-successful historical firing.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "apply_compound_gives_exact_unchanged",
+        "wiring_plan"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_wiring_plan",
+        "chk_relevance_wiring_plan"
+      ]
+    ],
+    [
+      "commit",
+      "wiring_plan"
+    ]
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "goals": {
+    "g1": "Which of today's logic failures are gaps in the ERS setter/protocol itself (a future addition could mechanically catch them), versus failures of my own discipline in using the existing setter correctly?"
+  },
+  "claims": {
+    "fail_retroactive": {
+      "id": "fail_retroactive",
+      "statement": "Repeatedly reasoned in prose first, then wrote ground/check/derive/commit to document a conclusion already reached -- called out 3+ times today. The setter has no field distinguishing 'checked before the conclusion existed' from 'checked to justify an existing conclusion' -- both look identical in a worklog.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "fail_relevance": {
+      "id": "fail_relevance",
+      "statement": "Cited mapping_in/inherit/core.delete (id-bookkeeping evidence) to answer a reversibility-classification question (a boundary/crossing property) -- an evidence-goal category mismatch. Falsifier checks run against these claims tested internal coherence only, never whether the cited evidence actually bore on the stated session goal.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "fail_discrimination": {
+      "id": "fail_discrimination",
+      "statement": "Argued add_finalise's zero-trace nodes were 'reconstructable-by-construction' because pattern-constant, checked against ONE example, never checked whether that criterion is true of EVERY rule (it is -- proven too much). No check was run against a case where the target property should come out differently.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "fail_cross_session_consistency": {
+      "id": "fail_cross_session_consistency",
+      "statement": "Characterized compound/outside-region matches as noise that 'corrupts' the distinct-match check -- this directly contradicted the already-committed refined_classifier definition (unqualified: any additional match = not reversible). No check was run against the actual text of that prior commitment before writing the new characterization.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    },
+    "candidate_additions": {
+      "id": "candidate_additions",
+      "statement": "Four candidate ERS additions, in decreasing order of how mechanically enforceable they are: (1) RELEVANCE check kind -- require, for any derived claim addressing the session goal, an explicit statement connecting cited evidence to the goal_statements; a falsifier that only tests internal coherence does not satisfy this. (2) DISCRIMINATION check kind -- for any claim explaining why a property differs across instances, require a check against at least one instance where the property is expected to come out differently; passing only on the instance at hand does not satisfy this. (3) CONSISTENCY check kind -- before grounding a claim that characterizes/qualifies an already-committed definition from a prior session, require a check that quotes and compares against that prior commitment's actual text. (4) Session-level RETROACTIVITY metric -- extend meta.workflow's existing ers_audit_metrics (which already classifies commit refusals as conclusion-changing vs file-only) to also report the ratio of check() outcomes that are survived vs failed/branch_traced across a whole session, as a detectability proxy for retroactive grounding.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "fail_retroactive",
+            "fail_relevance",
+            "fail_discrimination",
+            "fail_cross_session_consistency"
+          ],
+          "rule": "each named failure maps to a specific missing mechanical check; enumerate them as concrete, separately implementable protocol additions rather than a general resolve-to-be-more-careful"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": ""
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_classify_failures": {
+      "id": "chk_classify_failures",
+      "kind": "obligation",
+      "target": "fail_retroactive",
+      "method": "for each failure, determine: is this a setter-mechanical gap (a new check/field could catch it) or a discipline gap (the setter already has the right shape, I just didn't use it)?",
+      "result": "fail_retroactive: partially mechanical -- the setter cannot see timing, but it COULD track a proxy: ratio of check() outcomes that are 'survived' (affirming) vs 'failed'/'branch_traced' (conclusion-changing) across a session. A session with suspiciously few conclusion-changing checks relative to its claim count is a detectable smell, already partially gestured at by meta.workflow's ers_audit_metrics (which tracks this for COMMIT refusals, not for check() outcomes generally). fail_relevance: mechanical gap -- no existing check 'kind' requires citing evidence back to the goal_statements; falsifier only tests internal coherence of a claim, never its relevance. A new check kind (relevance) requiring an explicit goal-connection statement would catch this class. fail_discrimination: mechanical gap -- no existing check requires testing an explanatory criterion against a NEGATIVE instance (a case where the target property should differ). A new check kind (discrimination) requiring this for any claim phrased as 'X explains why P differs' would catch this class. fail_cross_session_consistency: mechanical gap -- nothing in ground() forces a diff against prior committed claims on the same subject before asserting a new characterization; a required check kind (consistency) comparing new text against retrieved prior commitments would catch this class.",
+      "outcome": "branch_traced",
+      "side_findings": null
+    },
+    "chk_falsifier_candidates": {
+      "id": "chk_falsifier_candidates",
+      "kind": "falsifier",
+      "target": "candidate_additions",
+      "method": "would these four additions actually have caught today's failures if they existed BEFORE today's session, or are they post-hoc rationalizations fitted to what already went wrong?",
+      "result": "Reasonably well-fitted, checkable: (1) relevance would have forced an explicit goal-connection statement for the mapping_in claims, which -- if honestly written -- could not have connected 'which id survives a merge' to 'is this rule reversible', likely surfacing the mismatch before commit. (2) discrimination would have forced checking pattern-constancy against a second rule instance, which immediately shows it holds universally and discriminates nothing -- this is the exact check that WAS eventually run (in ers_where_it_failed) but only after Sven's prompt, not as a standing requirement. (3) consistency would have forced quoting refined_classifier's actual 'exactly one candidate reconstruction, no exception' wording before writing the noise-framing docstring. These are not guaranteed to have caught everything (a dishonest or careless relevance/consistency statement could still pass), but they target the specific failure shapes observed, not generic caution.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "candidate_additions",
+    "statement": "Four candidate ERS additions, in decreasing order of how mechanically enforceable they are: (1) RELEVANCE check kind -- require, for any derived claim addressing the session goal, an explicit statement connecting cited evidence to the goal_statements; a falsifier that only tests internal coherence does not satisfy this. (2) DISCRIMINATION check kind -- for any claim explaining why a property differs across instances, require a check against at least one instance where the property is expected to come out differently; passing only on the instance at hand does not satisfy this. (3) CONSISTENCY check kind -- before grounding a claim that characterizes/qualifies an already-committed definition from a prior session, require a check that quotes and compares against that prior commitment's actual text. (4) Session-level RETROACTIVITY metric -- extend meta.workflow's existing ers_audit_metrics (which already classifies commit refusals as conclusion-changing vs file-only) to also report the ratio of check() outcomes that are survived vs failed/branch_traced across a whole session, as a detectability proxy for retroactive grounding.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "fail_retroactive",
+        "fail_relevance",
+        "fail_discrimination",
+        "fail_cross_session_consistency"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_classify_failures"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "candidate_additions"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_candidates"
+      ]
+    ],
+    [
+      "commit",
+      "candidate_additions"
+    ]
+  ]
+}

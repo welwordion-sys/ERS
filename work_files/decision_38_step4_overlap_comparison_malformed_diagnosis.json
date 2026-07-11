@@ -1,0 +1,230 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Determine what step 4 (OV_forward vs OV_reverse comparison) was actually supposed to test, whether the current flat-node-set implementation achieves it, and whether it's redundant with step 2's already-established positional correspondence between forward and reverse matches."
+  },
+  "prep_note": "Sven pushed on whether step 4 is malformed. Prepared before re-deriving its actual purpose.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_lf6_repair.json::corrected_resolve_reverse_compound_v2",
+      "claim_id": "corrected_resolve_reverse_compound_v2",
+      "statement": "resolve_reverse_compound is redesigned, no ordering/enumeration: (1) OV_forward = detect_overlaps run against the known forward matches+base graph (parameter-free) -- already known/recorded, exactly as footprint_is_consistent already correctly uses S_forward. (2) OV_reverse = detect_overlaps run on collect_reversed_matches's output against the result graph (also parameter-free). (3) Compare OV_forward and OV_reverse structurally. If they DIFFER, that mismatch IS a non-reversibility signal -- cheap, no isomorphism check needed. (4) If IDENTICAL, the correspondence is DIRECTLY IMPLIED by the topological match -- no ownership ambiguity remains. Proceed straight to the isomorphism check. resolve_compound (the tie-break function) is NOT NEEDED on the reverse side at all.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "own_inconsistency",
+            "sven_signal_1",
+            "sven_signal_2",
+            "imported_code_resolve_compound_signature"
+          ],
+          "rule": "using forward's known, recorded structure as ground truth eliminates the need for any ownership-resolution/enumeration on the reverse side"
+        }
+      ],
+      "source_path": "/home/claude/ers_lf6_repair.json",
+      "goals": [
+        "Repair LF6 violation in ers_reverse_overlap_correction.json: the revises targets (answer_reverse_overlap, answer_structure) were re-grounded as fresh 'given' claims to satisfy I1, silently promoting their true status (derived) -- redo using import_prior_commit, which preserves actual status/negation_handling, and re-derive the same corrected conclusions against the properly-imported claims."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::test_succeeds_explicit_category",
+      "claim_id": "test_succeeds_explicit_category",
+      "statement": "Re-tested with an explicit single-category output declaration (STRUCTURAL-out only, matching what's actually present) instead of ph_all_four: collect_reversed_matches correctly finds exactly 1 match against the real fired result, and resolve_reverse_compound correctly reports consistent=True (no overlaps for a single-rule firing, trivially consistent OV_forward==OV_reverse==empty set). Verified by actual execution, not assumption.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::test_found_zero_matches",
+      "claim_id": "test_found_zero_matches",
+      "statement": "End-to-end test (synthetic bijective rule, real firing via rebuild()): collect_reversed_matches found ZERO matches against the actual fired result, where exactly one was expected. Debugged: the forward rule's output side used ph_all_four (blanket 'preserve all 4 categories if present'), but the REAL firing only actually had 1 of those 4 categories present (STRUCTURAL-out to the external node X) -- the other 3 (STRUCTURAL-in, OPERATIONAL-out, OPERATIONAL-in) were declared-but-absent, which ph_all_four's own docstring says is harmless ('a keep-filter, not a degree count').",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_fix.json::code_read_boundary_externals_is_the_and_check",
+      "claim_id": "code_read_boundary_externals_is_the_and_check",
+      "statement": "_read_boundary_externals(edits, binding, graph) (schema.py) ALREADY implements the correct AND for the forward direction: for each output node's DECLARED boundary_grab category, it reads LIVE (per this specific binding, before teardown) whether a real edge actually exists via graph.edges_from/edges_to, returning ONLY the confirmed-present (out_node -> [(type,direction,outside_node)]) categories -- declared-and-existing, not merely declared.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_physical_switch_fix.json",
+      "goals": [
+        "Fix the ph_all_four zero-match bug using Sven's physical-switch idea: when a crossing's existence AND declaration both hold (confirmed per the actual firing via _read_boundary_externals), directly exchange the placeholder mapping between the input and mapped-output sides, per binding -- rather than requiring a fixed, static, blanket set of categories (all 4 of ph_all_four) that may not all be present in any given real firing."
+      ]
+    }
+  ],
+  "claims": {
+    "sven_original_intent": {
+      "id": "sven_original_intent",
+      "statement": "The design step 4 traces back to (ers_lf6_repair.json, corrected_resolve_reverse_compound_v2): Sven's original insight was 'the existence of any compound/overlap structure in reverse matching that did not exist in the actual forward firing is itself a non-reversibility signal' -- an intent about WHICH SPECIFIC MATCHES overlap (does the same PAIR of matches that overlapped forward also overlap in reverse, at the corresponding node), not merely whether some node happens to appear in both sides' overlap sets.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "step2_already_fixes_correspondence": {
+      "id": "step2_already_fixes_correspondence",
+      "statement": "Step 2 (per_match_multiplicity check, verified exactly-1 match per instance) ALREADY establishes a fixed 1:1 positional correspondence between matches[i] and reversed_matches[i] before step 4 runs -- reversed_matches[i] is not independently discovered, it is built directly from matches[i] via collect_reversed_matches. This means step 4 does NOT need to solve 'which reverse match corresponds to which forward match' -- that question is already answered by construction, index by index.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "current_impl_discards_pairing": {
+      "id": "current_impl_discards_pairing",
+      "statement": "The current _overlap_topology_signature implementation flattens detect_overlaps' output to a bare SET of real nodes touched by ANY overlap, discarding WHICH match indices are involved. Given step2_already_fixes_correspondence, this throws away exactly the information (which pair of matches overlaps where) that would let the comparison verify Sven's actual stated intent -- it can only catch 'overlap touches a totally different set of nodes', not 'the same node is contested by a different pairing than forward had, or a pairing that forward had is missing in reverse'.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "sven_original_intent",
+            "step2_already_fixes_correspondence"
+          ],
+          "rule": "an intent stated in terms of match-pair correspondence cannot be verified by a check that discards match identity entirely"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "detect_overlaps_already_has_pairing": {
+      "id": "detect_overlaps_already_has_pairing",
+      "statement": "detect_overlaps' raw return already contains exactly the pairing information needed: overlapping_nodes is {real_node: set of match indices}, boundary_crossings is {(i,j): set of real nodes}. Confirmed by reading the actual code (schema.py). _overlap_topology_signature discarded this by extracting only .keys()/.values(), replacing precise pairing data with a bare set membership check -- unnecessary information loss, not a required simplification.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "direct_comparison_valid": {
+      "id": "direct_comparison_valid",
+      "statement": "Given step 2's already-established guarantee (exactly one reversed match per forward match, hence reversed_matches has the SAME LENGTH and POSITIONAL correspondence as matches, index i means the same thing in both), and real node id identity being preserved across base_graph/result_graph for survived/inherited nodes (rebuild's max-id-preservation) -- ov_forward['overlapping_nodes'] and ov_reverse['overlapping_nodes'] can be compared DIRECTLY for equality (same real node keys, same index-set values), and likewise ov_forward['boundary_crossings'] vs ov_reverse['boundary_crossings'] directly by (i,j) key. No index-remapping or node-remapping logic is needed -- both correspondences already hold by construction.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "detect_overlaps_already_has_pairing",
+            "step2_already_fixes_correspondence"
+          ],
+          "rule": "when both the index correspondence and the node-identity correspondence already hold by construction, the precise comparison is just direct dict equality on the raw detect_overlaps output -- no need to build any intermediate flattened signature at all"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "step4_was_malformed": {
+      "id": "step4_was_malformed",
+      "statement": "Confirming Sven's assessment: step 4 as originally implemented (_overlap_topology_signature-based) was needlessly coarse -- it discarded already-available, already-correctly-keyed pairing information from detect_overlaps' own output for no benefit, replacing a precise, cheap, directly-available comparison with a weaker approximation. This was not a necessary simplification; it was an oversight.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "direct_comparison_valid"
+          ],
+          "rule": "a weaker check adopted in place of an available precise one, with no offsetting benefit (not cheaper, not simpler to implement), is a defect, not a design tradeoff"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_step4_malformed": {
+      "id": "chk_falsifier_step4_malformed",
+      "kind": "falsifier",
+      "target": "step4_was_malformed",
+      "method": "is there any case where the flat signature comparison is MORE correct than direct dict comparison -- e.g. does direct comparison risk false mismatches from node-identity differences that shouldn't matter (e.g. two DIFFERENT but equivalent real nodes)?",
+      "result": "No identified case: for survived nodes, real identity is literally preserved (same Node object/id), so direct comparison is exact, not approximate. For BORN positions, neither ov_forward's overlapping_nodes (base_graph has no born nodes yet) nor ov_reverse's (result_graph's born-reconstruction targets don't exist as real nodes to match against) would populate these dicts with born-related entries in a comparable way -- this comparison is scoped to survived/inherited nodes' overlap structure, consistent with how the rest of today's design already treats born positions separately (unconditionally in the footprint, never claimed to be checked by the overlap comparison).",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "chk_relevance_step4_malformed": {
+      "id": "chk_relevance_step4_malformed",
+      "kind": "relevance",
+      "target": "step4_was_malformed",
+      "method": "connect the evidence to this session's stated goal",
+      "result": "Goal: determine what step 4 was supposed to test and whether the current implementation achieves it. Directly answers both, identifies the defect, and derives the precise fix.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "step4_was_malformed",
+    "statement": "Confirming Sven's assessment: step 4 as originally implemented (_overlap_topology_signature-based) was needlessly coarse -- it discarded already-available, already-correctly-keyed pairing information from detect_overlaps' own output for no benefit, replacing a precise, cheap, directly-available comparison with a weaker approximation. This was not a necessary simplification; it was an oversight.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "sven_original_intent",
+        "step2_already_fixes_correspondence",
+        "current_impl_discards_pairing"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "detect_overlaps_already_has_pairing",
+        "direct_comparison_valid",
+        "step4_was_malformed"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_step4_malformed",
+        "chk_relevance_step4_malformed"
+      ]
+    ],
+    [
+      "commit",
+      "step4_was_malformed"
+    ]
+  ]
+}

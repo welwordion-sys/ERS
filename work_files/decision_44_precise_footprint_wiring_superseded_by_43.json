@@ -1,0 +1,213 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Wire compute_unchanged_candidates into reverse_footprint_lightweight, replacing the coarse over-approximation (all touched positions) with the precise unchanged/changed distinction: a candidate node is excluded from S_reverse_implied only if it is CONFIRMED unchanged for this specific firing (candidate per compute_unchanged_candidates AND its confirmed crossings equal its declared crossings via _read_boundary_externals); everything else counts as changed."
+  },
+  "prep_note": "Closes the imprecision flagged in ers_reverse_fire_implemented.json. Prepared before implementing.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_schema_precompute_unchanged.json::combined_design",
+      "claim_id": "combined_design",
+      "statement": "Two-part precomputation, correctly scoped: (1) STATIC, schema-level, computed once per rule (new function compute_unchanged_candidates(graph2)): a node is a CANDIDATE-unchanged node iff (a) bijectively mapped (out_node in core.inherit -- already guaranteed injective, no new work) AND (b) its declared spectrum matches: internal-edges-touching-in_node union expected_crossing-categories-touching-in_node (input side) EQUALS internal-edges-touching-out_node union boundary_grab-categories-touching-out_node (output side). (2) PER-FIRING, using the already-built _read_boundary_externals: a candidate node is CONFIRMED-unchanged for a specific firing iff its confirmed crossings (exists AND declared) exactly match its declared crossings (i.e. nothing was merely-declared-but-absent for this firing, closing the ph_all_four-style gap). (3) CONNECTIVITY: confirmed-unchanged nodes connected to other confirmed-unchanged nodes extend the anchor region transitively -- flood-fill outward from any confirmed-unchanged node through edges to other confirmed-unchanged nodes.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "sven_precompute_idea",
+            "code_inherit_already_bijective",
+            "connectivity_propagation_matches_anchor_intent"
+          ],
+          "rule": "combine the free static part (bijective, already computed) with a new static spectrum-match narrowing, and require per-firing confirmation to close the declared-vs-actual gap already found this session"
+        }
+      ],
+      "source_path": "/home/claude/ers_schema_precompute_unchanged.json",
+      "goals": [
+        "Determine whether SchemaCore/compile_core could precompute, statically from graph2, which nodes are bijectively mapped (clean 1:1 inherit, no fan-in/fan-out), have an unchanged edge spectrum (same internal+crossing (type,direction) categories before/after), and are transitively connected to other such nodes -- to replace reverse_footprint_lightweight's coarse over-approximation with a precise, schema-level unchanged/changed distinction."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_unchanged_candidates_verified.json::imported_combined_design",
+      "claim_id": "imported_combined_design",
+      "statement": "Two-part precomputation, correctly scoped: (1) STATIC, schema-level, computed once per rule (new function compute_unchanged_candidates(graph2)): a node is a CANDIDATE-unchanged node iff (a) bijectively mapped (out_node in core.inherit -- already guaranteed injective, no new work) AND (b) its declared spectrum matches: internal-edges-touching-in_node union expected_crossing-categories-touching-in_node (input side) EQUALS internal-edges-touching-out_node union boundary_grab-categories-touching-out_node (output side). (2) PER-FIRING, using the already-built _read_boundary_externals: a candidate node is CONFIRMED-unchanged for a specific firing iff its confirmed crossings (exists AND declared) exactly match its declared crossings (i.e. nothing was merely-declared-but-absent for this firing, closing the ph_all_four-style gap). (3) CONNECTIVITY: confirmed-unchanged nodes connected to other confirmed-unchanged nodes extend the anchor region transitively -- flood-fill outward from any confirmed-unchanged node through edges to other confirmed-unchanged nodes.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_sven_precompute_idea",
+            "imported_code_inherit_already_bijective",
+            "imported_connectivity_propagation_matches_anchor_intent"
+          ],
+          "rule": "combine the free static part (bijective, already computed) with a new static spectrum-match narrowing, and require per-firing confirmation to close the declared-vs-actual gap already found this session (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_unchanged_candidates_verified.json",
+      "goals": [
+        "Record the compute_unchanged_candidates implementation and its two-case verification (spectrum mismatch correctly excluded for ph_all_four; spectrum match correctly included for the explicit single-category rule)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_schema_precompute_unchanged.json::connectivity_propagation_matches_anchor_intent",
+      "claim_id": "connectivity_propagation_matches_anchor_intent",
+      "statement": "Propagating 'unchanged' status to nodes connected to other confirmed-unchanged nodes is exactly the ANCHOR mechanism's original intent (ers_reversibility_anchor: unchanged nodes as known-identity anchors, growing correspondence outward) -- but built on a PRECISE, schema-derivable foundation (bijective + matching declared spectrum) instead of the coarse over-approximation in reverse_footprint_lightweight (which currently treats ALL touched positions as equally 'changed', explicitly flagged as capable of false mismatches).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_schema_precompute_unchanged.json",
+      "goals": [
+        "Determine whether SchemaCore/compile_core could precompute, statically from graph2, which nodes are bijectively mapped (clean 1:1 inherit, no fan-in/fan-out), have an unchanged edge spectrum (same internal+crossing (type,direction) categories before/after), and are transitively connected to other such nodes -- to replace reverse_footprint_lightweight's coarse over-approximation with a precise, schema-level unchanged/changed distinction."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_unchanged_candidates_verified.json::imported_connectivity_propagation_matches_anchor_intent",
+      "claim_id": "imported_connectivity_propagation_matches_anchor_intent",
+      "statement": "Propagating 'unchanged' status to nodes connected to other confirmed-unchanged nodes is exactly the ANCHOR mechanism's original intent (ers_reversibility_anchor: unchanged nodes as known-identity anchors, growing correspondence outward) -- but built on a PRECISE, schema-derivable foundation (bijective + matching declared spectrum) instead of the coarse over-approximation in reverse_footprint_lightweight (which currently treats ALL touched positions as equally 'changed', explicitly flagged as capable of false mismatches).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_unchanged_candidates_verified.json",
+      "goals": [
+        "Record the compute_unchanged_candidates implementation and its two-case verification (spectrum mismatch correctly excluded for ph_all_four; spectrum match correctly included for the explicit single-category rule)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_fix.json::fix_design",
+      "claim_id": "fix_design",
+      "statement": "build_reversed_operation should become PER-BINDING, not per-rule: instead of build_reversed_graph2 constructing new-input categories from the blanket boundary_grab declaration (set(preserve.get(old_out))), it should use confirmed = _read_boundary_externals(operation.schema.edits, binding, base_graph) for the SPECIFIC firing being checked, and derive new-input categories from confirmed[old_out]'s actual (type,direction) pairs only -- a direct, per-firing exchange of the ALREADY-VERIFIED crossings, not a blanket requirement of everything merely declared possible.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "sven_physical_switch",
+            "code_read_boundary_externals_is_the_and_check"
+          ],
+          "rule": "the mechanism computing the AND's confirmed side already exists (forward direction); reuse it directly to build the per-firing reversed pattern instead of the blanket declared set"
+        }
+      ],
+      "source_path": "/home/claude/ers_physical_switch_fix.json",
+      "goals": [
+        "Fix the ph_all_four zero-match bug using Sven's physical-switch idea: when a crossing's existence AND declaration both hold (confirmed per the actual firing via _read_boundary_externals), directly exchange the placeholder mapping between the input and mapped-output sides, per binding -- rather than requiring a fixed, static, blanket set of categories (all 4 of ph_all_four) that may not all be present in any given real firing."
+      ]
+    }
+  ],
+  "claims": {
+    "current_lightweight_code": {
+      "id": "current_lightweight_code",
+      "statement": "reverse_footprint_lightweight (reverse_compound.py, current code): for each inherit pair, unconditionally adds binding[in_node] to the footprint -- ALL survived positions, no unchanged/changed distinction. Confirmed by direct code read.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "wiring_design": {
+      "id": "wiring_design",
+      "statement": "reverse_footprint_lightweight is revised: for each reversed match's core.inherit pairs, a survived position (binding[in_node]) is CONFIRMED unchanged and EXCLUDED from the footprint iff (a) (in_node,out_node) is in compute_unchanged_candidates(reversed_op.graph2) AND (b) confirmed = _read_boundary_externals(reversed_op.schema.edits, binding, result_graph) for this node equals its DECLARED crossings exactly (nothing merely-declared-but-absent). All born positions remain unconditionally in the footprint. Any survived position failing (a) or (b) is included (conservative fallback, same as before for anything not confirmed-unchanged).",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "current_lightweight_code"
+          ],
+          "rule": "replace the all-survived-positions-included coarse rule with a precise exclusion only for confirmed-unchanged candidates, keeping the same conservative fallback for everything else"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "bug_found_and_fixed": {
+      "id": "bug_found_and_fixed",
+      "statement": "compute_unchanged_candidates, in actual use, caught a real separate bug in build_reversed_graph2: old input_nodes' OWN internal structure (e.g. A's self-loop encoding bit value 1) was never copied to the new output side -- only old output_nodes' internal_edges were copied to the new input side. Confirmed by direct inspection: reversed graph2's new-output node lacked a self-loop that should have been there. Fixed by adding a symmetric step using the already-built _input_internal_edges helper (the same one compute_unchanged_candidates itself uses).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "wiring_tested": {
+      "id": "wiring_tested",
+      "statement": "After the fix, re-tested both toy rules (explicit single-category and ph_all_four). Both now correctly report s_reverse_implied as EMPTY (confirmed unchanged) instead of the coarse {real_A}. Verified this is CORRECT, not a new bug: both toy rules perform an identical, trivial no-op-like transformation on real_A (self-loop + one preserved crossing, literally identical incident sets before/after in this test), and once the physical-switch fix narrows the reversed pattern to CONFIRMED categories at construction time, the ph_all_four vs explicit declaration-style distinction stops mattering for this check -- both correctly resolve to unchanged. This is a coherent, validating outcome: it shows the physical-switch fix and compute_unchanged_candidates compose correctly, not that the check has become vacuous.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "bug_found_and_fixed",
+            "wiring_design"
+          ],
+          "rule": "verify a surprising result against the actual ground truth (are the real incident sets literally identical in this test?) before accepting or rejecting it as correct"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_wiring_tested": {
+      "id": "chk_falsifier_wiring_tested",
+      "kind": "falsifier",
+      "target": "wiring_tested",
+      "method": "could this new construction (per-binding confirmed_crossings during build_reversed_operation, THEN a separate confirmed-unchanged check in reverse_footprint_lightweight) be masking a genuine difference by narrowing too aggressively at BOTH stages redundantly, making the check unable to ever find a genuine mismatch?",
+      "result": "No: the two checks operate on different things -- build_reversed_operation's confirmed_crossings narrows the PATTERN'S requirements to what was true in the ORIGINAL forward firing (a one-time construction fact); reverse_footprint_lightweight's check verifies the ACTUAL match found by blind search (collect_reversed_matches) against its OWN confirmed crossings for that specific match -- these could still diverge if match_all found a match to a DIFFERENT region with different real structure, which would surface as a genuine mismatch there. Not proven un-maskable in general, but not shown vacuous by this test either.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "whether the two-stage confirmed-crossing narrowing could ever mask a genuine mismatch in a more complex case (not this trivial toy rule) is untested",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "chk_relevance_wiring_tested": {
+      "id": "chk_relevance_wiring_tested",
+      "kind": "relevance",
+      "target": "wiring_tested",
+      "method": "connect wiring_tested's evidence to this session's stated goal",
+      "result": "Goal: wire compute_unchanged_candidates into reverse_footprint_lightweight for a precise footprint. Directly reports the implementation, the bug found and fixed along the way, and verified test results.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "wiring_tested",
+    "statement": "After the fix, re-tested both toy rules (explicit single-category and ph_all_four). Both now correctly report s_reverse_implied as EMPTY (confirmed unchanged) instead of the coarse {real_A}. Verified this is CORRECT, not a new bug: both toy rules perform an identical, trivial no-op-like transformation on real_A (self-loop + one preserved crossing, literally identical incident sets before/after in this test), and once the physical-switch fix narrows the reversed pattern to CONFIRMED categories at construction time, the ph_all_four vs explicit declaration-style distinction stops mattering for this check -- both correctly resolve to unchanged. This is a coherent, validating outcome: it shows the physical-switch fix and compute_unchanged_candidates compose correctly, not that the check has become vacuous.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "current_lightweight_code",
+        "wiring_design"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "bug_found_and_fixed",
+        "wiring_tested"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_wiring_tested",
+        "chk_relevance_wiring_tested"
+      ]
+    ],
+    [
+      "commit",
+      "wiring_tested"
+    ]
+  ]
+}

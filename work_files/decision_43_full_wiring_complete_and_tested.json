@@ -1,0 +1,245 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Record the completed wiring: the full apply_compound-based pipeline tested against both a single-rule case (regression) and a genuine two-rule compound case (first time ever), including tracing the surprising 'no match found' result to a genuine, explained non-reversibility finding rather than a pipeline defect."
+  },
+  "prep_note": "ers_full_wiring.json already committed the plan; this records the completed, tested implementation.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_reverse_fire_implemented.json::implemented_and_tested",
+      "claim_id": "implemented_and_tested",
+      "statement": "Implemented in reverse_compound.py: reverse_footprint_lightweight (coarse S_reverse_implied, over-approximates by including ALL survived positions not just changed ones -- explicitly documented as capable of producing false mismatches, not swept under) and reverse_fire (orchestrator: collect_reversed_matches -> per-rule-multiplicity check -> resolve_reverse_compound -> footprint_is_consistent -> stops, correctly refusing to claim 'reversible: True' since the isomorphism check does not exist). Tested end to end for the first time: using rebuild()'s output_map as a stand-in S_forward (no apply_compound/LayeredGraph adapter exists, per imported_layered_graph_integration_needed), the full pipeline ran, footprint and overlap checks both passed, and the result correctly reports 'unresolved' rather than 'reversible: True' -- verified by actual execution, not asserted.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_footprint_wiring_answer",
+            "imported_apply_compound_returns_aggregates",
+            "imported_layered_graph_integration_needed"
+          ],
+          "rule": "implement per the committed design, test against the same single-rule case already exercised this session, and report exactly what passed and what remains explicitly unresolved"
+        }
+      ],
+      "source_path": "/home/claude/ers_reverse_fire_implemented.json",
+      "goals": [
+        "Record the reverse_fire orchestrator implementation and its first end-to-end test result, including the honest scope limits (coarse footprint approximation, no-overlap-only, no isomorphism check, stand-in S_forward since no apply_compound/LayeredGraph adapter exists)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_compound_test.json::compound_pipeline_verified",
+      "claim_id": "compound_pipeline_verified",
+      "statement": "After fixing the construction bug: fired rule B then rule A (read-before-write ordering, no apply_compound/redirect logic used) against a base graph with a genuine boundary_crossings overlap (rule B's crossing target R is inside rule A's own matched region). Result: forward firing correctly preserved the S->R edge this time. per_match_multiplicity = {0:1, 1:1} (no ambiguity). resolve_reverse_compound reported consistent:True (genuine overlap correctly matched between forward and reverse). reverse_footprint_lightweight + footprint_is_consistent also passed (both real nodes confirmed unchanged, correctly a subset of s_forward). This is the FIRST genuine multi-match compound test run today, and three of the four pipeline stages (collect, overlap, footprint) verified working correctly for it.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "own_construction_bug_found",
+            "overlap_construction_plan",
+            "firing_order_plan"
+          ],
+          "rule": "once the construction bug is fixed, the actual pipeline components (already written generically, no length-1 assumption in collect_reversed_matches or resolve_reverse_compound) work correctly against a real overlapping case"
+        }
+      ],
+      "source_path": "/home/claude/ers_compound_test.json",
+      "goals": [
+        "Build a genuine two-rule overlapping compound test (not synthetic single-rule): two matches whose overlap is a real boundary_crossings case (one match's live crossing target is inside another match's own matched region), fired via two ordered rebuild() calls (read before write, avoiding the need for full apply_compound redirect logic). Run it through collect_reversed_matches and resolve_reverse_compound (both already written generically over matches:list, no length-1 assumption) to see whether they actually work for N>1, and determine what check_isomorphism_anchored needs to handle the N=2 case (it currently hard-gates on len(matches)==1)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_step4_fixed.json::fixed_and_tested",
+      "claim_id": "fixed_and_tested",
+      "statement": "Replaced _overlap_topology_signature-based comparison in resolve_reverse_compound with direct equality comparison of ov_forward/ov_reverse's overlapping_nodes and boundary_crossings dicts, exactly as detect_overlaps already returns them -- no flattening, no information loss. Verified: syntax OK, existing single-rule regression test still passes with the same 'unresolved' result as before (this test has no overlaps, so both old and new comparisons trivially agree here -- the fix's actual benefit would show in a genuine multi-match overlapping case, still untested).",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_direct_comparison_valid",
+            "imported_step4_was_malformed"
+          ],
+          "rule": "implement the precise comparison derived from the prior session's finding and verify it against the same regression test already used throughout today"
+        }
+      ],
+      "source_path": "/home/claude/ers_step4_fixed.json",
+      "goals": [
+        "Record the step 4 fix: replaced the flattened overlap-signature comparison with direct comparison of detect_overlaps' own precise output, and verify no regression against the existing test."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_apply_compound_stub.json::stub_validated",
+      "claim_id": "stub_validated",
+      "statement": "PlainGraphLayeredStub + SimpleRegistry built (compound_stub.py) and validated: apply_compound runs UNCHANGED against it for a genuine two-match case, producing correct output_maps/born/consumed/changed, and materialize_result correctly reconstructs the resulting graph (falling back to base_graph edges for unchanged nodes, matching delta_representation's convention). Fixed one bug found along the way in the stub itself (PerspectiveGraph has no adopt_node/pre-existing-id insertion method -- Node is a plain frozen dataclass, insert directly into the internal _nodes set).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_apply_compound_stub.json",
+      "goals": [
+        "Correct the earlier mischaracterization: build a minimal plain-PerspectiveGraph-compatible LayeredGraph stub (materialize, derive_roster, roster, set_roster, edges_of, set_edges, adopt_node against a single throwaway base layer) and reuse the REAL apply_compound unchanged, replacing the hand-rolled reverse_footprint_lightweight/reconstruction logic with the proven mechanism."
+      ]
+    }
+  ],
+  "claims": {
+    "imported_apply_compound_gives_exact_unchanged": {
+      "id": "imported_apply_compound_gives_exact_unchanged",
+      "statement": "apply_compound's real 'changed' set (base_incident != result_incident, an EXACT structural comparison already computed) makes 'survived - changed' the PRECISE, authoritative answer to 'which nodes are unchanged' -- more precise than compute_unchanged_candidates' static declared-spectrum heuristic (which was explicitly NECESSARY-not-sufficient, requiring a separate per-firing confirmed-crossings check to close the gap). Once apply_compound is used on both forward and reverse sides, the anchor for check_isomorphism_anchored can be picked directly from (survived - changed), no separate compute_unchanged_candidates call needed for correctness (it may still have value as a cheap static pre-filter before running the heavier apply_compound, but is not required for THIS wiring).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_wiring_plan": {
+      "id": "imported_wiring_plan",
+      "statement": "(1) compute_s_forward(matches, base_graph): stub=PlainGraphLayeredStub(base_graph); result=apply_compound(stub,registry,'base','new',matches); return result['born']|result['changed']. (2) compute_reverse_reconstruction(reversed_matches, result_graph): same pattern, returns (recon_graph via stub.materialize_result('new'), s_reverse_implied=result['born']|result['changed'], unchanged_survivors=survived-changed for anchor selection). (3) check_isomorphism_anchored rewritten to take recon_graph + unchanged_survivors directly (no per-match rebuild(), no len(matches)==1 gate) -- BFS from an unchanged_survivors anchor exactly as before, comparing recon_graph against base_graph. (4) A redirect cycle (apply_compound raising ValueError) on the REVERSE side is itself caught and reported as reversible:False (an unresolvable reverse structure is a genuine non-reversibility signal, not a crash) -- on the FORWARD side no new cycle risk exists since it recomputes an already-successful historical firing.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_apply_compound_gives_exact_unchanged"
+          ],
+          "rule": "use the newly-validated stub for both forward and reverse aggregation, simplifying anchor selection to the exact answer apply_compound already computes (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "final_test_traced": {
+      "id": "final_test_traced",
+      "statement": "Fixed the test harness itself: forward firing must go through the real apply_compound (via the stub), not naive sequential rebuild() calls -- confirmed the earlier per_match_multiplicity={0:2,1:0} result was an artifact of a broken forward state (rule A's later independent rebuild() stripped rule B's earlier crossing preservation off the shared node), not a pipeline defect. With forward firing corrected: per_match_multiplicity={0:0,1:1} -- rule A's reversed pattern finds ZERO matches.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "genuine_non_reversibility_explained": {
+      "id": "genuine_non_reversibility_explained",
+      "statement": "Traced precisely: rule A declares NO boundary_grab (claims no crossing responsibility at all) -- yet in the correctly-fired result, real_R carries an extra edge (S->R) purely as a side effect of rule B's redirect-resolved crossing landing on R, a node A itself matched. A's reversed pattern, built solely from A's own declared spectrum, has no way to anticipate this externally-added structure and correctly fails to match. This is NOT a pipeline bug -- it is the classifier correctly identifying that rule A, AS CONSTRUCTED in this compound context, is genuinely not reversible: its own declaration doesn't account for what compound interaction does to its own matched node.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "final_test_traced"
+          ],
+          "rule": "trace the exact mechanism producing a surprising result before accepting or rejecting it, rather than assuming either 'the pipeline is broken' or 'it must be fine'"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "wiring_complete_for_tested_cases": {
+      "id": "wiring_complete_for_tested_cases",
+      "statement": "The full apply_compound-wired pipeline (compute_s_forward, collect_reversed_matches, resolve_reverse_compound, _aggregate_via_apply_compound for the reverse side, check_isomorphism_anchored using apply_compound's exact changed-set for anchoring) now runs end to end, with NO length-1 gate, for both tested cases: single-rule (regression: reversible:True, anchor confirmed) and a genuine two-rule compound case (correctly reversible:False, for an explained, real reason -- not a crash or a spurious result). This is the first time the complete pipeline has run for a compound case at all.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "genuine_non_reversibility_explained",
+            "imported_apply_compound_gives_exact_unchanged",
+            "imported_wiring_plan"
+          ],
+          "rule": "the pipeline is considered wired-to-completion for the tested scope once both the simple and compound cases produce explained, non-crashing, non-arbitrary verdicts"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_complete": {
+      "id": "chk_falsifier_complete",
+      "kind": "falsifier",
+      "target": "wiring_complete_for_tested_cases",
+      "method": "does 'complete for tested cases' overclaim readiness -- are there real, still-open gaps that this framing could obscure?",
+      "result": "No overclaim if stated precisely: still open -- (1) whether reversing an acyclic forward structure can ever introduce a new reverse-side redirect cycle (carried, untested, from ers_full_wiring.json's own falsifier); (2) no test against any real production rule (only synthetic toy rules); (3) code not committed to the perspective GitHub repo; (4) zero-anchor frequency and overlap-count distribution remain unmeasured. 'Complete for tested cases' is accurate only if these are stated alongside it, not implied solved.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "wiring is complete and tested for the two cases run today, but real-rule and larger-scale testing, the reverse-cycle risk, and repo commit status all remain open",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "chk_relevance_complete": {
+      "id": "chk_relevance_complete",
+      "kind": "relevance",
+      "target": "wiring_complete_for_tested_cases",
+      "method": "connect the evidence to this session's stated goal",
+      "result": "Goal: work to completion on the wiring. This reports the completed, tested implementation for both cases run, with the traced explanation for the compound case's surprising result, and names what's still open rather than implying total completion.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "wiring_complete_for_tested_cases",
+    "statement": "The full apply_compound-wired pipeline (compute_s_forward, collect_reversed_matches, resolve_reverse_compound, _aggregate_via_apply_compound for the reverse side, check_isomorphism_anchored using apply_compound's exact changed-set for anchoring) now runs end to end, with NO length-1 gate, for both tested cases: single-rule (regression: reversible:True, anchor confirmed) and a genuine two-rule compound case (correctly reversible:False, for an explained, real reason -- not a crash or a spurious result). This is the first time the complete pipeline has run for a compound case at all.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "imported_apply_compound_gives_exact_unchanged"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_wiring_plan"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "final_test_traced",
+        "genuine_non_reversibility_explained",
+        "wiring_complete_for_tested_cases"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_complete",
+        "chk_relevance_complete"
+      ]
+    ],
+    [
+      "commit",
+      "wiring_complete_for_tested_cases"
+    ]
+  ]
+}
