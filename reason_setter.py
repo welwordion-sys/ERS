@@ -1,6 +1,15 @@
-"""ERS setter substrate v0.5 prototype.
+"""ERS setter substrate v0.6 prototype.
 
 Gatekeeper, not diary: state is mutated only through setter calls.
+
+v0.6 reuse registry (LF6): commit() auto-appends its answer's claim closure
+to a shared claims_registry.json; prepare() (the sole task-start point)
+keyword-overlaps the goal against the registry and surfaces prior_candidates
+before any reasoning; reuse(reg_id) pulls one in verbatim, preserving its
+status/negation_handling. Surfacing is enforced (it lives inside prepare);
+sameness judgment is not — same epistemic status as I9. No new hard
+invariant, no new check kind.
+
 Hard invariants (truth conditions, uncircumventable):
   I1 referential integrity      — referenced ids exist
   I2 stated dependencies        — derived claims cite parents+rule
@@ -612,7 +621,8 @@ class ReasonSetter:
                 "Your task is to complete this ERS work file, not to reason "
                 "freely about the goal. Fetch reason_setter.py + PROTOCOL.md "
                 "from https://github.com/welwordion-sys/ERS (verify version "
-                "string, v0.5+). Load these given_facts via ground(), then "
+                "string, v0.6+ for the reuse registry). Load these given_facts "
+                "via ground(), then "
                 "propose() your own candidates — do not accept a pre-formed "
                 "answer from elsewhere as a candidate without discriminating "
                 "it against at least one alternative. check(), then commit()."

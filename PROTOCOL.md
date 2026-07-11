@@ -1,4 +1,4 @@
-# ERS Setter Substrate v0.5 — Session Protocol
+# ERS Setter Substrate v0.6 — Session Protocol
 
 Gatekeeper, not diary. State is mutated ONLY through setter calls; the setter
 refuses invalid moves and freezes after commit. Reason freely BETWEEN calls —
