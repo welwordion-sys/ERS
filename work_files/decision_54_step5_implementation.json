@@ -1,0 +1,214 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Design the refined step 5: exact preserved-id-set comparison per matched pair (no more, no less, no different), plus a firing-count backstop to catch extra firings with empty preserved-id-sets (invisible to the set comparison since empty==empty trivially). Address Sven's caution: split/merge cases mean preserved-id-sets CAN legitimately overlap ACROSS different match instances (shared/redirected nodes, per Compound Match Resolution's own overlapping_nodes/boundary_crossings typology) -- the comparison must not assume cross-instance disjointness, only per-instance forward-vs-reverse equality."
+  },
+  "prep_note": "Prepared before implementing Sven's refined design.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_step5_redesign_question.json::recommended_redesign",
+      "claim_id": "recommended_redesign",
+      "statement": "RECOMMENDED, answering 'is there any other way to say this set of created nodes corresponds to this match': for survived/id-preserving content -- YES, a free direct id-set comparison, no isomorphism needed; upgrade step 5 to do this (compare the SET of real ids a forward instance's survived nodes occupy against the candidate reverse match's, not just count(bindings)==1). For BORN content -- NO cheap shortcut found; do not push local anchored isomorphism into step 5 (avoids the 'multiple tries' combinatorial cost Sven flagged for compound cases with multiple candidate reverse matches per rule). Instead: leave born-node correspondence to step 9's existing global check, now fed more/better anchors by the strengthened step 5. This is close to Sven's own fallback (a simple activation count is easier and still useful) but sharper specifically where sharpness is free: id-preserving correspondence is not merely a count, it is a free set-equality check, so there is no reason to settle for a count THERE even though a count (or deferral) is the honest answer for born content.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "step9_not_redundant_but_cheaper",
+            "born_correspondence_has_no_cheap_shortcut"
+          ],
+          "rule": "apply the cheapest-available-and-sufficient check to each of the two structurally different cases separately, rather than using one uniform mechanism (count, or full local isomorphism) for both"
+        }
+      ],
+      "source_path": "/home/claude/ers_step5_redesign_question.json",
+      "goals": [
+        "Answer Sven's design question precisely: does pushing per-match discrepancy comparison (recorded forward creations/survivals vs backward findings) into step 5 make step 9's global isomorphism check redundant? Is there a cheap way to say 'this set of created nodes corresponds to this match' besides a local anchored isomorphism check? Determine whether id-preserving vs genuinely-born content require fundamentally different answers."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_step5_redesign_question.json::step9_not_redundant_but_cheaper",
+      "claim_id": "step9_not_redundant_but_cheaper",
+      "statement": "Step 9 does NOT become redundant even with a strengthened step 5 that does free id-set comparison for survived nodes -- it remains the ONLY mechanism that can establish born-node correspondence at all (per born_correspondence_has_no_cheap_shortcut), and it is the only check operating on the GLOBAL, composed reconstruction rather than per-match local views (needed to catch inter-match inconsistencies a purely local check could miss). What DOES change: if step 5 verifies survived-node id-sets match per instance BEFORE step 9 runs, every confirmed-correct survived node across the WHOLE compound firing becomes a validated anchor candidate for step 9's BFS growth -- not just one arbitrary pick from a single confirmed-unchanged set. This makes step 9 more robust (far less likely to hit the zero-anchor degenerate case) and probably faster (more starting points to grow from), without eliminating the need for it.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "id_preserving_correspondence_is_free",
+            "born_correspondence_has_no_cheap_shortcut"
+          ],
+          "rule": "a check that only covers the free/cheap portion (survived nodes) cannot subsume a check whose entire reason for existing is the portion with no cheap answer (born nodes) -- but it can still strictly improve that check's inputs"
+        }
+      ],
+      "source_path": "/home/claude/ers_step5_redesign_question.json",
+      "goals": [
+        "Answer Sven's design question precisely: does pushing per-match discrepancy comparison (recorded forward creations/survivals vs backward findings) into step 5 make step 9's global isomorphism check redundant? Is there a cheap way to say 'this set of created nodes corresponds to this match' besides a local anchored isomorphism check? Determine whether id-preserving vs genuinely-born content require fundamentally different answers."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_step5_redesign_question.json::born_correspondence_has_no_cheap_shortcut",
+      "claim_id": "born_correspondence_has_no_cheap_shortcut",
+      "statement": "For BORN (freshly created) nodes, there is NO analogous free signal -- by definition they share no real id with anything in base_graph, so nothing about WHICH born node in a reverse match corresponds to WHICH born node in a forward instance can be read off directly. Establishing this requires either (a) a local anchored structural comparison (Sven's proposed approach -- costly for compound cases with multiple candidate reverse matches per rule, since the correct pairing among candidates must be searched, not read), or (b) deferring the question entirely to a single GLOBAL isomorphism pass that grows outward from whatever confirmed-unchanged anchors exist anywhere in the whole firing, not per-match.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "sven_critique_and_proposal",
+            "id_preserving_correspondence_is_free"
+          ],
+          "rule": "the asymmetry between id-preserving and born content is exactly the asymmetry between a free lookup and a genuine search problem -- there is no reason to expect a cheap shortcut for the latter given the former's cheapness comes specifically from identity being preserved, which born content by definition lacks"
+        }
+      ],
+      "source_path": "/home/claude/ers_step5_redesign_question.json",
+      "goals": [
+        "Answer Sven's design question precisely: does pushing per-match discrepancy comparison (recorded forward creations/survivals vs backward findings) into step 5 make step 9's global isomorphism check redundant? Is there a cheap way to say 'this set of created nodes corresponds to this match' besides a local anchored isomorphism check? Determine whether id-preserving vs genuinely-born content require fundamentally different answers."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_step5_redesign_question.json::sven_critique_and_proposal",
+      "claim_id": "sven_critique_and_proposal",
+      "statement": "Sven (direct, this session): step 5 as built only checks existence, not correspondence -- a useless implementation. Proposed alternative: record forward creations (born+survived nodes, tagged by which match/firing they came from), compare against backward findings for discrepancies. Since node identity is not given for born content, this likely requires a LOCAL anchored isomorphism check per match -- which raises whether step 9 (the current global isomorphism check) becomes redundant, and notes compound cases would need multiple tries to find the right pairing when identity isn't preserved (id-preserving/survived cases are trivial by contrast). Asks: is there any cheaper way to say 'this set of created nodes corresponds to this match'? Otherwise a simple rule-activation count is easier and still useful.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_step5_redesign_question.json",
+      "goals": [
+        "Answer Sven's design question precisely: does pushing per-match discrepancy comparison (recorded forward creations/survivals vs backward findings) into step 5 make step 9's global isomorphism check redundant? Is there a cheap way to say 'this set of created nodes corresponds to this match' besides a local anchored isomorphism check? Determine whether id-preserving vs genuinely-born content require fundamentally different answers."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_step4_intent_check.json::direct_comparison_valid",
+      "claim_id": "direct_comparison_valid",
+      "statement": "Given step 2's already-established guarantee (exactly one reversed match per forward match, hence reversed_matches has the SAME LENGTH and POSITIONAL correspondence as matches, index i means the same thing in both), and real node id identity being preserved across base_graph/result_graph for survived/inherited nodes (rebuild's max-id-preservation) -- ov_forward['overlapping_nodes'] and ov_reverse['overlapping_nodes'] can be compared DIRECTLY for equality (same real node keys, same index-set values), and likewise ov_forward['boundary_crossings'] vs ov_reverse['boundary_crossings'] directly by (i,j) key. No index-remapping or node-remapping logic is needed -- both correspondences already hold by construction.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "detect_overlaps_already_has_pairing",
+            "step2_already_fixes_correspondence"
+          ],
+          "rule": "when both the index correspondence and the node-identity correspondence already hold by construction, the precise comparison is just direct dict equality on the raw detect_overlaps output -- no need to build any intermediate flattened signature at all"
+        }
+      ],
+      "source_path": "/home/claude/ers_step4_intent_check.json",
+      "goals": [
+        "Determine what step 4 (OV_forward vs OV_reverse comparison) was actually supposed to test, whether the current flat-node-set implementation achieves it, and whether it's redundant with step 2's already-established positional correspondence between forward and reverse matches."
+      ]
+    }
+  ],
+  "claims": {
+    "sven_refinements": {
+      "id": "sven_refinements",
+      "statement": "Sven (direct, this session): (1) check exact preserved-id-set equality per match -- no more, no less, no different. (2) additionally use a firing count to catch extra firings that have NO preserved id at all (invisible to the set check, since an empty set trivially equals another empty set). (3) beware split/merge ambiguity -- preserved-id-sets can legitimately overlap between DIFFERENT matches (shared/redirected nodes), not just within one match's own fan-in.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "pairing_already_exists_by_construction": {
+      "id": "pairing_already_exists_by_construction",
+      "statement": "Because build_reversed_operation constructs each reversed_op FROM a SPECIFIC forward instance's own binding (the physical-switch fix), the pairing between forward instance i and its reversed_op is already fixed by construction, not a search problem -- the id-set comparison is inherently per-instance (compare instance i's own forward-recorded preserved ids against instance i's own reverse-found preserved ids), not a cross-instance matching problem. The split/merge caution therefore does not require finding WHICH pairing is correct -- it requires the SET COMPARISON ITSELF to tolerate legitimate overlap with OTHER instances' sets, not assume disjointness.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "sven_refinements"
+          ],
+          "rule": "the physical-switch fix already ties each reversed_op to one specific forward instance, so the harder 'which pairing' problem Sven flagged for born content does not apply to the survived/id-preserving comparison, which is already instance-scoped"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "overlap_source_already_computed": {
+      "id": "overlap_source_already_computed",
+      "statement": "Which real nodes are legitimately shared between which match indices is ALREADY computed by detect_overlaps (overlapping_nodes: real_node -> set of match indices; boundary_crossings: (i,j) -> set of nodes) -- the same data step 6/resolve_reverse_compound already uses. The refined step 5 does not need to separately reason about split/merge in the abstract; it needs to NOT break when a real id legitimately appears in more than one instance's preserved-id-set, which is already a known, structurally-declared possibility, not an edge case to special-case from scratch.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "concrete_design": {
+      "id": "concrete_design",
+      "statement": "collect_reversed_matches is extended to take forward apply_compound's result (output_maps, per-match) so it can compute, per instance i: forward_preserved[i] = set of real ids that are inherit-mapped for instance i's own operation (core.inherit keys mapped through output_maps[i]). For the reverse side, per instance i's single accepted binding (after the existing per_match_multiplicity==1 check), reverse_preserved[i] = set of real ids the reversed_op's OWN core.inherit maps through that binding. The check: forward_preserved[i] == reverse_preserved[i] EXACTLY (no more, no less, no different) -- compared per-instance only, never pooled or checked for disjointness against other instances (per pairing_already_exists_by_construction and overlap_source_already_computed, legitimate cross-instance overlap is expected and irrelevant to this per-instance equality check). SEPARATELY, a firing-count check: len(matches) == len(reversed_matches with exactly one binding each) -- already partially implied by the existing per_match_multiplicity==0/>1 checks, but explicitly named as the backstop for instances whose forward_preserved set is EMPTY (pure-born instances), where the id-set check alone cannot distinguish a correct empty-preserved match from a spurious extra one with no preserved ids.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "pairing_already_exists_by_construction",
+            "overlap_source_already_computed"
+          ],
+          "rule": "implement the per-instance equality check directly using apply_compound's already-available output_maps and core.inherit, with no new cross-instance machinery needed"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_concrete_design": {
+      "id": "chk_falsifier_concrete_design",
+      "kind": "falsifier",
+      "target": "concrete_design",
+      "method": "does forward_preserved[i] as defined (core.inherit keys mapped through output_maps[i]) correctly capture ONLY instance i's own contribution, or could it accidentally include ids that belong to a DIFFERENT instance's inherit relationship if output_maps[i] is read carelessly?",
+      "result": "Checked against apply_compound's actual structure: output_maps is keyed per match index (output_maps[i] specifically), and core.inherit belongs to operation[i].schema.core -- both are already correctly scoped to instance i by apply_compound's own design (this is how apply_compound itself keeps per-match output straight during compound resolution). No cross-contamination risk identified from reading the actual data structures.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "chk_relevance_concrete_design": {
+      "id": "chk_relevance_concrete_design",
+      "kind": "relevance",
+      "target": "concrete_design",
+      "method": "connect the evidence to Sven's request",
+      "result": "Directly implements exact set comparison (no more/less/different), the firing-count backstop for empty-preserved instances, and explicitly does not assume cross-instance disjointness -- addressing all three points raised.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "concrete_design",
+    "statement": "collect_reversed_matches is extended to take forward apply_compound's result (output_maps, per-match) so it can compute, per instance i: forward_preserved[i] = set of real ids that are inherit-mapped for instance i's own operation (core.inherit keys mapped through output_maps[i]). For the reverse side, per instance i's single accepted binding (after the existing per_match_multiplicity==1 check), reverse_preserved[i] = set of real ids the reversed_op's OWN core.inherit maps through that binding. The check: forward_preserved[i] == reverse_preserved[i] EXACTLY (no more, no less, no different) -- compared per-instance only, never pooled or checked for disjointness against other instances (per pairing_already_exists_by_construction and overlap_source_already_computed, legitimate cross-instance overlap is expected and irrelevant to this per-instance equality check). SEPARATELY, a firing-count check: len(matches) == len(reversed_matches with exactly one binding each) -- already partially implied by the existing per_match_multiplicity==0/>1 checks, but explicitly named as the backstop for instances whose forward_preserved set is EMPTY (pure-born instances), where the id-set check alone cannot distinguish a correct empty-preserved match from a spurious extra one with no preserved ids.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "sven_refinements",
+        "pairing_already_exists_by_construction",
+        "overlap_source_already_computed"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "concrete_design"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_concrete_design",
+        "chk_relevance_concrete_design"
+      ]
+    ],
+    [
+      "commit",
+      "concrete_design"
+    ]
+  ]
+}

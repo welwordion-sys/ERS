@@ -1,0 +1,192 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Record two findings from tracing Sven's substrate/failure-level question: (1) a latent _next_id sync bug in materialize_result, fixed. (2) the real, unresolved finding -- build_reversed_graph2 mishandles nodes that were forward-born when they become part of the reverse pattern's own matched structure: a forward-born node (21) is wrongly retained as survived/changed, while a genuine prior-state node (7) is wrongly consumed/lost."
+  },
+  "prep_note": "Prepared before recording; the fix is done, the deeper finding is not.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_full_wiring.json::wiring_plan",
+      "claim_id": "wiring_plan",
+      "statement": "(1) compute_s_forward(matches, base_graph): stub=PlainGraphLayeredStub(base_graph); result=apply_compound(stub,registry,'base','new',matches); return result['born']|result['changed']. (2) compute_reverse_reconstruction(reversed_matches, result_graph): same pattern, returns (recon_graph via stub.materialize_result('new'), s_reverse_implied=result['born']|result['changed'], unchanged_survivors=survived-changed for anchor selection). (3) check_isomorphism_anchored rewritten to take recon_graph + unchanged_survivors directly (no per-match rebuild(), no len(matches)==1 gate) -- BFS from an unchanged_survivors anchor exactly as before, comparing recon_graph against base_graph. (4) A redirect cycle (apply_compound raising ValueError) on the REVERSE side is itself caught and reported as reversible:False (an unresolvable reverse structure is a genuine non-reversibility signal, not a crash) -- on the FORWARD side no new cycle risk exists since it recomputes an already-successful historical firing.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "apply_compound_gives_exact_unchanged"
+          ],
+          "rule": "use the newly-validated stub for both forward and reverse aggregation, simplifying anchor selection to the exact answer apply_compound already computes"
+        }
+      ],
+      "source_path": "/home/claude/ers_full_wiring.json",
+      "goals": [
+        "Wire the validated apply_compound stub into the full reverse_fire pipeline: (1) compute S_forward via apply_compound on the real matches/base_graph, replacing the rebuild()-output_map stand-in. (2) Replace reverse_footprint_lightweight's hand-rolled per-match logic with apply_compound on reversed_matches/result_graph, giving S_reverse_implied AND the reconstructed graph in one call. (3) Rewrite check_isomorphism_anchored to use this reconstruction directly, removing the len(matches)!=1 gate since apply_compound already generalizes to N matches. (4) Regression-test the single-rule case and run the previously-blocked two-rule compound case through the complete pipeline for the first time."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_wiring_complete.json::imported_wiring_plan",
+      "claim_id": "imported_wiring_plan",
+      "statement": "(1) compute_s_forward(matches, base_graph): stub=PlainGraphLayeredStub(base_graph); result=apply_compound(stub,registry,'base','new',matches); return result['born']|result['changed']. (2) compute_reverse_reconstruction(reversed_matches, result_graph): same pattern, returns (recon_graph via stub.materialize_result('new'), s_reverse_implied=result['born']|result['changed'], unchanged_survivors=survived-changed for anchor selection). (3) check_isomorphism_anchored rewritten to take recon_graph + unchanged_survivors directly (no per-match rebuild(), no len(matches)==1 gate) -- BFS from an unchanged_survivors anchor exactly as before, comparing recon_graph against base_graph. (4) A redirect cycle (apply_compound raising ValueError) on the REVERSE side is itself caught and reported as reversible:False (an unresolvable reverse structure is a genuine non-reversibility signal, not a crash) -- on the FORWARD side no new cycle risk exists since it recomputes an already-successful historical firing.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_apply_compound_gives_exact_unchanged"
+          ],
+          "rule": "use the newly-validated stub for both forward and reverse aggregation, simplifying anchor selection to the exact answer apply_compound already computes (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_wiring_complete.json",
+      "goals": [
+        "Record the completed wiring: the full apply_compound-based pipeline tested against both a single-rule case (regression) and a genuine two-rule compound case (first time ever), including tracing the surprising 'no match found' result to a genuine, explained non-reversibility finding rather than a pipeline defect."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_wiring_complete.json::genuine_non_reversibility_explained",
+      "claim_id": "genuine_non_reversibility_explained",
+      "statement": "Traced precisely: rule A declares NO boundary_grab (claims no crossing responsibility at all) -- yet in the correctly-fired result, real_R carries an extra edge (S->R) purely as a side effect of rule B's redirect-resolved crossing landing on R, a node A itself matched. A's reversed pattern, built solely from A's own declared spectrum, has no way to anticipate this externally-added structure and correctly fails to match. This is NOT a pipeline bug -- it is the classifier correctly identifying that rule A, AS CONSTRUCTED in this compound context, is genuinely not reversible: its own declaration doesn't account for what compound interaction does to its own matched node.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "final_test_traced"
+          ],
+          "rule": "trace the exact mechanism producing a surprising result before accepting or rejecting it, rather than assuming either 'the pipeline is broken' or 'it must be fine'"
+        }
+      ],
+      "source_path": "/home/claude/ers_wiring_complete.json",
+      "goals": [
+        "Record the completed wiring: the full apply_compound-based pipeline tested against both a single-rule case (regression) and a genuine two-rule compound case (first time ever), including tracing the surprising 'no match found' result to a genuine, explained non-reversibility finding rather than a pipeline defect."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_precise_footprint_wiring.json::bug_found_and_fixed",
+      "claim_id": "bug_found_and_fixed",
+      "statement": "compute_unchanged_candidates, in actual use, caught a real separate bug in build_reversed_graph2: old input_nodes' OWN internal structure (e.g. A's self-loop encoding bit value 1) was never copied to the new output side -- only old output_nodes' internal_edges were copied to the new input side. Confirmed by direct inspection: reversed graph2's new-output node lacked a self-loop that should have been there. Fixed by adding a symmetric step using the already-built _input_internal_edges helper (the same one compute_unchanged_candidates itself uses).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_precise_footprint_wiring.json",
+      "goals": [
+        "Wire compute_unchanged_candidates into reverse_footprint_lightweight, replacing the coarse over-approximation (all touched positions) with the precise unchanged/changed distinction: a candidate node is excluded from S_reverse_implied only if it is CONFIRMED unchanged for this specific firing (candidate per compute_unchanged_candidates AND its confirmed crossings equal its declared crossings via _read_boundary_externals); everything else counts as changed."
+      ]
+    }
+  ],
+  "claims": {
+    "substrate_and_failure_traced": {
+      "id": "substrate_and_failure_traced",
+      "statement": "Sven asked: what was the substrate, and at what level did the rule fail? Answered by direct inspection, not the printed summary alone: substrate = encode(g, '0+0=0'), a real production graph, base_graph_snapshot/result_graph from a genuine add_init_00_single_single firing via apply_compound. Failure level = the isomorphism/reconstruction check specifically (footprint and overlap comparisons both passed) -- traced via direct instrumentation of _aggregate_via_apply_compound's reverse call.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "next_id_bug_fixed": {
+      "id": "next_id_bug_fixed",
+      "statement": "Found and fixed: PlainGraphLayeredStub.materialize_result built recon_graph via PerspectiveGraph() (fresh _next_id=0) then inserted existing high-id nodes directly into _nodes, bypassing add_node() -- _next_id was never synced, staying at 0 even with nodes up to id 21+ present. Latent, not the cause of THIS specific failure (this reverse pass minted zero born nodes), but would cause a real id collision the moment one did. Fixed: result._next_id = max(ids)+1 after population. Verified the fix doesn't change the (still real) failure result.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "born_node_disposition_gap": {
+      "id": "born_node_disposition_gap",
+      "statement": "The REAL, unresolved finding: reverse aggregation on this firing shows consumed={Node(7), Node(20)}, changed={Node(21)}. Node 7 existed in the TRUE prior state (base_graph) and gets CONSUMED (lost) rather than recovered by the reversed rule. Node 21 was FORWARD-BORN (created fresh by add_init_00_single_single, never existed before firing) yet the reversed rule treats it as SURVIVED/changed rather than eliminating it -- backwards: a correct reconstruction of the prior state should make node 21 disappear (it is an artifact of the forward direction) and should recover node 7 (real prior structure). This is a gap in how build_reversed_graph2's role-swap handles nodes that were forward-born when they become part of the reverse pattern's own matched/bound structure -- not addressed by any of today's design sessions, which focused on boundary/crossing categories and overlap comparison, not on how born-vs-inherited disposition should invert.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "substrate_and_failure_traced"
+          ],
+          "rule": "direct instrumentation of the reverse aggregation's consumed/changed/born sets, cross-referenced against the forward firing's own born set, identifies precisely which nodes are mishandled and in which direction"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_born_gap": {
+      "id": "chk_falsifier_born_gap",
+      "kind": "falsifier",
+      "target": "born_node_disposition_gap",
+      "method": "could this be correct behavior for a DIFFERENT reason -- e.g. is add_init_00_single_single simply, genuinely irreversible (destroys real information about node 7), making the 'wrong disposition' framing overstated?",
+      "result": "Both could be true simultaneously, not mutually exclusive: SEPARATELY from any construction gap, add_init_00_single_single might indeed be genuinely irreversible (many arithmetic init rules likely are, consistent with Hierarchical Graph Layer Structure's 'arithmetic is effectively all-irreversible' note). But the SPECIFIC mechanism observed -- a forward-born node surviving into the reverse reconstruction as though it were part of the true prior state -- is a construction-level issue regardless of whether the rule is ALSO genuinely irreversible for other reasons. The two questions (is this construction correct? is this rule reversible?) are separate and this session cannot yet distinguish which is doing how much work in this specific False verdict.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "cannot currently distinguish whether the False verdict reflects genuine rule irreversibility, a construction defect in handling forward-born nodes, or both together",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "chk_relevance_born_gap": {
+      "id": "chk_relevance_born_gap",
+      "kind": "relevance",
+      "target": "born_node_disposition_gap",
+      "method": "connect the evidence to the question asked",
+      "result": "Sven asked for the substrate and the failure level. Both answered precisely, with the deeper mechanism traced via direct instrumentation rather than restating the printed diff.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "born_node_disposition_gap",
+    "statement": "The REAL, unresolved finding: reverse aggregation on this firing shows consumed={Node(7), Node(20)}, changed={Node(21)}. Node 7 existed in the TRUE prior state (base_graph) and gets CONSUMED (lost) rather than recovered by the reversed rule. Node 21 was FORWARD-BORN (created fresh by add_init_00_single_single, never existed before firing) yet the reversed rule treats it as SURVIVED/changed rather than eliminating it -- backwards: a correct reconstruction of the prior state should make node 21 disappear (it is an artifact of the forward direction) and should recover node 7 (real prior structure). This is a gap in how build_reversed_graph2's role-swap handles nodes that were forward-born when they become part of the reverse pattern's own matched/bound structure -- not addressed by any of today's design sessions, which focused on boundary/crossing categories and overlap comparison, not on how born-vs-inherited disposition should invert.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "substrate_and_failure_traced",
+        "next_id_bug_fixed",
+        "born_node_disposition_gap"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_born_gap",
+        "chk_relevance_born_gap"
+      ]
+    ],
+    [
+      "commit",
+      "born_node_disposition_gap"
+    ]
+  ]
+}

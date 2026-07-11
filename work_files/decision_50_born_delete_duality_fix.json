@@ -1,0 +1,208 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Fix build_reversed_graph2's construction defect: implement the born<->delete duality. Forward-born output nodes (new-input positions) must not feed a mapping edge into any new-output -- they represent pure creation-from-nothing, nothing to recover. Forward-deleted input nodes (new-output positions) must be forced into compile_core's output_only/born classification even when no natural mapping edge exists, since compile_core classifies purely by operational-edge presence and a position with zero incoming edges defaults to being misclassified as an input node."
+  },
+  "prep_note": "Prepared before implementing the fix Sven and I agreed on.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_construction_defect_not_special_logic.json::reversal_is_construction_not_special_firing",
+      "claim_id": "reversal_is_construction_not_special_firing",
+      "statement": "CORRECTED characterization (Sven, this session): reverse firing is not special -- once a graph2 exists, compile_core classifies inherit/born/delete identically for any graph2, and apply_compound fires it unmodified, same as any forward rule. What is actually broken is that build_reversed_graph2 never implements the born<->delete DUALITY when constructing the reversed graph2: a forward-born node (created from nothing) should be constructed such that its reverse counterpart is DELETED (erasure mirrors creation); a forward-deleted node should be constructed such that its reverse counterpart is BORN (creation mirrors erasure). The code does neither -- it only handles the role-swap (input<->output) and boundary-category transposition, leaving compile_core to classify whatever mapping edges incidentally fall out of that, with zero consideration of the forward rule's own born/delete status. This directly explains the observed failure: node 21 (forward-born) came out survived/changed instead of consumed; node 7 (forward-real, present but mishandled) came out consumed instead of correctly recovered.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "code_confirms_no_born_delete_handling"
+          ],
+          "rule": "the absence of any born/delete-aware branching in the construction code, confirmed by direct inspection, is the precise, sufficient explanation for the observed misclassification -- no separate 'special reverse logic' is needed, only correcting what the construction itself encodes"
+        }
+      ],
+      "source_path": "/home/claude/ers_construction_defect_not_special_logic.json",
+      "goals": [
+        "Confirm precisely: (1) how the born-node construction defect evaded every falsifier run today (zero test coverage of the case, not a check that ran and failed). (2) correct the mischaracterization -- this is a construction defect in build_reversed_graph2 (missing born<->delete duality), not a need for special reverse-firing logic; firing a correctly-built reversed graph2 is just a normal firing via unmodified apply_compound."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_isomorphism_check.json::isomorphism_design",
+      "claim_id": "isomorphism_design",
+      "statement": "ADOPTED: cand_bfs_direct_comparison, WITH the falsifier's correction incorporated: (1) build the candidate reconstruction via rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) -- reusing the proven mechanism, no new materialization logic. (2) Pick anchor from the CONFIRMED-unchanged set (not from an arbitrary match_all binding). (3) BFS-grow a correspondence from the anchor: for INHERITED/confirmed-unchanged real nodes, compare incident edges by DIRECT real-id equality (same physical node, by construction). For BORN/reconstructed nodes (freshly minted, no shared id with base_graph possible), compare STRUCTURALLY instead -- find whether some node in base_graph, adjacent to the already-confirmed correspondence, has matching edge structure relative to what's already anchored; require this structural match, not id equality, for born positions specifically. (4) Require full coverage: every node in both the reconstruction and base_graph must be reached by the BFS; unreached/disconnected nodes are a coverage gap, not a silent pass. Rejected: cand_seeded_match_all (failed its falsifier -- derive_match_view requires graph2-specific scaffolding a plain materialized graph doesn't have; a confirmed blocker, not an inconvenience).",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "sven_hints",
+            "rebuild_is_reusable_for_reconstruction",
+            "anchor_source_is_confirmed_unchanged_not_arbitrary"
+          ],
+          "rule": "adopt the candidate that survived its falsifier, incorporating the real correction it surfaced (born nodes need structural not id-based matching), and reject the one shown to have a concrete, confirmed blocker"
+        }
+      ],
+      "source_path": "/home/claude/ers_isomorphism_check.json",
+      "goals": [
+        "Implement the isomorphism check (refined_classifier's final, still-unbuilt piece): choose an anchor from a CONFIRMED-unchanged node (not from match_all's arbitrary resolution), use it to seed a structural correspondence, materialize ('build') the reconstructed candidate layer, and compare it against the retained previous layer (base_graph)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_isomorphism_implemented.json::imported_isomorphism_design",
+      "claim_id": "imported_isomorphism_design",
+      "statement": "ADOPTED: cand_bfs_direct_comparison, WITH the falsifier's correction incorporated: (1) build the candidate reconstruction via rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) -- reusing the proven mechanism, no new materialization logic. (2) Pick anchor from the CONFIRMED-unchanged set (not from an arbitrary match_all binding). (3) BFS-grow a correspondence from the anchor: for INHERITED/confirmed-unchanged real nodes, compare incident edges by DIRECT real-id equality (same physical node, by construction). For BORN/reconstructed nodes (freshly minted, no shared id with base_graph possible), compare STRUCTURALLY instead -- find whether some node in base_graph, adjacent to the already-confirmed correspondence, has matching edge structure relative to what's already anchored; require this structural match, not id equality, for born positions specifically. (4) Require full coverage: every node in both the reconstruction and base_graph must be reached by the BFS; unreached/disconnected nodes are a coverage gap, not a silent pass. Rejected: cand_seeded_match_all (failed its falsifier -- derive_match_view requires graph2-specific scaffolding a plain materialized graph doesn't have; a confirmed blocker, not an inconvenience).",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_sven_hints",
+            "imported_rebuild_is_reusable_for_reconstruction",
+            "imported_anchor_source_is_confirmed_unchanged_not_arbitrary"
+          ],
+          "rule": "adopt the candidate that survived its falsifier, incorporating the real correction it surfaced (born nodes need structural not id-based matching), and reject the one shown to have a concrete, confirmed blocker (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_isomorphism_implemented.json",
+      "goals": [
+        "Record the implemented check_isomorphism_anchored and its two-case test: positive case (genuine match) returns reversible:True with a confirmed anchor; negative case (deliberately corrupted retained layer) correctly returns reversible:False with the exact edge mismatch, confirming the check can genuinely fail, not just default to True."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_construction_defect_not_special_logic.json::code_confirms_no_born_delete_handling",
+      "claim_id": "code_confirms_no_born_delete_handling",
+      "statement": "Direct grep of reversed_rule.py: core.born is never referenced in build_reversed_graph2's actual construction logic at all -- only core.delete appears, and only in docstrings/comments explaining the earlier (unrelated) removed guard. The function iterates core.output_nodes and core.input_nodes UNIFORMLY, with no branch distinguishing which output_nodes were born vs inherited, or which input_nodes ended up deleted vs mapped. Mapping edges are built purely from core.mapping_in with no consideration of forward born/delete status.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_construction_defect_not_special_logic.json",
+      "goals": [
+        "Confirm precisely: (1) how the born-node construction defect evaded every falsifier run today (zero test coverage of the case, not a check that ran and failed). (2) correct the mischaracterization -- this is a construction defect in build_reversed_graph2 (missing born<->delete duality), not a need for special reverse-firing logic; firing a correctly-built reversed graph2 is just a normal firing via unmodified apply_compound."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    }
+  ],
+  "claims": {
+    "actual_bug_was_simpler": {
+      "id": "actual_bug_was_simpler",
+      "statement": "The actual bug (Sven, this session): build_reversed_graph2 reversed core.mapping_in (ALL fan-in candidates, winners and losers) instead of core.inherit (ONLY the winning/survived mapping, guaranteed injective both directions by compile_core's own documented invariant). Fixed with a one-loop change: for old_out, old_in in core.inherit.items(): reverse the edge. No fan-in/fan-out handling needed since inherit is already clean 1:1.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "duality_falls_out_for_free": {
+      "id": "duality_falls_out_for_free",
+      "statement": "This single fix correctly handles born and delete with ZERO special-casing, exactly as Sven predicted: a forward-BORN out_node has no inherit entry -> no reverse mapping edge -> stays a plain new-input context node, nothing to recover (correct, since nothing was inherited FROM it). A forward-DELETED in_node (zero-trace or fan-in loser) is never an inherit VALUE either -> its new-output position also gets no reverse mapping edge -> correctly stays unrecovered, which is precisely what should let the downstream footprint/isomorphism check catch genuine irreversibility rather than something requiring separate handling in construction.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "verified_on_real_production_case": {
+      "id": "verified_on_real_production_case",
+      "statement": "Re-ran the exact real production case that exposed the original bug (add_init_00_single_single against real encoded 0+0=0). Result flipped from reversible:False to reversible:True. Verified this is NOT accidental by inspecting the underlying aggregation directly: forward born={20,21}/consumed={}/changed={6,7}; reverse born={}/consumed={20,21}/changed={6,7} -- an exact mirror duality (forward-born becomes reverse-consumed, changed stays changed in both directions). Node 7 (real prior structure) is now genuinely present in the reconstruction; node 21 (forward-only artifact) is genuinely absent. Single-rule synthetic regression test also still passes unchanged.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "actual_bug_was_simpler",
+            "duality_falls_out_for_free"
+          ],
+          "rule": "verify a fix against the exact real case that exposed the original bug, by inspecting the underlying mechanism directly rather than trusting the final boolean alone"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "own_overcomplication_acknowledged": {
+      "id": "own_overcomplication_acknowledged",
+      "statement": "The earlier plan (forced/synthetic mapping edges to manufacture correct born classification for delete nodes) was solving a problem that did not exist once the actual bug -- reversing mapping_in instead of inherit -- was identified and fixed. Sven's direct question ('what requires additional steps after this?') correctly identified that no additional steps were needed.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_verified": {
+      "id": "chk_falsifier_verified",
+      "kind": "falsifier",
+      "target": "verified_on_real_production_case",
+      "method": "does this fix risk making the classifier too PERMISSIVE now -- e.g. could it accidentally report reversible:True for a rule that genuinely IS irreversible, by no longer even attempting to check deleted/fan-in-loser nodes at all?",
+      "result": "Real, plausible risk, not ruled out: since deleted/fan-in-loser nodes now simply produce NO reverse mapping edge (rather than either a forced-wrong classification OR an explicit check), the isomorphism/footprint comparison's ability to catch a genuinely-irreversible case depends entirely on whether the MISSING reconstruction coverage is actually detected by the existing full-coverage requirement in check_isomorphism_anchored (unreached nodes = reported gap). This specific case (add_init_00_single_single) had no such missing-coverage issue apparently, but a rule that genuinely destroys real prior-layer structure (not just forward-only artifacts) has not been tested against this fix to confirm the coverage check still correctly catches it.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "whether a genuinely-irreversible rule (destroying real prior structure, not just forward-only artifacts) is still correctly caught as False after this fix is untested",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "chk_relevance_verified": {
+      "id": "chk_relevance_verified",
+      "kind": "relevance",
+      "target": "verified_on_real_production_case",
+      "method": "connect the evidence to the question asked",
+      "result": "Sven asked what additional steps were needed beyond reversing the survived mapping. Answer: none -- the fix, verified against the real case that exposed the bug, confirms this directly.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "verified_on_real_production_case",
+    "statement": "Re-ran the exact real production case that exposed the original bug (add_init_00_single_single against real encoded 0+0=0). Result flipped from reversible:False to reversible:True. Verified this is NOT accidental by inspecting the underlying aggregation directly: forward born={20,21}/consumed={}/changed={6,7}; reverse born={}/consumed={20,21}/changed={6,7} -- an exact mirror duality (forward-born becomes reverse-consumed, changed stays changed in both directions). Node 7 (real prior structure) is now genuinely present in the reconstruction; node 21 (forward-only artifact) is genuinely absent. Single-rule synthetic regression test also still passes unchanged.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "actual_bug_was_simpler",
+        "duality_falls_out_for_free",
+        "verified_on_real_production_case",
+        "own_overcomplication_acknowledged"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_verified",
+        "chk_relevance_verified"
+      ]
+    ],
+    [
+      "commit",
+      "verified_on_real_production_case"
+    ]
+  ]
+}

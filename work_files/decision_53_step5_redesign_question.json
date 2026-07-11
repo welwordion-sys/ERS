@@ -1,0 +1,233 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Answer Sven's design question precisely: does pushing per-match discrepancy comparison (recorded forward creations/survivals vs backward findings) into step 5 make step 9's global isomorphism check redundant? Is there a cheap way to say 'this set of created nodes corresponds to this match' besides a local anchored isomorphism check? Determine whether id-preserving vs genuinely-born content require fundamentally different answers."
+  },
+  "prep_note": "Sven's critique and design question, this session. Prepared before answering.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_full_wiring.json::apply_compound_gives_exact_unchanged",
+      "claim_id": "apply_compound_gives_exact_unchanged",
+      "statement": "apply_compound's real 'changed' set (base_incident != result_incident, an EXACT structural comparison already computed) makes 'survived - changed' the PRECISE, authoritative answer to 'which nodes are unchanged' -- more precise than compute_unchanged_candidates' static declared-spectrum heuristic (which was explicitly NECESSARY-not-sufficient, requiring a separate per-firing confirmed-crossings check to close the gap). Once apply_compound is used on both forward and reverse sides, the anchor for check_isomorphism_anchored can be picked directly from (survived - changed), no separate compute_unchanged_candidates call needed for correctness (it may still have value as a cheap static pre-filter before running the heavier apply_compound, but is not required for THIS wiring).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_full_wiring.json",
+      "goals": [
+        "Wire the validated apply_compound stub into the full reverse_fire pipeline: (1) compute S_forward via apply_compound on the real matches/base_graph, replacing the rebuild()-output_map stand-in. (2) Replace reverse_footprint_lightweight's hand-rolled per-match logic with apply_compound on reversed_matches/result_graph, giving S_reverse_implied AND the reconstructed graph in one call. (3) Rewrite check_isomorphism_anchored to use this reconstruction directly, removing the len(matches)!=1 gate since apply_compound already generalizes to N matches. (4) Regression-test the single-rule case and run the previously-blocked two-rule compound case through the complete pipeline for the first time."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_wiring_complete.json::imported_apply_compound_gives_exact_unchanged",
+      "claim_id": "imported_apply_compound_gives_exact_unchanged",
+      "statement": "apply_compound's real 'changed' set (base_incident != result_incident, an EXACT structural comparison already computed) makes 'survived - changed' the PRECISE, authoritative answer to 'which nodes are unchanged' -- more precise than compute_unchanged_candidates' static declared-spectrum heuristic (which was explicitly NECESSARY-not-sufficient, requiring a separate per-firing confirmed-crossings check to close the gap). Once apply_compound is used on both forward and reverse sides, the anchor for check_isomorphism_anchored can be picked directly from (survived - changed), no separate compute_unchanged_candidates call needed for correctness (it may still have value as a cheap static pre-filter before running the heavier apply_compound, but is not required for THIS wiring).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_wiring_complete.json",
+      "goals": [
+        "Record the completed wiring: the full apply_compound-based pipeline tested against both a single-rule case (regression) and a genuine two-rule compound case (first time ever), including tracing the surprising 'no match found' result to a genuine, explained non-reversibility finding rather than a pipeline defect."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_isomorphism_check.json::isomorphism_design",
+      "claim_id": "isomorphism_design",
+      "statement": "ADOPTED: cand_bfs_direct_comparison, WITH the falsifier's correction incorporated: (1) build the candidate reconstruction via rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) -- reusing the proven mechanism, no new materialization logic. (2) Pick anchor from the CONFIRMED-unchanged set (not from an arbitrary match_all binding). (3) BFS-grow a correspondence from the anchor: for INHERITED/confirmed-unchanged real nodes, compare incident edges by DIRECT real-id equality (same physical node, by construction). For BORN/reconstructed nodes (freshly minted, no shared id with base_graph possible), compare STRUCTURALLY instead -- find whether some node in base_graph, adjacent to the already-confirmed correspondence, has matching edge structure relative to what's already anchored; require this structural match, not id equality, for born positions specifically. (4) Require full coverage: every node in both the reconstruction and base_graph must be reached by the BFS; unreached/disconnected nodes are a coverage gap, not a silent pass. Rejected: cand_seeded_match_all (failed its falsifier -- derive_match_view requires graph2-specific scaffolding a plain materialized graph doesn't have; a confirmed blocker, not an inconvenience).",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "sven_hints",
+            "rebuild_is_reusable_for_reconstruction",
+            "anchor_source_is_confirmed_unchanged_not_arbitrary"
+          ],
+          "rule": "adopt the candidate that survived its falsifier, incorporating the real correction it surfaced (born nodes need structural not id-based matching), and reject the one shown to have a concrete, confirmed blocker"
+        }
+      ],
+      "source_path": "/home/claude/ers_isomorphism_check.json",
+      "goals": [
+        "Implement the isomorphism check (refined_classifier's final, still-unbuilt piece): choose an anchor from a CONFIRMED-unchanged node (not from match_all's arbitrary resolution), use it to seed a structural correspondence, materialize ('build') the reconstructed candidate layer, and compare it against the retained previous layer (base_graph)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_isomorphism_implemented.json::implemented_and_both_tested",
+      "claim_id": "implemented_and_both_tested",
+      "statement": "Implemented check_isomorphism_anchored + _confirmed_unchanged_real_nodes in reverse_compound.py, wired into reverse_fire replacing the prior 'unresolved' placeholder. Tested TWO cases: (1) genuine match against the correct retained layer -- reversible:True, anchor=Node(0), empty born_correspondence (no born nodes in this toy rule). (2) the SAME setup against a DELIBERATELY CORRUPTED retained layer (an extra real edge added that never existed) -- reversible:False, reason='edge mismatch at confirmed node Node(0)', with the exact differing edge sets reported. This confirms the check can genuinely detect a real discrepancy, not merely default to True regardless of input.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_isomorphism_design",
+            "imported_rebuild_is_reusable_for_reconstruction",
+            "imported_anchor_source_is_confirmed_unchanged_not_arbitrary"
+          ],
+          "rule": "implement per the committed design and verify BOTH a positive and a deliberately-engineered negative case before accepting the implementation as doing real work"
+        }
+      ],
+      "source_path": "/home/claude/ers_isomorphism_implemented.json",
+      "goals": [
+        "Record the implemented check_isomorphism_anchored and its two-case test: positive case (genuine match) returns reversible:True with a confirmed anchor; negative case (deliberately corrupted retained layer) correctly returns reversible:False with the exact edge mismatch, confirming the check can genuinely fail, not just default to True."
+      ]
+    }
+  ],
+  "claims": {
+    "sven_critique_and_proposal": {
+      "id": "sven_critique_and_proposal",
+      "statement": "Sven (direct, this session): step 5 as built only checks existence, not correspondence -- a useless implementation. Proposed alternative: record forward creations (born+survived nodes, tagged by which match/firing they came from), compare against backward findings for discrepancies. Since node identity is not given for born content, this likely requires a LOCAL anchored isomorphism check per match -- which raises whether step 9 (the current global isomorphism check) becomes redundant, and notes compound cases would need multiple tries to find the right pairing when identity isn't preserved (id-preserving/survived cases are trivial by contrast). Asks: is there any cheaper way to say 'this set of created nodes corresponds to this match'? Otherwise a simple rule-activation count is easier and still useful.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "id_preserving_correspondence_is_free": {
+      "id": "id_preserving_correspondence_is_free",
+      "statement": "For SURVIVED (inherited) nodes, correspondence between a forward instance and a candidate reverse match is NOT a search problem at all -- the same real node id appears in both apply_compound's forward result (survived = roster - consumed - changed... more precisely, nodes with an inherit relationship) and the reverse aggregation's own result. Comparing the SET of real ids a forward instance's survived nodes occupy against the set a candidate reverse match's survived nodes occupy is a direct set-equality check, already computable from data apply_compound already returns (step 2 and step 7) -- no isomorphism search, no anchor needed, no 'trying' required.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "born_correspondence_has_no_cheap_shortcut": {
+      "id": "born_correspondence_has_no_cheap_shortcut",
+      "statement": "For BORN (freshly created) nodes, there is NO analogous free signal -- by definition they share no real id with anything in base_graph, so nothing about WHICH born node in a reverse match corresponds to WHICH born node in a forward instance can be read off directly. Establishing this requires either (a) a local anchored structural comparison (Sven's proposed approach -- costly for compound cases with multiple candidate reverse matches per rule, since the correct pairing among candidates must be searched, not read), or (b) deferring the question entirely to a single GLOBAL isomorphism pass that grows outward from whatever confirmed-unchanged anchors exist anywhere in the whole firing, not per-match.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "sven_critique_and_proposal",
+            "id_preserving_correspondence_is_free"
+          ],
+          "rule": "the asymmetry between id-preserving and born content is exactly the asymmetry between a free lookup and a genuine search problem -- there is no reason to expect a cheap shortcut for the latter given the former's cheapness comes specifically from identity being preserved, which born content by definition lacks"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "step9_not_redundant_but_cheaper": {
+      "id": "step9_not_redundant_but_cheaper",
+      "statement": "Step 9 does NOT become redundant even with a strengthened step 5 that does free id-set comparison for survived nodes -- it remains the ONLY mechanism that can establish born-node correspondence at all (per born_correspondence_has_no_cheap_shortcut), and it is the only check operating on the GLOBAL, composed reconstruction rather than per-match local views (needed to catch inter-match inconsistencies a purely local check could miss). What DOES change: if step 5 verifies survived-node id-sets match per instance BEFORE step 9 runs, every confirmed-correct survived node across the WHOLE compound firing becomes a validated anchor candidate for step 9's BFS growth -- not just one arbitrary pick from a single confirmed-unchanged set. This makes step 9 more robust (far less likely to hit the zero-anchor degenerate case) and probably faster (more starting points to grow from), without eliminating the need for it.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "id_preserving_correspondence_is_free",
+            "born_correspondence_has_no_cheap_shortcut"
+          ],
+          "rule": "a check that only covers the free/cheap portion (survived nodes) cannot subsume a check whose entire reason for existing is the portion with no cheap answer (born nodes) -- but it can still strictly improve that check's inputs"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "recommended_redesign": {
+      "id": "recommended_redesign",
+      "statement": "RECOMMENDED, answering 'is there any other way to say this set of created nodes corresponds to this match': for survived/id-preserving content -- YES, a free direct id-set comparison, no isomorphism needed; upgrade step 5 to do this (compare the SET of real ids a forward instance's survived nodes occupy against the candidate reverse match's, not just count(bindings)==1). For BORN content -- NO cheap shortcut found; do not push local anchored isomorphism into step 5 (avoids the 'multiple tries' combinatorial cost Sven flagged for compound cases with multiple candidate reverse matches per rule). Instead: leave born-node correspondence to step 9's existing global check, now fed more/better anchors by the strengthened step 5. This is close to Sven's own fallback (a simple activation count is easier and still useful) but sharper specifically where sharpness is free: id-preserving correspondence is not merely a count, it is a free set-equality check, so there is no reason to settle for a count THERE even though a count (or deferral) is the honest answer for born content.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "step9_not_redundant_but_cheaper",
+            "born_correspondence_has_no_cheap_shortcut"
+          ],
+          "rule": "apply the cheapest-available-and-sufficient check to each of the two structurally different cases separately, rather than using one uniform mechanism (count, or full local isomorphism) for both"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_recommendation": {
+      "id": "chk_falsifier_recommendation",
+      "kind": "falsifier",
+      "target": "recommended_redesign",
+      "method": "could id-set comparison for survived nodes give a false pass -- e.g. matching real ids present without checking they're attached to the RIGHT match (in a compound case with multiple instances of the same rule, could instance 0's survived ids accidentally satisfy instance 1's check)?",
+      "result": "Real risk if implemented carelessly: id-set comparison must be done PER matched pair (forward instance i's survived-id-set against the SPECIFIC candidate reverse match being evaluated for instance i), not pooled across all instances -- if pooled, exactly the cross-instance collision risk already flagged for the current per_match_multiplicity check would reappear in a new form. This is not a reason to reject the recommendation, but a precise implementation requirement: comparison must stay per-pair, never aggregated across the compound set.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "id-set comparison must be scoped per matched pair, not pooled, or it reintroduces the same cross-instance collision risk already known from the current per_match_multiplicity check",
+          "disposition": "fixed"
+        }
+      ]
+    },
+    "chk_relevance_recommendation": {
+      "id": "chk_relevance_recommendation",
+      "kind": "relevance",
+      "target": "recommended_redesign",
+      "method": "connect the evidence to Sven's question",
+      "result": "Sven asked three things: is 9 redundant, is there a cheaper correspondence signal, is a simple count good enough otherwise. All three answered directly and distinctly rather than collapsed into one vague response.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "recommended_redesign",
+    "statement": "RECOMMENDED, answering 'is there any other way to say this set of created nodes corresponds to this match': for survived/id-preserving content -- YES, a free direct id-set comparison, no isomorphism needed; upgrade step 5 to do this (compare the SET of real ids a forward instance's survived nodes occupy against the candidate reverse match's, not just count(bindings)==1). For BORN content -- NO cheap shortcut found; do not push local anchored isomorphism into step 5 (avoids the 'multiple tries' combinatorial cost Sven flagged for compound cases with multiple candidate reverse matches per rule). Instead: leave born-node correspondence to step 9's existing global check, now fed more/better anchors by the strengthened step 5. This is close to Sven's own fallback (a simple activation count is easier and still useful) but sharper specifically where sharpness is free: id-preserving correspondence is not merely a count, it is a free set-equality check, so there is no reason to settle for a count THERE even though a count (or deferral) is the honest answer for born content.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "sven_critique_and_proposal",
+        "id_preserving_correspondence_is_free",
+        "born_correspondence_has_no_cheap_shortcut"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "step9_not_redundant_but_cheaper",
+        "recommended_redesign"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_recommendation",
+        "chk_relevance_recommendation"
+      ]
+    ],
+    [
+      "commit",
+      "recommended_redesign"
+    ]
+  ]
+}

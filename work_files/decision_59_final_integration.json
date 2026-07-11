@@ -1,0 +1,196 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Build the real integration point: a wrapper around apply_compound that, after firing (poisoned-apple UPWARD default), runs reverse_fire on the same matches/base_graph/result_graph and, if proven reversible:True, reclassifies the LayerRecord to SIDEWAYS with provenance dropped (required by LayerRecord's own validation). unverifiable and False both leave the layer UPWARD -- only a proven True reclassifies. Test against both a known-reversible and a known-not-reversible/unverifiable case before considering this done."
+  },
+  "prep_note": "The final integration point Sven asked for. Prepared before implementing.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_forced_born_fix_verified.json::fix_implemented_and_verified",
+      "claim_id": "fix_implemented_and_verified",
+      "statement": "Implemented: _preserved_ids_per_instance now takes forward_born and reverse_born, filtering out any inherit-classified-but-actually-forced-born real id from both forward_preserved and reverse_preserved. reverse_fire reordered so the reverse aggregation runs before the preserved-id check, making reverse_born available. Verified: syntax OK, single-rule regression unchanged, real production case (add_init_00_single_single) unchanged (reversible:True). A genuine overlapping_nodes conflict was constructed (two trivial rules both matching the same real node) to get real forced_born data from apply_compound -- the full reverse_fire pipeline failed EARLIER (per_match_multiplicity ambiguity, correct and expected since the two test rules were too structurally identical to distinguish in reverse) before reaching the preserved-id check, so the fix was verified by calling _preserved_ids_per_instance directly against real forward apply_compound output: the winner's forward_preserved correctly included the inherited real id; the forced-born loser's forward_preserved was correctly EMPTY, not wrongly including its fresh born id (which the pre-fix version would have done).",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_bug_confirmed",
+            "imported_fix_uses_existing_aggregate"
+          ],
+          "rule": "implement the fix per the committed design and verify against real apply_compound output from a constructed overlapping_nodes conflict, not just theoretical reasoning"
+        }
+      ],
+      "source_path": "/home/claude/ers_forced_born_fix_verified.json",
+      "goals": [
+        "Record the forced-born filter fix implementation and its verification against real apply_compound data from a genuine overlapping_nodes conflict."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_physical_switch_verified.json::fix_verified",
+      "claim_id": "fix_verified",
+      "statement": "Re-ran the EXACT ph_all_four test case that previously found zero matches (imported_test_found_zero_matches). After implementing the physical-switch fix (imported_fix_design: build_reversed_graph2's confirmed_crossings parameter, collect_reversed_matches passing base_graph+forward binding through to _read_boundary_externals per firing): per_rule_multiplicity is now {0: 1} (was {0: 0}), exactly 1 reversed match found, resolve_reverse_compound reports consistent=True. Verified by actual execution against the identical rule and base graph that failed before, not a different/easier test case.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_fix_design",
+            "imported_test_found_zero_matches"
+          ],
+          "rule": "re-running the same failing case after implementing the designed fix and observing the failure resolve is direct empirical confirmation"
+        }
+      ],
+      "source_path": "/home/claude/ers_physical_switch_verified.json",
+      "goals": [
+        "Verify and record the physical-switch fix's actual test result: does re-running the exact ph_all_four case that previously found zero matches now succeed?"
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_compound_test.json::compound_pipeline_verified",
+      "claim_id": "compound_pipeline_verified",
+      "statement": "After fixing the construction bug: fired rule B then rule A (read-before-write ordering, no apply_compound/redirect logic used) against a base graph with a genuine boundary_crossings overlap (rule B's crossing target R is inside rule A's own matched region). Result: forward firing correctly preserved the S->R edge this time. per_match_multiplicity = {0:1, 1:1} (no ambiguity). resolve_reverse_compound reported consistent:True (genuine overlap correctly matched between forward and reverse). reverse_footprint_lightweight + footprint_is_consistent also passed (both real nodes confirmed unchanged, correctly a subset of s_forward). This is the FIRST genuine multi-match compound test run today, and three of the four pipeline stages (collect, overlap, footprint) verified working correctly for it.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "own_construction_bug_found",
+            "overlap_construction_plan",
+            "firing_order_plan"
+          ],
+          "rule": "once the construction bug is fixed, the actual pipeline components (already written generically, no length-1 assumption in collect_reversed_matches or resolve_reverse_compound) work correctly against a real overlapping case"
+        }
+      ],
+      "source_path": "/home/claude/ers_compound_test.json",
+      "goals": [
+        "Build a genuine two-rule overlapping compound test (not synthetic single-rule): two matches whose overlap is a real boundary_crossings case (one match's live crossing target is inside another match's own matched region), fired via two ordered rebuild() calls (read before write, avoiding the need for full apply_compound redirect logic). Run it through collect_reversed_matches and resolve_reverse_compound (both already written generically over matches:list, no length-1 assumption) to see whether they actually work for N>1, and determine what check_isomorphism_anchored needs to handle the N=2 case (it currently hard-gates on len(matches)==1)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_forced_born_filter_fix.json::fix_uses_existing_aggregate",
+      "claim_id": "fix_uses_existing_aggregate",
+      "statement": "No need to separately recompute forced_born or call detect_overlaps/resolve_compound again for this purpose -- apply_compound's own returned 'born' aggregate already correctly reflects forced-born overrides. Fix: forward_preserved = {fwd_map[out_node] for out_node in fwd_core.inherit.keys() if out_node in fwd_map and fwd_map[out_node] not in fwd_result['born']}. The SAME issue applies to reverse_preserved -- but reverse_fire currently computes the preserved-id check BEFORE the reverse aggregation (_aggregate_via_apply_compound on reversed_matches) runs, so reverse_result['born'] is not yet available at that point -- reverse_fire's step order must change: compute the reverse aggregation FIRST, then do the preserved-id check using both aggregates' born sets.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "bug_confirmed"
+          ],
+          "rule": "reuse apply_compound's own already-correct disposition rather than reimplementing forced_born detection, and reorder reverse_fire so both aggregates are available before the check that needs them"
+        }
+      ],
+      "source_path": "/home/claude/ers_forced_born_filter_fix.json",
+      "goals": [
+        "Fix a real latent bug found while explaining the split/merge solution: _preserved_ids_per_instance reads static core.inherit directly, not accounting for apply_compound's forced_born override for genuine overlapping_nodes conflicts. Fix using the ALREADY-COMPUTED aggregate born set (no need to recompute forced_born separately) for both forward and reverse sides, and construct a genuine overlapping_nodes test case to verify the fix actually matters, not just theoretically."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_forced_born_fix_verified.json::imported_fix_uses_existing_aggregate",
+      "claim_id": "imported_fix_uses_existing_aggregate",
+      "statement": "No need to separately recompute forced_born or call detect_overlaps/resolve_compound again for this purpose -- apply_compound's own returned 'born' aggregate already correctly reflects forced-born overrides. Fix: forward_preserved = {fwd_map[out_node] for out_node in fwd_core.inherit.keys() if out_node in fwd_map and fwd_map[out_node] not in fwd_result['born']}. The SAME issue applies to reverse_preserved -- but reverse_fire currently computes the preserved-id check BEFORE the reverse aggregation (_aggregate_via_apply_compound on reversed_matches) runs, so reverse_result['born'] is not yet available at that point -- reverse_fire's step order must change: compute the reverse aggregation FIRST, then do the preserved-id check using both aggregates' born sets.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_bug_confirmed"
+          ],
+          "rule": "reuse apply_compound's own already-correct disposition rather than reimplementing forced_born detection, and reorder reverse_fire so both aggregates are available before the check that needs them (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_forced_born_fix_verified.json",
+      "goals": [
+        "Record the forced-born filter fix implementation and its verification against real apply_compound data from a genuine overlapping_nodes conflict."
+      ]
+    }
+  ],
+  "claims": {
+    "design": {
+      "id": "design",
+      "statement": "A thin wrapper (reclassify_after_firing, in reverse_compound.py -- the module that owns the reversibility-checking concern, not schema.py, keeping apply_compound itself untouched/reversibility-agnostic): calls the real apply_compound normally (poisoned-apple UPWARD default, unmodified), then runs reverse_fire on the SAME matches plus base_graph=lg.materialize(base_layer) and result_graph=lg.materialize(new_layer) (post-firing). If verdict['reversible'] is True (strict identity check, not truthy -- 'unverifiable' must NOT reclassify), replace the registry's LayerRecord for new_layer with travel_type=SIDEWAYS, provenance=None (required by LayerRecord's own __post_init__ validation), same ruleset/parents. Requires a new LayerRegistry.reclassify(key, record) method (layers.py) since add() forbids overwriting an existing key -- a small, additive, safe change to a core file, not a modification of existing behavior.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "implemented_and_tested": {
+      "id": "implemented_and_tested",
+      "statement": "Implemented LayerRegistry.reclassify (layers.py, small additive method) and reclassify_after_firing (reverse_compound.py, wraps apply_compound unmodified). Tested three cases: (1) known-reversible synthetic rule -- verdict True, correctly reclassified travel_type=SIDEWAYS, provenance=None. (2) known-not-reversible synthetic rule (a genuinely zero-trace consumed node) -- verdict False, correctly stayed travel_type=UPWARD with provenance intact. (3) the real production case (add_init_00_single_single against real 0+0=0) run through an ACTUAL LayeredGraph/LayerRegistry (not test scaffolding) -- verdict True, correctly reclassified. This is the first time the reversibility checker has been wired into the actual layer-creation architecture rather than exercised standalone.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "design"
+          ],
+          "rule": "implement per the committed design and verify all three outcomes (reclassify, stay-upward, real production case through real infrastructure) before considering the integration complete"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_integration": {
+      "id": "chk_falsifier_integration",
+      "kind": "falsifier",
+      "target": "implemented_and_tested",
+      "method": "does reclassify_after_firing touch or weaken apply_compound's own tested behavior in any way, or could it break existing callers of apply_compound/layer_apply_schema that don't use this new wrapper?",
+      "result": "No -- apply_compound itself is called completely unmodified inside the wrapper; nothing about its internals, its UPWARD default, or its return value changed. Existing callers that call apply_compound/layer_apply_schema directly (not through reclassify_after_firing) are entirely unaffected -- reclassification only happens for callers that opt into the new wrapper. layer_apply_schema (the single-rule path) was NOT wrapped -- only apply_compound was -- a real, named scope limit, not silently claimed done.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "layer_apply_schema (single-rule firing path) was not wrapped with the same reclassification -- only apply_compound (compound path) was -- a real gap for single-rule firings specifically",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "chk_relevance_integration": {
+      "id": "chk_relevance_integration",
+      "kind": "relevance",
+      "target": "implemented_and_tested",
+      "method": "connect the evidence to Sven's request",
+      "result": "Sven asked to finish the integration so they can finally commit. This delivers exactly the missing piece identified last turn (the reclassification caller), tested three ways including through real production infrastructure.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "implemented_and_tested",
+    "statement": "Implemented LayerRegistry.reclassify (layers.py, small additive method) and reclassify_after_firing (reverse_compound.py, wraps apply_compound unmodified). Tested three cases: (1) known-reversible synthetic rule -- verdict True, correctly reclassified travel_type=SIDEWAYS, provenance=None. (2) known-not-reversible synthetic rule (a genuinely zero-trace consumed node) -- verdict False, correctly stayed travel_type=UPWARD with provenance intact. (3) the real production case (add_init_00_single_single against real 0+0=0) run through an ACTUAL LayeredGraph/LayerRegistry (not test scaffolding) -- verdict True, correctly reclassified. This is the first time the reversibility checker has been wired into the actual layer-creation architecture rather than exercised standalone.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "design"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "implemented_and_tested"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_integration",
+        "chk_relevance_integration"
+      ]
+    ],
+    [
+      "commit",
+      "implemented_and_tested"
+    ]
+  ]
+}

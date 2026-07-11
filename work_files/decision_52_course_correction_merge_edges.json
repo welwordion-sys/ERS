@@ -1,0 +1,193 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Correct course: born-node mapping_in edges represent MERGE cases that functionally disappear on reversal by their nature -- there is nothing to save or verify, because a merge is not a clean invertible relationship to begin with. The task (reverse the graph) is complete: inherit-reversal (clean, injective, done) plus boundary/crossing handling (the AND-rule, done) -- these were the only genuine difficulty. The 'derivation-consistency' concern was a misapplied extension, not a real gap."
+  },
+  "prep_note": "Sven: 'going off the rails'. Prepared before retracting the prior framing.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_born_node_reversal_gap.json::born_node_disposition_gap",
+      "claim_id": "born_node_disposition_gap",
+      "statement": "The REAL, unresolved finding: reverse aggregation on this firing shows consumed={Node(7), Node(20)}, changed={Node(21)}. Node 7 existed in the TRUE prior state (base_graph) and gets CONSUMED (lost) rather than recovered by the reversed rule. Node 21 was FORWARD-BORN (created fresh by add_init_00_single_single, never existed before firing) yet the reversed rule treats it as SURVIVED/changed rather than eliminating it -- backwards: a correct reconstruction of the prior state should make node 21 disappear (it is an artifact of the forward direction) and should recover node 7 (real prior structure). This is a gap in how build_reversed_graph2's role-swap handles nodes that were forward-born when they become part of the reverse pattern's own matched/bound structure -- not addressed by any of today's design sessions, which focused on boundary/crossing categories and overlap comparison, not on how born-vs-inherited disposition should invert.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "substrate_and_failure_traced"
+          ],
+          "rule": "direct instrumentation of the reverse aggregation's consumed/changed/born sets, cross-referenced against the forward firing's own born set, identifies precisely which nodes are mishandled and in which direction"
+        }
+      ],
+      "source_path": "/home/claude/ers_born_node_reversal_gap.json",
+      "goals": [
+        "Record two findings from tracing Sven's substrate/failure-level question: (1) a latent _next_id sync bug in materialize_result, fixed. (2) the real, unresolved finding -- build_reversed_graph2 mishandles nodes that were forward-born when they become part of the reverse pattern's own matched structure: a forward-born node (21) is wrongly retained as survived/changed, while a genuine prior-state node (7) is wrongly consumed/lost."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_born_mapping_precision.json::why_the_fix_still_worked_for_this_case",
+      "claim_id": "why_the_fix_still_worked_for_this_case",
+      "statement": "The fix (reverse inherit only) still produced the correct verdict for THIS case because node 8's IDENTITY recovery is handled independently and completely via the inherit-reversal through node 19 -- dropping mapping_in for nodes 20/21 did not lose the ability to recover node 8 itself. What IS genuinely lost: the reversed construction no longer VERIFIES that nodes 20/21's specific structure is a CORRECT, CONSISTENT derivation from node 8 -- it only requires them to structurally match SOME real content via the AND-rule placeholder categories, with no check that this content is actually what node 8 should have produced.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "sven_correction_confirmed",
+            "empirical_check_real_case"
+          ],
+          "rule": "distinguish what the fix still correctly recovers (identity, via inherit, independent of mapping_in) from what it silently stops checking (derivation-consistency for born nodes, previously implicitly encoded in mapping_in, now simply absent)"
+        }
+      ],
+      "source_path": "/home/claude/ers_born_mapping_precision.json",
+      "goals": [
+        "Correct the mischaracterization: born nodes DO have mapping edges -- that is literally what causes compile_core to classify them as output nodes at all (a node with zero operational edges wouldn't be classified as output_only in the first place). Determine precisely what a born node's mapping_in edges represent, why the fix correctly does not reverse them, and whether dropping them entirely is equivalent to correctly detecting 'no recoverable correspondence' or is itself a form of silent resolution that should instead surface as explicit ambiguity."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_construction_defect_not_special_logic.json::reversal_is_construction_not_special_firing",
+      "claim_id": "reversal_is_construction_not_special_firing",
+      "statement": "CORRECTED characterization (Sven, this session): reverse firing is not special -- once a graph2 exists, compile_core classifies inherit/born/delete identically for any graph2, and apply_compound fires it unmodified, same as any forward rule. What is actually broken is that build_reversed_graph2 never implements the born<->delete DUALITY when constructing the reversed graph2: a forward-born node (created from nothing) should be constructed such that its reverse counterpart is DELETED (erasure mirrors creation); a forward-deleted node should be constructed such that its reverse counterpart is BORN (creation mirrors erasure). The code does neither -- it only handles the role-swap (input<->output) and boundary-category transposition, leaving compile_core to classify whatever mapping edges incidentally fall out of that, with zero consideration of the forward rule's own born/delete status. This directly explains the observed failure: node 21 (forward-born) came out survived/changed instead of consumed; node 7 (forward-real, present but mishandled) came out consumed instead of correctly recovered.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "code_confirms_no_born_delete_handling"
+          ],
+          "rule": "the absence of any born/delete-aware branching in the construction code, confirmed by direct inspection, is the precise, sufficient explanation for the observed misclassification -- no separate 'special reverse logic' is needed, only correcting what the construction itself encodes"
+        }
+      ],
+      "source_path": "/home/claude/ers_construction_defect_not_special_logic.json",
+      "goals": [
+        "Confirm precisely: (1) how the born-node construction defect evaded every falsifier run today (zero test coverage of the case, not a check that ran and failed). (2) correct the mischaracterization -- this is a construction defect in build_reversed_graph2 (missing born<->delete duality), not a need for special reverse-firing logic; firing a correctly-built reversed graph2 is just a normal firing via unmodified apply_compound."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_born_delete_duality_fix.json::duality_falls_out_for_free",
+      "claim_id": "duality_falls_out_for_free",
+      "statement": "This single fix correctly handles born and delete with ZERO special-casing, exactly as Sven predicted: a forward-BORN out_node has no inherit entry -> no reverse mapping edge -> stays a plain new-input context node, nothing to recover (correct, since nothing was inherited FROM it). A forward-DELETED in_node (zero-trace or fan-in loser) is never an inherit VALUE either -> its new-output position also gets no reverse mapping edge -> correctly stays unrecovered, which is precisely what should let the downstream footprint/isomorphism check catch genuine irreversibility rather than something requiring separate handling in construction.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_born_delete_duality_fix.json",
+      "goals": [
+        "Fix build_reversed_graph2's construction defect: implement the born<->delete duality. Forward-born output nodes (new-input positions) must not feed a mapping edge into any new-output -- they represent pure creation-from-nothing, nothing to recover. Forward-deleted input nodes (new-output positions) must be forced into compile_core's output_only/born classification even when no natural mapping edge exists, since compile_core classifies purely by operational-edge presence and a position with zero incoming edges defaults to being misclassified as an input node."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_first_real_caller.json::first_real_result",
+      "claim_id": "first_real_result",
+      "statement": "reverse_fire against this real firing returned: reversible:False, reason='edge mismatch at confirmed node Node(id=6)', with the exact differing edge sets reported (recon has an extra Node(6)->Node(21) STRUCTURAL edge and is missing a Node(6)->Node(7) STRUCTURAL edge that base_edges has). This is a real, structured, traceable verdict -- not a crash, not 'unverifiable'. NOT YET independently verified whether this False verdict is CORRECT (add_init_00_single_single genuinely irreversible for this reason) or a false rejection from a remaining gap in the classifier (e.g. the single-anchor BFS not accounting for some real structural nuance of this rule's scaffolding) -- this determination is real, additional work not done in this session.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_first_real_caller.json",
+      "goals": [
+        "Build the first real caller of reverse_fire: a script that runs the reversibility classifier against a REAL, existing production rule (not a synthetic toy) -- e.g. spine_finalise_v1's add_finalise -- with a real base graph and real firing, giving both an actual consumer of this code and the first test against production rules."
+      ]
+    }
+  ],
+  "claims": {
+    "sven_correction": {
+      "id": "sven_correction",
+      "statement": "Sven (direct, this session): can edges be saved? Yes -- but these born edges create MERGE cases, so they functionally disappear on reversal. I did not ask to save edges, I asked to reverse the graph -- a task whose only genuine difficulty should have been boundary and crossings.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "why_merge_edges_have_nothing_to_verify": {
+      "id": "why_merge_edges_have_nothing_to_verify",
+      "statement": "A mapping_in edge into a BORN node (e.g. node8 -> node20/21, alongside node8's identity separately inheriting into node19) represents a MERGE/fan-out-into-new-value relationship, not a clean 1:1 correspondence. There is no single well-defined 'correct derivation' to check, because the whole nature of the relationship is that it combines/transforms information in a way that cannot be represented as one invertible graph2 edge -- unlike inherit (guaranteed injective both directions) or a declared boundary/crossing category (a clean keep-filter). Framing this as a missing 'derivation-consistency check' was a category error: there is nothing well-defined to verify, not an unverified thing.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "sven_correction"
+          ],
+          "rule": "a relationship that is not a clean invertible correspondence in the first place cannot have a missing consistency check -- the absence is correct, not incomplete"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "task_scope_confirmed_complete": {
+      "id": "task_scope_confirmed_complete",
+      "statement": "The actual task -- reverse the graph -- has exactly two genuine difficulties, both resolved: (1) mapping edges via core.inherit, clean and injective, no special-casing needed for born/delete (falls out for free, confirmed against the real production case). (2) boundary/crossing category handling via the AND-rule (exists AND declared), confirmed empirically across 83 real rule instances and fixed for the ph_all_four blanket-declaration gap via the physical-switch (per-firing confirmed_crossings). Nothing else is part of what 'reverse the graph' means -- the 'derivation-consistency for merge edges' investigation was scope creep onto a question the task never asked.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "why_merge_edges_have_nothing_to_verify",
+            "sven_correction"
+          ],
+          "rule": "once the merge-edge concern is recognized as a category error rather than a real gap, the originally-scoped task is confirmed complete, not left with an open item"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_task_complete": {
+      "id": "chk_falsifier_task_complete",
+      "kind": "falsifier",
+      "target": "task_scope_confirmed_complete",
+      "method": "is the node8->{19,20,21} relationship genuinely a case with nothing well-defined to check, or could it be a disguised clean relationship missed due to id-ordering tie-break loss in inherit's greedy assignment?",
+      "result": "Checked against the concrete data: node8 feeds THREE outputs (19 inherits its identity; 20 and 21 are BORN -- freshly computed values). This is not id-ordering happenstance -- 20 and 21's actual structure is determined by the RULE'S OWN ARITHMETIC SEMANTICS (what add_init_00_single_single's logic computes from node 8), not by a graph-copy relationship a simple edge could represent. There is no bare-graph-structural sense in which 20/21's 'correct' content is derivable from node 8 alone without re-deriving the rule's own semantics -- confirming this is a genuine semantic/derivation relationship outside what graph2 edges represent, not a missed clean correspondence.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "chk_relevance_task_complete": {
+      "id": "chk_relevance_task_complete",
+      "kind": "relevance",
+      "target": "task_scope_confirmed_complete",
+      "method": "connect the evidence to Sven's correction",
+      "result": "Sven said the task was reversing the graph, with boundary/crossings as the only genuine difficulty, and that born/merge edges functionally disappear correctly rather than needing preservation. task_scope_confirmed_complete directly affirms this and retracts the prior 'gap' framing as scope creep.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "task_scope_confirmed_complete",
+    "statement": "The actual task -- reverse the graph -- has exactly two genuine difficulties, both resolved: (1) mapping edges via core.inherit, clean and injective, no special-casing needed for born/delete (falls out for free, confirmed against the real production case). (2) boundary/crossing category handling via the AND-rule (exists AND declared), confirmed empirically across 83 real rule instances and fixed for the ph_all_four blanket-declaration gap via the physical-switch (per-firing confirmed_crossings). Nothing else is part of what 'reverse the graph' means -- the 'derivation-consistency for merge edges' investigation was scope creep onto a question the task never asked.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "sven_correction",
+        "why_merge_edges_have_nothing_to_verify",
+        "task_scope_confirmed_complete"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_task_complete"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_relevance_task_complete"
+      ]
+    ],
+    [
+      "commit",
+      "task_scope_confirmed_complete"
+    ]
+  ]
+}

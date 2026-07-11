@@ -1,0 +1,184 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Fix a real latent bug found while explaining the split/merge solution: _preserved_ids_per_instance reads static core.inherit directly, not accounting for apply_compound's forced_born override for genuine overlapping_nodes conflicts. Fix using the ALREADY-COMPUTED aggregate born set (no need to recompute forced_born separately) for both forward and reverse sides, and construct a genuine overlapping_nodes test case to verify the fix actually matters, not just theoretically."
+  },
+  "prep_note": "Found while explaining split/merge to Sven. Prepared before fixing.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_checker_continuation.json::footprint_wiring_answer",
+      "claim_id": "footprint_wiring_answer",
+      "statement": "ADOPTED: cand_lightweight_aggregate, scoped to the no-overlap case (matches this session's tested coverage). S_forward comes directly from a REAL forward firing via apply_compound's own return value (result['born']|result['changed']) -- no new code needed there. S_reverse_implied is computed by a new lightweight function: for the reversed matches (no overlaps case), born = reversed schema's core.born positions mapped through the reversed output_map, changed = incident-set comparison before/after for survived positions -- mirroring apply_compound's aggregation without the full LayeredGraph/registry integration (cand_reuse_apply_compound_dryrun failed its falsifier: no PerspectiveGraph-to-LayeredGraph adapter exists, real unbuilt integration work). SCOPE LIMIT, carried: this lightweight version does not incorporate resolve_compound's redirect logic, so it is only confirmed adequate for the no-overlap case already tested -- a genuine compound/overlapping reverse firing would need more.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "apply_compound_returns_aggregates",
+            "layered_graph_integration_needed"
+          ],
+          "rule": "adopt the candidate that survived its falsifier (self-contained, no new untested integration surface) over the one that failed (requires building an adapter that doesn't exist), while honestly scoping the adopted candidate's own limit"
+        }
+      ],
+      "source_path": "/home/claude/ers_checker_continuation.json",
+      "goals": [
+        "Continue the reversibility checker implementation: wire footprint_is_consistent to real apply_compound aggregates (S_forward/S_reverse_implied), build a reverse_fire orchestrator tying collect_reversed_matches + resolve_reverse_compound + footprint_is_consistent together, and determine what the isomorphism-to-retained-previous-layer check actually requires to implement against real graphs."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_reverse_fire_implemented.json::imported_footprint_wiring_answer",
+      "claim_id": "imported_footprint_wiring_answer",
+      "statement": "ADOPTED: cand_lightweight_aggregate, scoped to the no-overlap case (matches this session's tested coverage). S_forward comes directly from a REAL forward firing via apply_compound's own return value (result['born']|result['changed']) -- no new code needed there. S_reverse_implied is computed by a new lightweight function: for the reversed matches (no overlaps case), born = reversed schema's core.born positions mapped through the reversed output_map, changed = incident-set comparison before/after for survived positions -- mirroring apply_compound's aggregation without the full LayeredGraph/registry integration (cand_reuse_apply_compound_dryrun failed its falsifier: no PerspectiveGraph-to-LayeredGraph adapter exists, real unbuilt integration work). SCOPE LIMIT, carried: this lightweight version does not incorporate resolve_compound's redirect logic, so it is only confirmed adequate for the no-overlap case already tested -- a genuine compound/overlapping reverse firing would need more.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_apply_compound_returns_aggregates",
+            "imported_layered_graph_integration_needed"
+          ],
+          "rule": "adopt the candidate that survived its falsifier (self-contained, no new untested integration surface) over the one that failed (requires building an adapter that doesn't exist), while honestly scoping the adopted candidate's own limit (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_reverse_fire_implemented.json",
+      "goals": [
+        "Record the reverse_fire orchestrator implementation and its first end-to-end test result, including the honest scope limits (coarse footprint approximation, no-overlap-only, no isomorphism check, stand-in S_forward since no apply_compound/LayeredGraph adapter exists)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_step5_implementation.json::concrete_design",
+      "claim_id": "concrete_design",
+      "statement": "collect_reversed_matches is extended to take forward apply_compound's result (output_maps, per-match) so it can compute, per instance i: forward_preserved[i] = set of real ids that are inherit-mapped for instance i's own operation (core.inherit keys mapped through output_maps[i]). For the reverse side, per instance i's single accepted binding (after the existing per_match_multiplicity==1 check), reverse_preserved[i] = set of real ids the reversed_op's OWN core.inherit maps through that binding. The check: forward_preserved[i] == reverse_preserved[i] EXACTLY (no more, no less, no different) -- compared per-instance only, never pooled or checked for disjointness against other instances (per pairing_already_exists_by_construction and overlap_source_already_computed, legitimate cross-instance overlap is expected and irrelevant to this per-instance equality check). SEPARATELY, a firing-count check: len(matches) == len(reversed_matches with exactly one binding each) -- already partially implied by the existing per_match_multiplicity==0/>1 checks, but explicitly named as the backstop for instances whose forward_preserved set is EMPTY (pure-born instances), where the id-set check alone cannot distinguish a correct empty-preserved match from a spurious extra one with no preserved ids.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "pairing_already_exists_by_construction",
+            "overlap_source_already_computed"
+          ],
+          "rule": "implement the per-instance equality check directly using apply_compound's already-available output_maps and core.inherit, with no new cross-instance machinery needed"
+        }
+      ],
+      "source_path": "/home/claude/ers_step5_implementation.json",
+      "goals": [
+        "Design the refined step 5: exact preserved-id-set comparison per matched pair (no more, no less, no different), plus a firing-count backstop to catch extra firings with empty preserved-id-sets (invisible to the set comparison since empty==empty trivially). Address Sven's caution: split/merge cases mean preserved-id-sets CAN legitimately overlap ACROSS different match instances (shared/redirected nodes, per Compound Match Resolution's own overlapping_nodes/boundary_crossings typology) -- the comparison must not assume cross-instance disjointness, only per-instance forward-vs-reverse equality."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_step5_verified.json::imported_concrete_design",
+      "claim_id": "imported_concrete_design",
+      "statement": "collect_reversed_matches is extended to take forward apply_compound's result (output_maps, per-match) so it can compute, per instance i: forward_preserved[i] = set of real ids that are inherit-mapped for instance i's own operation (core.inherit keys mapped through output_maps[i]). For the reverse side, per instance i's single accepted binding (after the existing per_match_multiplicity==1 check), reverse_preserved[i] = set of real ids the reversed_op's OWN core.inherit maps through that binding. The check: forward_preserved[i] == reverse_preserved[i] EXACTLY (no more, no less, no different) -- compared per-instance only, never pooled or checked for disjointness against other instances (per pairing_already_exists_by_construction and overlap_source_already_computed, legitimate cross-instance overlap is expected and irrelevant to this per-instance equality check). SEPARATELY, a firing-count check: len(matches) == len(reversed_matches with exactly one binding each) -- already partially implied by the existing per_match_multiplicity==0/>1 checks, but explicitly named as the backstop for instances whose forward_preserved set is EMPTY (pure-born instances), where the id-set check alone cannot distinguish a correct empty-preserved match from a spurious extra one with no preserved ids.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_pairing_already_exists_by_construction",
+            "imported_overlap_source_already_computed"
+          ],
+          "rule": "implement the per-instance equality check directly using apply_compound's already-available output_maps and core.inherit, with no new cross-instance machinery needed (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_step5_verified.json",
+      "goals": [
+        "Record the implementation and test results of the refined step 5 (exact preserved-id-set comparison, firing-count backstop) against both the synthetic regression and the real production case."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_full_wiring.json::apply_compound_gives_exact_unchanged",
+      "claim_id": "apply_compound_gives_exact_unchanged",
+      "statement": "apply_compound's real 'changed' set (base_incident != result_incident, an EXACT structural comparison already computed) makes 'survived - changed' the PRECISE, authoritative answer to 'which nodes are unchanged' -- more precise than compute_unchanged_candidates' static declared-spectrum heuristic (which was explicitly NECESSARY-not-sufficient, requiring a separate per-firing confirmed-crossings check to close the gap). Once apply_compound is used on both forward and reverse sides, the anchor for check_isomorphism_anchored can be picked directly from (survived - changed), no separate compute_unchanged_candidates call needed for correctness (it may still have value as a cheap static pre-filter before running the heavier apply_compound, but is not required for THIS wiring).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_full_wiring.json",
+      "goals": [
+        "Wire the validated apply_compound stub into the full reverse_fire pipeline: (1) compute S_forward via apply_compound on the real matches/base_graph, replacing the rebuild()-output_map stand-in. (2) Replace reverse_footprint_lightweight's hand-rolled per-match logic with apply_compound on reversed_matches/result_graph, giving S_reverse_implied AND the reconstructed graph in one call. (3) Rewrite check_isomorphism_anchored to use this reconstruction directly, removing the len(matches)!=1 gate since apply_compound already generalizes to N matches. (4) Regression-test the single-rule case and run the previously-blocked two-rule compound case through the complete pipeline for the first time."
+      ]
+    }
+  ],
+  "claims": {
+    "bug_confirmed": {
+      "id": "bug_confirmed",
+      "statement": "Confirmed by reading apply_compound's disposition loop (schema.py): for out_node,in_node in core.inherit.items(): if in_node in forced_born.get(i,set()): born.add(om[out_node]) else: survived.add(om[out_node]). apply_compound ALREADY correctly separates genuine inherit winners from forced-born losers in its returned 'born' aggregate. _preserved_ids_per_instance (reverse_compound.py) reads core.inherit.keys() directly with no forced_born awareness -- for a genuine overlapping_nodes conflict, the loser's fresh born id would be wrongly included as 'preserved'.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "fix_uses_existing_aggregate": {
+      "id": "fix_uses_existing_aggregate",
+      "statement": "No need to separately recompute forced_born or call detect_overlaps/resolve_compound again for this purpose -- apply_compound's own returned 'born' aggregate already correctly reflects forced-born overrides. Fix: forward_preserved = {fwd_map[out_node] for out_node in fwd_core.inherit.keys() if out_node in fwd_map and fwd_map[out_node] not in fwd_result['born']}. The SAME issue applies to reverse_preserved -- but reverse_fire currently computes the preserved-id check BEFORE the reverse aggregation (_aggregate_via_apply_compound on reversed_matches) runs, so reverse_result['born'] is not yet available at that point -- reverse_fire's step order must change: compute the reverse aggregation FIRST, then do the preserved-id check using both aggregates' born sets.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "bug_confirmed"
+          ],
+          "rule": "reuse apply_compound's own already-correct disposition rather than reimplementing forced_born detection, and reorder reverse_fire so both aggregates are available before the check that needs them"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_fix": {
+      "id": "chk_falsifier_fix",
+      "kind": "falsifier",
+      "target": "fix_uses_existing_aggregate",
+      "method": "does reordering reverse_fire to compute the reverse aggregation earlier risk breaking anything downstream that currently relies on the CURRENT order (e.g. short-circuiting before the expensive apply_compound call when a cheaper check already failed)?",
+      "result": "Real tradeoff, not free: currently, per_match_multiplicity/firing-count checks (cheap) run BEFORE the preserved-id check, which itself runs before the (potentially more expensive) reverse aggregation via apply_compound. Moving the reverse aggregation earlier means paying its cost even for cases that might have failed the cheap checks anyway -- though those cheap checks still run FIRST and can still short-circuit before ever reaching the aggregation, so the aggregation only gets pulled forward relative to the preserved-id check specifically, not ahead of the genuinely cheap gates. Acceptable, not free -- worth noting explicitly rather than treating as costless.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "reordering pays apply_compound's cost slightly earlier than before for cases that pass the cheap gates but would have failed the id-set check anyway -- a real but modest cost tradeoff",
+          "disposition": "fixed"
+        }
+      ]
+    },
+    "chk_relevance_fix": {
+      "id": "chk_relevance_fix",
+      "kind": "relevance",
+      "target": "fix_uses_existing_aggregate",
+      "method": "connect the evidence to the goal",
+      "result": "Directly specifies the fix using already-available data and the required reordering, addressing the confirmed bug.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "fix_uses_existing_aggregate",
+    "statement": "No need to separately recompute forced_born or call detect_overlaps/resolve_compound again for this purpose -- apply_compound's own returned 'born' aggregate already correctly reflects forced-born overrides. Fix: forward_preserved = {fwd_map[out_node] for out_node in fwd_core.inherit.keys() if out_node in fwd_map and fwd_map[out_node] not in fwd_result['born']}. The SAME issue applies to reverse_preserved -- but reverse_fire currently computes the preserved-id check BEFORE the reverse aggregation (_aggregate_via_apply_compound on reversed_matches) runs, so reverse_result['born'] is not yet available at that point -- reverse_fire's step order must change: compute the reverse aggregation FIRST, then do the preserved-id check using both aggregates' born sets.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "bug_confirmed",
+        "fix_uses_existing_aggregate"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_fix",
+        "chk_relevance_fix"
+      ]
+    ],
+    [
+      "commit",
+      "fix_uses_existing_aggregate"
+    ]
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Confirm precisely: (1) how the born-node construction defect evaded every falsifier run today (zero test coverage of the case, not a check that ran and failed). (2) correct the mischaracterization -- this is a construction defect in build_reversed_graph2 (missing born<->delete duality), not a need for special reverse-firing logic; firing a correctly-built reversed graph2 is just a normal firing via unmodified apply_compound."
+  },
+  "prep_note": "Sven's two corrections, both confirmed against the actual code. Prepared before recording.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_isomorphism_check.json::isomorphism_design",
+      "claim_id": "isomorphism_design",
+      "statement": "ADOPTED: cand_bfs_direct_comparison, WITH the falsifier's correction incorporated: (1) build the candidate reconstruction via rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) -- reusing the proven mechanism, no new materialization logic. (2) Pick anchor from the CONFIRMED-unchanged set (not from an arbitrary match_all binding). (3) BFS-grow a correspondence from the anchor: for INHERITED/confirmed-unchanged real nodes, compare incident edges by DIRECT real-id equality (same physical node, by construction). For BORN/reconstructed nodes (freshly minted, no shared id with base_graph possible), compare STRUCTURALLY instead -- find whether some node in base_graph, adjacent to the already-confirmed correspondence, has matching edge structure relative to what's already anchored; require this structural match, not id equality, for born positions specifically. (4) Require full coverage: every node in both the reconstruction and base_graph must be reached by the BFS; unreached/disconnected nodes are a coverage gap, not a silent pass. Rejected: cand_seeded_match_all (failed its falsifier -- derive_match_view requires graph2-specific scaffolding a plain materialized graph doesn't have; a confirmed blocker, not an inconvenience).",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "sven_hints",
+            "rebuild_is_reusable_for_reconstruction",
+            "anchor_source_is_confirmed_unchanged_not_arbitrary"
+          ],
+          "rule": "adopt the candidate that survived its falsifier, incorporating the real correction it surfaced (born nodes need structural not id-based matching), and reject the one shown to have a concrete, confirmed blocker"
+        }
+      ],
+      "source_path": "/home/claude/ers_isomorphism_check.json",
+      "goals": [
+        "Implement the isomorphism check (refined_classifier's final, still-unbuilt piece): choose an anchor from a CONFIRMED-unchanged node (not from match_all's arbitrary resolution), use it to seed a structural correspondence, materialize ('build') the reconstructed candidate layer, and compare it against the retained previous layer (base_graph)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_isomorphism_implemented.json::imported_isomorphism_design",
+      "claim_id": "imported_isomorphism_design",
+      "statement": "ADOPTED: cand_bfs_direct_comparison, WITH the falsifier's correction incorporated: (1) build the candidate reconstruction via rebuild(result_graph.copy(), reversed_op.schema.edits, reversed_binding) -- reusing the proven mechanism, no new materialization logic. (2) Pick anchor from the CONFIRMED-unchanged set (not from an arbitrary match_all binding). (3) BFS-grow a correspondence from the anchor: for INHERITED/confirmed-unchanged real nodes, compare incident edges by DIRECT real-id equality (same physical node, by construction). For BORN/reconstructed nodes (freshly minted, no shared id with base_graph possible), compare STRUCTURALLY instead -- find whether some node in base_graph, adjacent to the already-confirmed correspondence, has matching edge structure relative to what's already anchored; require this structural match, not id equality, for born positions specifically. (4) Require full coverage: every node in both the reconstruction and base_graph must be reached by the BFS; unreached/disconnected nodes are a coverage gap, not a silent pass. Rejected: cand_seeded_match_all (failed its falsifier -- derive_match_view requires graph2-specific scaffolding a plain materialized graph doesn't have; a confirmed blocker, not an inconvenience).",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_sven_hints",
+            "imported_rebuild_is_reusable_for_reconstruction",
+            "imported_anchor_source_is_confirmed_unchanged_not_arbitrary"
+          ],
+          "rule": "adopt the candidate that survived its falsifier, incorporating the real correction it surfaced (born nodes need structural not id-based matching), and reject the one shown to have a concrete, confirmed blocker (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_isomorphism_implemented.json",
+      "goals": [
+        "Record the implemented check_isomorphism_anchored and its two-case test: positive case (genuine match) returns reversible:True with a confirmed anchor; negative case (deliberately corrupted retained layer) correctly returns reversible:False with the exact edge mismatch, confirming the check can genuinely fail, not just default to True."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_checker_continuation.json::footprint_wiring_answer",
+      "claim_id": "footprint_wiring_answer",
+      "statement": "ADOPTED: cand_lightweight_aggregate, scoped to the no-overlap case (matches this session's tested coverage). S_forward comes directly from a REAL forward firing via apply_compound's own return value (result['born']|result['changed']) -- no new code needed there. S_reverse_implied is computed by a new lightweight function: for the reversed matches (no overlaps case), born = reversed schema's core.born positions mapped through the reversed output_map, changed = incident-set comparison before/after for survived positions -- mirroring apply_compound's aggregation without the full LayeredGraph/registry integration (cand_reuse_apply_compound_dryrun failed its falsifier: no PerspectiveGraph-to-LayeredGraph adapter exists, real unbuilt integration work). SCOPE LIMIT, carried: this lightweight version does not incorporate resolve_compound's redirect logic, so it is only confirmed adequate for the no-overlap case already tested -- a genuine compound/overlapping reverse firing would need more.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "apply_compound_returns_aggregates",
+            "layered_graph_integration_needed"
+          ],
+          "rule": "adopt the candidate that survived its falsifier (self-contained, no new untested integration surface) over the one that failed (requires building an adapter that doesn't exist), while honestly scoping the adopted candidate's own limit"
+        }
+      ],
+      "source_path": "/home/claude/ers_checker_continuation.json",
+      "goals": [
+        "Continue the reversibility checker implementation: wire footprint_is_consistent to real apply_compound aggregates (S_forward/S_reverse_implied), build a reverse_fire orchestrator tying collect_reversed_matches + resolve_reverse_compound + footprint_is_consistent together, and determine what the isomorphism-to-retained-previous-layer check actually requires to implement against real graphs."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_reverse_fire_implemented.json::imported_footprint_wiring_answer",
+      "claim_id": "imported_footprint_wiring_answer",
+      "statement": "ADOPTED: cand_lightweight_aggregate, scoped to the no-overlap case (matches this session's tested coverage). S_forward comes directly from a REAL forward firing via apply_compound's own return value (result['born']|result['changed']) -- no new code needed there. S_reverse_implied is computed by a new lightweight function: for the reversed matches (no overlaps case), born = reversed schema's core.born positions mapped through the reversed output_map, changed = incident-set comparison before/after for survived positions -- mirroring apply_compound's aggregation without the full LayeredGraph/registry integration (cand_reuse_apply_compound_dryrun failed its falsifier: no PerspectiveGraph-to-LayeredGraph adapter exists, real unbuilt integration work). SCOPE LIMIT, carried: this lightweight version does not incorporate resolve_compound's redirect logic, so it is only confirmed adequate for the no-overlap case already tested -- a genuine compound/overlapping reverse firing would need more.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_apply_compound_returns_aggregates",
+            "imported_layered_graph_integration_needed"
+          ],
+          "rule": "adopt the candidate that survived its falsifier (self-contained, no new untested integration surface) over the one that failed (requires building an adapter that doesn't exist), while honestly scoping the adopted candidate's own limit (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_reverse_fire_implemented.json",
+      "goals": [
+        "Record the reverse_fire orchestrator implementation and its first end-to-end test result, including the honest scope limits (coarse footprint approximation, no-overlap-only, no isomorphism check, stand-in S_forward since no apply_compound/LayeredGraph adapter exists)."
+      ]
+    }
+  ],
+  "claims": {
+    "imported_substrate_and_failure_traced": {
+      "id": "imported_substrate_and_failure_traced",
+      "statement": "Sven asked: what was the substrate, and at what level did the rule fail? Answered by direct inspection, not the printed summary alone: substrate = encode(g, '0+0=0'), a real production graph, base_graph_snapshot/result_graph from a genuine add_init_00_single_single firing via apply_compound. Failure level = the isomorphism/reconstruction check specifically (footprint and overlap comparisons both passed) -- traced via direct instrumentation of _aggregate_via_apply_compound's reverse call.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_next_id_bug_fixed": {
+      "id": "imported_next_id_bug_fixed",
+      "statement": "Found and fixed: PlainGraphLayeredStub.materialize_result built recon_graph via PerspectiveGraph() (fresh _next_id=0) then inserted existing high-id nodes directly into _nodes, bypassing add_node() -- _next_id was never synced, staying at 0 even with nodes up to id 21+ present. Latent, not the cause of THIS specific failure (this reverse pass minted zero born nodes), but would cause a real id collision the moment one did. Fixed: result._next_id = max(ids)+1 after population. Verified the fix doesn't change the (still real) failure result.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_born_node_disposition_gap": {
+      "id": "imported_born_node_disposition_gap",
+      "statement": "The REAL, unresolved finding: reverse aggregation on this firing shows consumed={Node(7), Node(20)}, changed={Node(21)}. Node 7 existed in the TRUE prior state (base_graph) and gets CONSUMED (lost) rather than recovered by the reversed rule. Node 21 was FORWARD-BORN (created fresh by add_init_00_single_single, never existed before firing) yet the reversed rule treats it as SURVIVED/changed rather than eliminating it -- backwards: a correct reconstruction of the prior state should make node 21 disappear (it is an artifact of the forward direction) and should recover node 7 (real prior structure). This is a gap in how build_reversed_graph2's role-swap handles nodes that were forward-born when they become part of the reverse pattern's own matched/bound structure -- not addressed by any of today's design sessions, which focused on boundary/crossing categories and overlap comparison, not on how born-vs-inherited disposition should invert.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_substrate_and_failure_traced"
+          ],
+          "rule": "direct instrumentation of the reverse aggregation's consumed/changed/born sets, cross-referenced against the forward firing's own born set, identifies precisely which nodes are mishandled and in which direction (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "code_confirms_no_born_delete_handling": {
+      "id": "code_confirms_no_born_delete_handling",
+      "statement": "Direct grep of reversed_rule.py: core.born is never referenced in build_reversed_graph2's actual construction logic at all -- only core.delete appears, and only in docstrings/comments explaining the earlier (unrelated) removed guard. The function iterates core.output_nodes and core.input_nodes UNIFORMLY, with no branch distinguishing which output_nodes were born vs inherited, or which input_nodes ended up deleted vs mapped. Mapping edges are built purely from core.mapping_in with no consideration of forward born/delete status.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "test_coverage_gap_confirmed": {
+      "id": "test_coverage_gap_confirmed",
+      "statement": "Every synthetic test rule built and falsified today (the first bijective toy rule, its ph_all_four variant, the two-rule R/S compound test) was deliberately pure-inherit: single input, single output, full identity mapping, zero born, zero delete on the forward side. No falsifier across ers_reversed_placeholders_scope, ers_reversed_placeholders_and_rule, ers_reversed_rule_implementation, ers_physical_switch_fix, ers_schema_precompute_unchanged, or ers_precise_footprint_wiring ever ran against a rule with a genuine born or deleted node -- the case was never constructed, not merely un-caught by a check that ran.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "reversal_is_construction_not_special_firing": {
+      "id": "reversal_is_construction_not_special_firing",
+      "statement": "CORRECTED characterization (Sven, this session): reverse firing is not special -- once a graph2 exists, compile_core classifies inherit/born/delete identically for any graph2, and apply_compound fires it unmodified, same as any forward rule. What is actually broken is that build_reversed_graph2 never implements the born<->delete DUALITY when constructing the reversed graph2: a forward-born node (created from nothing) should be constructed such that its reverse counterpart is DELETED (erasure mirrors creation); a forward-deleted node should be constructed such that its reverse counterpart is BORN (creation mirrors erasure). The code does neither -- it only handles the role-swap (input<->output) and boundary-category transposition, leaving compile_core to classify whatever mapping edges incidentally fall out of that, with zero consideration of the forward rule's own born/delete status. This directly explains the observed failure: node 21 (forward-born) came out survived/changed instead of consumed; node 7 (forward-real, present but mishandled) came out consumed instead of correctly recovered.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "code_confirms_no_born_delete_handling"
+          ],
+          "rule": "the absence of any born/delete-aware branching in the construction code, confirmed by direct inspection, is the precise, sufficient explanation for the observed misclassification -- no separate 'special reverse logic' is needed, only correcting what the construction itself encodes"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_construction_defect": {
+      "id": "chk_falsifier_construction_defect",
+      "kind": "falsifier",
+      "target": "reversal_is_construction_not_special_firing",
+      "method": "is it possible SOME special reverse-specific logic is still genuinely needed beyond fixing the born<->delete duality in construction -- e.g. does apply_compound itself make any forward-specific assumption that would break even with a correctly-constructed reversed graph2?",
+      "result": "Not identified in this session: apply_compound/compile_core operate purely on graph2 structure (input_nodes, output_nodes, inherit, born, delete, internal_edges, boundary_grab) with no code path that asks 'is this a forward or reversed rule' -- confirmed by re-reading compile_core's own logic (no forward/reverse flag or assumption anywhere). No evidence of a genuine remaining need for reverse-specific firing logic was found, consistent with the corrected characterization. Not exhaustively proven absent, but no counter-evidence surfaced.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "chk_relevance_construction_defect": {
+      "id": "chk_relevance_construction_defect",
+      "kind": "relevance",
+      "target": "reversal_is_construction_not_special_firing",
+      "method": "connect the evidence to the questions asked",
+      "result": "Sven asked how the bug evaded ERS and pushed back on the 'special logic' framing. Both directly answered: zero test coverage (not a failed check) for the first; direct code evidence that compile_core/apply_compound are firing-agnostic, confirming the defect is purely in construction, for the second.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "reversal_is_construction_not_special_firing",
+    "statement": "CORRECTED characterization (Sven, this session): reverse firing is not special -- once a graph2 exists, compile_core classifies inherit/born/delete identically for any graph2, and apply_compound fires it unmodified, same as any forward rule. What is actually broken is that build_reversed_graph2 never implements the born<->delete DUALITY when constructing the reversed graph2: a forward-born node (created from nothing) should be constructed such that its reverse counterpart is DELETED (erasure mirrors creation); a forward-deleted node should be constructed such that its reverse counterpart is BORN (creation mirrors erasure). The code does neither -- it only handles the role-swap (input<->output) and boundary-category transposition, leaving compile_core to classify whatever mapping edges incidentally fall out of that, with zero consideration of the forward rule's own born/delete status. This directly explains the observed failure: node 21 (forward-born) came out survived/changed instead of consumed; node 7 (forward-real, present but mishandled) came out consumed instead of correctly recovered.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "imported_substrate_and_failure_traced"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_next_id_bug_fixed"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_born_node_disposition_gap"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "code_confirms_no_born_delete_handling",
+        "test_coverage_gap_confirmed",
+        "reversal_is_construction_not_special_firing"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_construction_defect",
+        "chk_relevance_construction_defect"
+      ]
+    ],
+    [
+      "commit",
+      "reversal_is_construction_not_special_firing"
+    ]
+  ]
+}

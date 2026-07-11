@@ -1,0 +1,254 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Record the corrected three-phase caller's test result: match-all (across all 257 registered rules, not stop-at-first) -> apply_compound fire -> reverse_fire check, run against a real production case (0+0=0)."
+  },
+  "prep_note": "Implements ers_correct_pipeline_integration.json's committed plan. Prepared before recording the test.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_correct_pipeline_integration.json::own_caller_bug_confirmed",
+      "claim_id": "own_caller_bug_confirmed",
+      "statement": "check_real_rule_reversibility.py used apply_to_layer (the SINGLE-OPERATION layer_apply_schema path) in a loop that STOPS AT THE FIRST rule that fires -- this never collects a full matches record across all registered rules, never runs detect_overlaps/resolve_compound/apply_compound at all for real rules, and conflates match-discovery with firing. It does not reflect the intended pipeline in any of its three phases.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/ers_correct_pipeline_integration.json",
+      "goals": [
+        "Correct the real-caller integration to match Perspective's actual intended firing pipeline: (1) find ALL matches across ALL registered rules against the real base graph (the 'matches record' grouping/dispatch is meant to produce), not stop at the first one found via a single-op layer_apply_schema loop. (2) Fire that full matches record via apply_compound (compound and single-rule cases uniformly -- a ruleset of size 1 is the trivial case, per the settled design). (3) ONLY THEN run reverse_fire on that same matches record + before/after layers -- reversibility checking is a distinct phase that comes after firing, not interleaved with match discovery."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_correct_pipeline_integration.json::scoping_decision",
+      "claim_id": "scoping_decision",
+      "statement": "Corrected caller uses match_view.match_all directly, per registered rule, against the real base graph -- collecting ALL matches across ALL rules into one combined matches list. This reuses the SAME underlying match semantics dispatch.py/find_core ultimately fall back to (match_cut_at_edge, a special case of match_all), and is what collect_reversed_matches already does for the REVERSE side all session -- but deliberately does NOT reimplement grouping's own fingerprint-gate/CoreTree pruning mechanism, which is an EFFICIENCY optimization over the same match semantics, not a different notion of what counts as a match (confirmed via dispatch.py's own docstring). This is a real, stated scope limit: correct semantics, not grouping's actual optimized code path.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "code_dispatch_confirms_pruning_only",
+            "own_caller_bug_confirmed"
+          ],
+          "rule": "use the underlying match semantics grouping is itself built on top of, since reimplementing the pruning optimization is a separate, larger undertaking not required to correctly reflect the pipeline's PHASES (match all -> compound fire -> then check reversibility)"
+        }
+      ],
+      "source_path": "/home/claude/ers_correct_pipeline_integration.json",
+      "goals": [
+        "Correct the real-caller integration to match Perspective's actual intended firing pipeline: (1) find ALL matches across ALL registered rules against the real base graph (the 'matches record' grouping/dispatch is meant to produce), not stop at the first one found via a single-op layer_apply_schema loop. (2) Fire that full matches record via apply_compound (compound and single-rule cases uniformly -- a ruleset of size 1 is the trivial case, per the settled design). (3) ONLY THEN run reverse_fire on that same matches record + before/after layers -- reversibility checking is a distinct phase that comes after firing, not interleaved with match discovery."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_compound_test.json::compound_pipeline_verified",
+      "claim_id": "compound_pipeline_verified",
+      "statement": "After fixing the construction bug: fired rule B then rule A (read-before-write ordering, no apply_compound/redirect logic used) against a base graph with a genuine boundary_crossings overlap (rule B's crossing target R is inside rule A's own matched region). Result: forward firing correctly preserved the S->R edge this time. per_match_multiplicity = {0:1, 1:1} (no ambiguity). resolve_reverse_compound reported consistent:True (genuine overlap correctly matched between forward and reverse). reverse_footprint_lightweight + footprint_is_consistent also passed (both real nodes confirmed unchanged, correctly a subset of s_forward). This is the FIRST genuine multi-match compound test run today, and three of the four pipeline stages (collect, overlap, footprint) verified working correctly for it.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "own_construction_bug_found",
+            "overlap_construction_plan",
+            "firing_order_plan"
+          ],
+          "rule": "once the construction bug is fixed, the actual pipeline components (already written generically, no length-1 assumption in collect_reversed_matches or resolve_reverse_compound) work correctly against a real overlapping case"
+        }
+      ],
+      "source_path": "/home/claude/ers_compound_test.json",
+      "goals": [
+        "Build a genuine two-rule overlapping compound test (not synthetic single-rule): two matches whose overlap is a real boundary_crossings case (one match's live crossing target is inside another match's own matched region), fired via two ordered rebuild() calls (read before write, avoiding the need for full apply_compound redirect logic). Run it through collect_reversed_matches and resolve_reverse_compound (both already written generically over matches:list, no length-1 assumption) to see whether they actually work for N>1, and determine what check_isomorphism_anchored needs to handle the N=2 case (it currently hard-gates on len(matches)==1)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_wiring_complete.json::wiring_complete_for_tested_cases",
+      "claim_id": "wiring_complete_for_tested_cases",
+      "statement": "The full apply_compound-wired pipeline (compute_s_forward, collect_reversed_matches, resolve_reverse_compound, _aggregate_via_apply_compound for the reverse side, check_isomorphism_anchored using apply_compound's exact changed-set for anchoring) now runs end to end, with NO length-1 gate, for both tested cases: single-rule (regression: reversible:True, anchor confirmed) and a genuine two-rule compound case (correctly reversible:False, for an explained, real reason -- not a crash or a spurious result). This is the first time the complete pipeline has run for a compound case at all.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "genuine_non_reversibility_explained",
+            "imported_apply_compound_gives_exact_unchanged",
+            "imported_wiring_plan"
+          ],
+          "rule": "the pipeline is considered wired-to-completion for the tested scope once both the simple and compound cases produce explained, non-crashing, non-arbitrary verdicts"
+        }
+      ],
+      "source_path": "/home/claude/ers_wiring_complete.json",
+      "goals": [
+        "Record the completed wiring: the full apply_compound-based pipeline tested against both a single-rule case (regression) and a genuine two-rule compound case (first time ever), including tracing the surprising 'no match found' result to a genuine, explained non-reversibility finding rather than a pipeline defect."
+      ]
+    }
+  ],
+  "claims": {
+    "imported_sven_pipeline_description": {
+      "id": "imported_sven_pipeline_description",
+      "statement": "Sven (direct, this session): the intended firing pipeline is (1) match_all using grouping to find rules, producing a matches record; (2) compound uses that record to identify overlaps and fire (compound and single rules together); (3) THEN reversibility is checked/determined for the resulting layer.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_code_dispatch_confirms_pruning_only": {
+      "id": "imported_code_dispatch_confirms_pruning_only",
+      "statement": "dispatch.py's own docstring: grouping (CoreTree/fingerprint gate/find_core) is a PRUNING layer that narrows candidate rules efficiently, then still falls back to match_cut_at_edge for the actual binding -- 'find_core and dispatch.py are UNTOUCHED and keep their existing verified single-winner contract; find_all_cores is a separate sibling driver... this is exactly what Compound Match Resolution needs to see, not something to suppress.' The matches-record-for-compound is find_all_cores' job (collect ALL matches, including overlapping ones), not dispatch's (single winner).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_own_caller_bug_confirmed": {
+      "id": "imported_own_caller_bug_confirmed",
+      "statement": "check_real_rule_reversibility.py used apply_to_layer (the SINGLE-OPERATION layer_apply_schema path) in a loop that STOPS AT THE FIRST rule that fires -- this never collects a full matches record across all registered rules, never runs detect_overlaps/resolve_compound/apply_compound at all for real rules, and conflates match-discovery with firing. It does not reflect the intended pipeline in any of its three phases.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_scoping_decision": {
+      "id": "imported_scoping_decision",
+      "statement": "Corrected caller uses match_view.match_all directly, per registered rule, against the real base graph -- collecting ALL matches across ALL rules into one combined matches list. This reuses the SAME underlying match semantics dispatch.py/find_core ultimately fall back to (match_cut_at_edge, a special case of match_all), and is what collect_reversed_matches already does for the REVERSE side all session -- but deliberately does NOT reimplement grouping's own fingerprint-gate/CoreTree pruning mechanism, which is an EFFICIENCY optimization over the same match semantics, not a different notion of what counts as a match (confirmed via dispatch.py's own docstring). This is a real, stated scope limit: correct semantics, not grouping's actual optimized code path.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_code_dispatch_confirms_pruning_only",
+            "imported_own_caller_bug_confirmed"
+          ],
+          "rule": "use the underlying match semantics grouping is itself built on top of, since reimplementing the pruning optimization is a separate, larger undertaking not required to correctly reflect the pipeline's PHASES (match all -> compound fire -> then check reversibility) (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "corrected_caller_tested": {
+      "id": "corrected_caller_tested",
+      "statement": "check_real_rule_reversibility_v2.py built and run: Phase 1 (match_all per registered rule, collected across ALL 257 registered rules, not stop-at-first) found exactly ONE genuine match against 0+0=0 (add_init_00_single_single). Phase 2 fired this matches record via apply_compound (born={20,21}, consumed={}, changed={6,7}). Phase 3 ran reverse_fire on the SAME matches record: reversible:False, reason='edge mismatch at confirmed node Node(id=6)' -- recon has an edge to Node(21) base_edges lacks, and base_edges has an edge to Node(7) recon lacks. Same underlying verdict as the uncorrected v1 caller, but now reached via the actually-correct three-phase pipeline (full match-all, then compound-fire, then check) rather than a stop-at-first-match shortcut that happened to coincide.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_scoping_decision",
+            "imported_own_caller_bug_confirmed"
+          ],
+          "rule": "implement per the corrected pipeline design and run against the same real test case used before, to compare against the prior (incorrect-pipeline) result"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "single_match_this_case": {
+      "id": "single_match_this_case",
+      "statement": "This specific test case (0+0=0) happened to have exactly one genuine match across all 257 registered rules -- it did NOT exercise a real compound/overlapping firing (apply_compound's redirect/overlap-resolution logic ran on a ruleset of size 1, the trivial case, not genuinely tested for interaction here). Whether a different real case would produce multiple simultaneous matches (genuinely exercising compound resolution end-to-end with production rules) is untested.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_corrected_tested": {
+      "id": "chk_falsifier_corrected_tested",
+      "kind": "falsifier",
+      "target": "corrected_caller_tested",
+      "method": "does Phase 1's use of match_all (not grouping's actual dispatch tree) risk missing a match that the real production dispatch mechanism WOULD have found, making '257 rules checked' misleading?",
+      "result": "Real, carried risk from ers_correct_pipeline_integration.json's own falsifier: grouping's pruning is ASSERTED lossless by dispatch.py's docstring but not independently verified here. match_all is the more exhaustive/naive search (no pruning shortcuts), so if anything it should find AT LEAST what grouping would find, not less -- but this equivalence is assumed, not proven, and is explicitly carried forward rather than treated as settled.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "chk_relevance_corrected_tested": {
+      "id": "chk_relevance_corrected_tested",
+      "kind": "relevance",
+      "target": "corrected_caller_tested",
+      "method": "connect the evidence to this session's stated goal",
+      "result": "Goal: record the corrected caller's test result. Directly reports the three-phase run and the honest scope limit (single match, no genuine compound case exercised).",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "corrected_caller_tested",
+    "statement": "check_real_rule_reversibility_v2.py built and run: Phase 1 (match_all per registered rule, collected across ALL 257 registered rules, not stop-at-first) found exactly ONE genuine match against 0+0=0 (add_init_00_single_single). Phase 2 fired this matches record via apply_compound (born={20,21}, consumed={}, changed={6,7}). Phase 3 ran reverse_fire on the SAME matches record: reversible:False, reason='edge mismatch at confirmed node Node(id=6)' -- recon has an edge to Node(21) base_edges lacks, and base_edges has an edge to Node(7) recon lacks. Same underlying verdict as the uncorrected v1 caller, but now reached via the actually-correct three-phase pipeline (full match-all, then compound-fire, then check) rather than a stop-at-first-match shortcut that happened to coincide.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "imported_sven_pipeline_description"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_code_dispatch_confirms_pruning_only"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_own_caller_bug_confirmed"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_scoping_decision"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "corrected_caller_tested",
+        "single_match_this_case"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_corrected_tested",
+        "chk_relevance_corrected_tested"
+      ]
+    ],
+    [
+      "commit",
+      "corrected_caller_tested"
+    ]
+  ]
+}

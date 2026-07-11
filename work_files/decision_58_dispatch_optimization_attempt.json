@@ -1,0 +1,203 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Wire a genuine dispatch/grouping optimization into Phase 1 of the real caller: use CoreTree's fingerprint gate as a cheap per-rule pre-filter before running full match_all, verified NOT to produce false negatives (excluding a rule that would actually match) against real production data before trusting it for correctness-critical Phase 1 matching."
+  },
+  "prep_note": "Sven, this session. Prepared before implementing -- correctness must be verified first.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/ers_correct_pipeline_integration.json::scoping_decision",
+      "claim_id": "scoping_decision",
+      "statement": "Corrected caller uses match_view.match_all directly, per registered rule, against the real base graph -- collecting ALL matches across ALL rules into one combined matches list. This reuses the SAME underlying match semantics dispatch.py/find_core ultimately fall back to (match_cut_at_edge, a special case of match_all), and is what collect_reversed_matches already does for the REVERSE side all session -- but deliberately does NOT reimplement grouping's own fingerprint-gate/CoreTree pruning mechanism, which is an EFFICIENCY optimization over the same match semantics, not a different notion of what counts as a match (confirmed via dispatch.py's own docstring). This is a real, stated scope limit: correct semantics, not grouping's actual optimized code path.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "code_dispatch_confirms_pruning_only",
+            "own_caller_bug_confirmed"
+          ],
+          "rule": "use the underlying match semantics grouping is itself built on top of, since reimplementing the pruning optimization is a separate, larger undertaking not required to correctly reflect the pipeline's PHASES (match all -> compound fire -> then check reversibility)"
+        }
+      ],
+      "source_path": "/home/claude/ers_correct_pipeline_integration.json",
+      "goals": [
+        "Correct the real-caller integration to match Perspective's actual intended firing pipeline: (1) find ALL matches across ALL registered rules against the real base graph (the 'matches record' grouping/dispatch is meant to produce), not stop at the first one found via a single-op layer_apply_schema loop. (2) Fire that full matches record via apply_compound (compound and single-rule cases uniformly -- a ruleset of size 1 is the trivial case, per the settled design). (3) ONLY THEN run reverse_fire on that same matches record + before/after layers -- reversibility checking is a distinct phase that comes after firing, not interleaved with match discovery."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_pipeline_corrected_tested.json::imported_scoping_decision",
+      "claim_id": "imported_scoping_decision",
+      "statement": "Corrected caller uses match_view.match_all directly, per registered rule, against the real base graph -- collecting ALL matches across ALL rules into one combined matches list. This reuses the SAME underlying match semantics dispatch.py/find_core ultimately fall back to (match_cut_at_edge, a special case of match_all), and is what collect_reversed_matches already does for the REVERSE side all session -- but deliberately does NOT reimplement grouping's own fingerprint-gate/CoreTree pruning mechanism, which is an EFFICIENCY optimization over the same match semantics, not a different notion of what counts as a match (confirmed via dispatch.py's own docstring). This is a real, stated scope limit: correct semantics, not grouping's actual optimized code path.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_code_dispatch_confirms_pruning_only",
+            "imported_own_caller_bug_confirmed"
+          ],
+          "rule": "use the underlying match semantics grouping is itself built on top of, since reimplementing the pruning optimization is a separate, larger undertaking not required to correctly reflect the pipeline's PHASES (match all -> compound fire -> then check reversibility) (imported, parents not re-grounded — external provenance)"
+        }
+      ],
+      "source_path": "/home/claude/ers_pipeline_corrected_tested.json",
+      "goals": [
+        "Record the corrected three-phase caller's test result: match-all (across all 257 registered rules, not stop-at-first) -> apply_compound fire -> reverse_fire check, run against a real production case (0+0=0)."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_forced_born_fix_verified.json::fix_implemented_and_verified",
+      "claim_id": "fix_implemented_and_verified",
+      "statement": "Implemented: _preserved_ids_per_instance now takes forward_born and reverse_born, filtering out any inherit-classified-but-actually-forced-born real id from both forward_preserved and reverse_preserved. reverse_fire reordered so the reverse aggregation runs before the preserved-id check, making reverse_born available. Verified: syntax OK, single-rule regression unchanged, real production case (add_init_00_single_single) unchanged (reversible:True). A genuine overlapping_nodes conflict was constructed (two trivial rules both matching the same real node) to get real forced_born data from apply_compound -- the full reverse_fire pipeline failed EARLIER (per_match_multiplicity ambiguity, correct and expected since the two test rules were too structurally identical to distinguish in reverse) before reaching the preserved-id check, so the fix was verified by calling _preserved_ids_per_instance directly against real forward apply_compound output: the winner's forward_preserved correctly included the inherited real id; the forced-born loser's forward_preserved was correctly EMPTY, not wrongly including its fresh born id (which the pre-fix version would have done).",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_bug_confirmed",
+            "imported_fix_uses_existing_aggregate"
+          ],
+          "rule": "implement the fix per the committed design and verify against real apply_compound output from a constructed overlapping_nodes conflict, not just theoretical reasoning"
+        }
+      ],
+      "source_path": "/home/claude/ers_forced_born_fix_verified.json",
+      "goals": [
+        "Record the forced-born filter fix implementation and its verification against real apply_compound data from a genuine overlapping_nodes conflict."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_implementation.json::implementation_status",
+      "claim_id": "implementation_status",
+      "statement": "Implemented in basic_machinery/reverse_compound.py: build_reversed_operation (wraps build_reversed_graph2+compile_schema, cached), collect_reversed_matches (phase 1, blind match_all per rule, flags per-rule multiplicity), resolve_reverse_compound (phase 2, OV_forward vs OV_reverse structural comparison via detect_overlaps reused unmodified twice -- no ordering, no enumeration, per this session's correction). Verified end-to-end against a single-rule synthetic case using an explicit-category rule. NOT verified: any genuine multi-rule compound firing (no test built); footprint_is_consistent is still not wired to a real apply_compound aggregate; the full isomorphism-to-retained-previous-layer check is not implemented at all -- resolve_reverse_compound only gets as far as the OV comparison. A real, uncorrected defect was found and left uncorrected (root_cause_and_rule_misapplied): reversed rules built from a forward rule using ph_all_four (blanket, variable-presence preservation) will incorrectly find zero matches against real firings where fewer than all 4 declared categories are actually present, because the exact-degree matcher cannot express 'however many of these are present'. This affects any real rule using ph_all_four (at least spine_finalise_v1.py's out_rspine, confirmed earlier this session) and is carried forward, not fixed.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "test_succeeds_explicit_category",
+            "root_cause_and_rule_misapplied"
+          ],
+          "rule": "state plainly what is verified working, what is unverified, and what is a known, real, uncorrected defect -- not overclaiming completeness"
+        }
+      ],
+      "source_path": "/home/claude/ers_implementation.json",
+      "goals": [
+        "Implement the corrected reversibility check design (per ers_lf6_repair.json and ers_compose_reversed_compound.json's surviving structure): collect_reversed_matches(matches, result_graph) -- per-rule blind match_all of each reversed rule against the result, flagging per-rule multiplicity; resolve_reverse_compound -- compare OV_forward (detect_overlaps on the known forward matches/base graph) against OV_reverse (detect_overlaps on the reverse matches/result graph), no enumeration, no ordering; reverse_fire -- thin orchestrator wiring these to footprint_is_consistent (existing) and the isomorphism check."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/ers_pipeline_corrected_tested.json::corrected_caller_tested",
+      "claim_id": "corrected_caller_tested",
+      "statement": "check_real_rule_reversibility_v2.py built and run: Phase 1 (match_all per registered rule, collected across ALL 257 registered rules, not stop-at-first) found exactly ONE genuine match against 0+0=0 (add_init_00_single_single). Phase 2 fired this matches record via apply_compound (born={20,21}, consumed={}, changed={6,7}). Phase 3 ran reverse_fire on the SAME matches record: reversible:False, reason='edge mismatch at confirmed node Node(id=6)' -- recon has an edge to Node(21) base_edges lacks, and base_edges has an edge to Node(7) recon lacks. Same underlying verdict as the uncorrected v1 caller, but now reached via the actually-correct three-phase pipeline (full match-all, then compound-fire, then check) rather than a stop-at-first-match shortcut that happened to coincide.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "imported_scoping_decision",
+            "imported_own_caller_bug_confirmed"
+          ],
+          "rule": "implement per the corrected pipeline design and run against the same real test case used before, to compare against the prior (incorrect-pipeline) result"
+        }
+      ],
+      "source_path": "/home/claude/ers_pipeline_corrected_tested.json",
+      "goals": [
+        "Record the corrected three-phase caller's test result: match-all (across all 257 registered rules, not stop-at-first) -> apply_compound fire -> reverse_fire check, run against a real production case (0+0=0)."
+      ]
+    }
+  ],
+  "claims": {
+    "fingerprint_gate_correctness_verified": {
+      "id": "fingerprint_gate_correctness_verified",
+      "statement": "Ran both naive (check all 257 registered rules) and fingerprint-gated approaches against the real 0+0=0 graph. Results IDENTICAL (both find exactly {add_init_00_single_single}) -- no false negative, the gate is safe to use for correctness.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "gate_provides_no_benefit_here": {
+      "id": "gate_provides_no_benefit_here",
+      "statement": "The gated approach skipped 0/257 rules (should_try=True for every single registered rule against this graph) and was measurably SLOWER (1.042s vs 0.579s naive) -- the added fingerprint computation cost was pure overhead with zero pruning payoff for this specific real case. Likely cause: the fingerprint gate's crude upper-bound heuristic doesn't discriminate well for a small graph (0+0=0 has ~9-10 nodes) -- too many rules superficially satisfy the loose bound even though only one actually fully matches.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "real_pruning_needs_tree_sharing_not_built": {
+      "id": "real_pruning_needs_tree_sharing_not_built",
+      "statement": "The genuine efficiency gain in dispatch.py's design comes from the CoreTree's SHARED-CORE mechanism (test a core shared by many rules ONCE, only descend into individual rules if that shared test passes) -- not from an independent per-rule fingerprint check, which is what was tried and shown to provide no benefit. Building a real multi-match collector that walks the tree and shares core-tests across rules (analogous to _find_and_try but collecting all matches instead of stopping at the first) is a genuinely larger undertaking, not attempted here, and dispatch.py's own docstring states its existing recursive walk is meant to keep its verified single-winner contract untouched -- a multi-match variant would need to be a new, separately-verified sibling, not a small change to existing code.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "gate_provides_no_benefit_here"
+          ],
+          "rule": "a correct-but-unhelpful experiment reveals that the actual efficiency mechanism lives elsewhere (tree sharing) than where it was tried (independent per-rule fingerprint checks), which is worth stating precisely rather than either claiming success or abandoning the finding unexplained"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {},
+  "checks": {
+    "chk_falsifier_no_benefit": {
+      "id": "chk_falsifier_no_benefit",
+      "kind": "falsifier",
+      "target": "real_pruning_needs_tree_sharing_not_built",
+      "method": "is there a smaller, honest improvement available now (not the full tree-walk rebuild) rather than leaving Phase 1 completely unoptimized?",
+      "result": "None identified that's both correctness-safe and measurably beneficial for the tested case -- the only cheap option tried (independent fingerprint gate) is verified safe but not beneficial here. Not asserting no such improvement could exist for LARGER graphs/rulesets (untested), only that none was found or verified for the tested case within this session.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "whether the fingerprint gate becomes genuinely beneficial for larger/more complex real graphs (more nodes, more structurally-diverse ruleset matches) than the small 0+0=0 case is untested",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "chk_relevance_no_benefit": {
+      "id": "chk_relevance_no_benefit",
+      "kind": "relevance",
+      "target": "real_pruning_needs_tree_sharing_not_built",
+      "method": "connect the evidence to Sven's request",
+      "result": "Sven asked for the dispatch/grouping optimization. This reports a genuine, verified attempt, its correctness, and its honest lack of benefit as applied -- not silently skipping the request or overclaiming success.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {},
+  "committed": {
+    "answer": "real_pruning_needs_tree_sharing_not_built",
+    "statement": "The genuine efficiency gain in dispatch.py's design comes from the CoreTree's SHARED-CORE mechanism (test a core shared by many rules ONCE, only descend into individual rules if that shared test passes) -- not from an independent per-rule fingerprint check, which is what was tried and shown to provide no benefit. Building a real multi-match collector that walks the tree and shares core-tests across rules (analogous to _find_and_try but collecting all matches instead of stopping at the first) is a genuinely larger undertaking, not attempted here, and dispatch.py's own docstring states its existing recursive walk is meant to keep its verified single-winner contract untouched -- a multi-match variant would need to be a new, separately-verified sibling, not a small change to existing code.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "fingerprint_gate_correctness_verified",
+        "gate_provides_no_benefit_here",
+        "real_pruning_needs_tree_sharing_not_built"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsifier_no_benefit",
+        "chk_relevance_no_benefit"
+      ]
+    ],
+    [
+      "commit",
+      "real_pruning_needs_tree_sharing_not_built"
+    ]
+  ]
+}
