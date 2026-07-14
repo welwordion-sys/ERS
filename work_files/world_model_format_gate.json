@@ -1,0 +1,321 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Settle the v0 world-model format: (a) the depth-0 collision primitive, and (b) how transitivity/propagation is licensed, such that the model's ground truth cannot be contaminated by unsound derivation."
+  },
+  "prep_note": "Sven: minimal ambition, maximal formality. Disjointness first, depth deferred. Transitivity licensed per-channel by declaration. Prior: worldmodel_transplant_gate.json committed the consistency-layer scope.",
+  "prior_candidates": [
+    {
+      "reg_id": "worldmodel_transplant_gate.json::ans",
+      "claim_id": "ans",
+      "statement": "Transplant the world-model as a CONSISTENCY layer beside ERS: a claim is checked for whether its referents exist in the asserted model and whether it contradicts an already-populated relation. It checks consistency-against-asserted-model, NOT truth-against-world. Population of the model stays the human/reasoner's job, not ERS's.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "f_ers_shape",
+            "f_shape_gap",
+            "f_wm_exists"
+          ],
+          "rule": "shape-check has a known gap (f_shape_gap); the world-model can test the missing dimension (f_wm_exists); add it as a distinct consistency layer without claiming it closes the truth gap"
+        }
+      ],
+      "source_path": "worldmodel_transplant_gate.json",
+      "goals": [
+        "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_regress",
+      "claim_id": "f_regress",
+      "statement": "Any adjustable knob requires a decision-maker to set it, and that decision-maker itself requires governing; if the governing is judgment it never bottoms out (regress).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+      "goals": [
+        "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      ]
+    },
+    {
+      "reg_id": "worldmodel_transplant_gate.json::f_ers_shape",
+      "claim_id": "f_ers_shape",
+      "statement": "ERS today checks reasoning SHAPE (grounded, has-falsifier, no-orphan) and does not model what the reasoner asserts to be true about the world.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "worldmodel_transplant_gate.json",
+      "goals": [
+        "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::inv_no_knob",
+      "claim_id": "inv_no_knob",
+      "statement": "Loop variants (probabilistic firing, spontaneous association) are studied between clean benchmark runs by editing the fixed condition, never via an in-engine swappable parameter, and any weights used must be fixed/mechanical, never judged from state.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "f_regress"
+          ],
+          "rule": "a runtime parameter needs a chooser (f_regress); moving variant-selection to between-runs keeps the chooser outside the engine (the human experimenter), breaking the regress"
+        }
+      ],
+      "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+      "goals": [
+        "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_judged_converge",
+      "claim_id": "f_judged_converge",
+      "statement": "'Fire contingency on convergence' requires a detector that judges whether the state is converging.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+      "goals": [
+        "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      ]
+    }
+  ],
+  "claims": {
+    "f_ers_format": {
+      "id": "f_ers_format",
+      "statement": "ERS enforces reasoning discipline by refusing malformed shapes at write time, not by evaluating whether the logic is good.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f_silence": {
+      "id": "f_silence",
+      "statement": "A claim passes a consistency check either because it is consistent or because the model is too sparse to disagree; the checker cannot distinguish these from the inside.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f_nondistribution": {
+      "id": "f_nondistribution",
+      "statement": "Property inheritance across a relation is non-uniform: part-of is transitive for itself (wheel part-of car part-of garage), but attributes do not distribute down it (car is-red does not license wheel is-red).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f_exceptions_unbounded": {
+      "id": "f_exceptions_unbounded",
+      "statement": "The set of predicates that do NOT travel a given relation is unbounded and cannot be enumerated; the set that DO travel it is small and enumerable.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f_depth0_lookup": {
+      "id": "f_depth0_lookup",
+      "statement": "Collisions between already-asserted literals are decidable by lookup with no derivation; collisions requiring an inference step are not.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f_algebra": {
+      "id": "f_algebra",
+      "statement": "Functional slots, dimension-value exclusion, category disjointness, antisymmetry ({aRb,bRa}) and irreflexivity ({aRa}) are all instances of a single constraint: at most one member of a declared set may hold.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "ans_a": {
+      "id": "ans_a",
+      "statement": "v0 primitive is a single declaration form: AT-MOST-ONE-OF a named set of propositions. It subsumes functional slots, dimension-value exclusion, category disjointness, antisymmetry and irreflexivity (degenerate one-element case). Checking is depth-0 lookup only; nothing is derived.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "f_algebra",
+            "f_depth0_lookup",
+            "f_ers_format"
+          ],
+          "rule": "the five catch-types share one algebraic form (f_algebra); that form is decidable by lookup (f_depth0_lookup); enforcing it at write time matches ERS's format discipline (f_ers_format)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "ans_b": {
+      "id": "ans_b",
+      "statement": "Propagation is licensed per (predicate, relation, direction) CHANNEL by explicit declaration. Undeclared channels do not propagate. A relation's own transitivity is itself just a declared channel (part-of travels part-of, upward), so there is no general 'relations are transitive' rule and no exception mechanism.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "f_nondistribution",
+            "f_exceptions_unbounded",
+            "f_ers_format"
+          ],
+          "rule": "blanket transitivity requires enumerating an unbounded exception set (f_nondistribution + f_exceptions_unbounded); inverting the default to declare-to-travel makes the unbounded set the silent/inert one, which is the same structural-refusal discipline as ERS (f_ers_format)"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "cand_a": {
+      "id": "cand_a",
+      "statement": "Single at-most-one-of partition primitive, depth-0.",
+      "discriminator": "vs. five separate declared property-types, or vs. a general inference engine"
+    },
+    "cand_b": {
+      "id": "cand_b",
+      "statement": "Per-channel declared propagation licensing.",
+      "discriminator": "vs. blanket transitivity-with-exceptions, or vs. no propagation ever"
+    }
+  },
+  "checks": {
+    "chk_falsify_a": {
+      "id": "chk_falsify_a",
+      "kind": "falsifier",
+      "target": "ans_a",
+      "method": "Find a depth-0 collision the at-most-one-of form CANNOT express, which would show the primitive is not sufficient for v0.",
+      "result": "Cross-dimension incompatibility (transparent AND dark) is expressible as at-most-one-of({transparent, dark}) but ONLY if the pair is hand-enumerated — it is domain knowledge, not structure, so the primitive expresses it but does not generalize to unenumerated pairs. Also: 'exactly one' (totality) is NOT expressible — at-most-one cannot force a slot to be filled. Both are real limits. The primitive survives as SUFFICIENT FOR COLLISION-DETECTION (its stated job) but is NOT a completeness constraint language.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "at-most-one-of cannot express 'exactly one'/totality; v0 detects collisions, does not enforce completeness",
+          "disposition": "filed"
+        },
+        {
+          "finding": "cross-dimension incompatible pairs must be hand-enumerated per domain; does not generalize",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "chk_falsify_b": {
+      "id": "chk_falsify_b",
+      "kind": "falsifier",
+      "target": "ans_b",
+      "method": "Find a case where declared-channel licensing still admits an unsound derivation, which would break o_no_contamination.",
+      "result": "A channel declared WRONGLY (someone declares colour travels down part-of) propagates falsehood soundly-by-construction — the mechanism cannot detect a bad declaration. So contamination is not eliminated; it is RELOCATED to the declaration act, where it is at least explicit, hand-checkable and authority-backed rather than emergent from a flood. The strong reading ('cannot contaminate') is FALSIFIED; the narrow reading ('cannot contaminate WITHOUT an explicit, attributable declaration') survives.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "strong claim 'no contamination possible' is false — a wrong channel declaration contaminates; only the narrow attributable-declaration reading holds",
+          "disposition": "fixed"
+        }
+      ]
+    },
+    "chk_oblige": {
+      "id": "chk_oblige",
+      "kind": "obligation",
+      "target": "ans_b",
+      "method": "Test ans_a+ans_b against o_no_contamination / o_no_exceptions / o_depth_deferred / o_honest_ceiling.",
+      "result": "o_no_contamination: satisfied only in narrowed form (per chk_falsify_b). o_no_exceptions: satisfied — declare-to-travel inverts the default so the unbounded set is inert. o_depth_deferred: satisfied — v0 declares zero channels, each later channel is an independently verifiable increment. o_honest_ceiling: satisfied given the filed limits (no totality, no cross-dimension generalization, silence-is-not-consistency per f_silence).",
+      "outcome": "satisfied",
+      "side_findings": null
+    },
+    "chk_relevance": {
+      "id": "chk_relevance",
+      "kind": "relevance",
+      "target": "ans_a",
+      "method": "Tie the evidence to the stated goal.",
+      "result": "Goal asked for the v0 collision primitive and the propagation-licensing rule. ans_a supplies the primitive (one form, five catch-types, depth-0); ans_b supplies the licensing (declared channels, no blanket transitivity). Together they discharge both halves, with the contamination limit named rather than assumed away.",
+      "outcome": "satisfied",
+      "side_findings": null
+    },
+    "chk_relevance_b": {
+      "id": "chk_relevance_b",
+      "kind": "relevance",
+      "target": "ans_b",
+      "method": "Tie ans_b's evidence directly to the stated goal's half (b): how transitivity is licensed so ground truth cannot be contaminated by unsound derivation.",
+      "result": "The goal's (b) half asks how propagation is licensed such that ground truth is not contaminated. ans_b's evidence bears directly: f_nondistribution establishes that blanket transitivity IS the contamination mechanism (car is-red -> wheel is-red); f_exceptions_unbounded establishes that patching it with exceptions cannot be made safe; f_ers_format supplies the inversion (declare-to-travel) that makes undeclared channels inert rather than exceptional. The answer therefore discharges (b) directly, with its residual limit (a wrongly-declared channel still contaminates) named in chk_falsify_b rather than hidden.",
+      "outcome": "satisfied",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "o_no_contamination": "must guarantee the model cannot come to hold a derived claim that is unsound",
+    "o_no_exceptions": "must not require enumerating an unbounded set to be safe",
+    "o_depth_deferred": "must leave depth/propagation switchable on incrementally without redesign",
+    "o_honest_ceiling": "must not claim to catch errors it cannot catch"
+  },
+  "committed": {
+    "answer": "ans_b",
+    "statement": "Propagation is licensed per (predicate, relation, direction) CHANNEL by explicit declaration. Undeclared channels do not propagate. A relation's own transitivity is itself just a declared channel (part-of travels part-of, upward), so there is no general 'relations are transitive' rule and no exception mechanism.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "f_ers_format",
+        "f_silence",
+        "f_nondistribution",
+        "f_exceptions_unbounded",
+        "f_depth0_lookup",
+        "f_algebra",
+        "ans_a",
+        "ans_b"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        "o_no_contamination",
+        "o_no_exceptions",
+        "o_depth_deferred",
+        "o_honest_ceiling"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "cand_a",
+        "cand_b"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsify_a",
+        "chk_falsify_b",
+        "chk_oblige",
+        "chk_relevance"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_relevance_b"
+      ]
+    ],
+    [
+      "commit",
+      "ans_b"
+    ]
+  ]
+}

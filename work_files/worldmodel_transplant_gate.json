@@ -1,0 +1,242 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+  },
+  "prep_note": "Archived flood-and-stall engine had no correctness oracle; ERS shape-check cannot catch a well-formed but false claim. Literature: grounding at the population boundary is the paradigm's unsolved failure mode.",
+  "prior_candidates": [
+    {
+      "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::inv_no_knob",
+      "claim_id": "inv_no_knob",
+      "statement": "Loop variants (probabilistic firing, spontaneous association) are studied between clean benchmark runs by editing the fixed condition, never via an in-engine swappable parameter, and any weights used must be fixed/mechanical, never judged from state.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "f_regress"
+          ],
+          "rule": "a runtime parameter needs a chooser (f_regress); moving variant-selection to between-runs keeps the chooser outside the engine (the human experimenter), breaking the regress"
+        }
+      ],
+      "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+      "goals": [
+        "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_judged_converge",
+      "claim_id": "f_judged_converge",
+      "statement": "'Fire contingency on convergence' requires a detector that judges whether the state is converging.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+      "goals": [
+        "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::inv_judgeless",
+      "claim_id": "inv_judgeless",
+      "statement": "Every drive fires on a hard read off existing machinery; no firing condition may require a judgment. Contingency fires on a fixed counter threshold; all other drives fire unconditionally; the counter alone contains volume.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "f_regress",
+            "f_counter_hard",
+            "f_judged_converge"
+          ],
+          "rule": "a judged firing condition reintroduces the regress (f_regress); a counter-threshold fire does not (f_counter_hard); therefore replace the judged convergence gate with a hard threshold"
+        }
+      ],
+      "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+      "goals": [
+        "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_regress",
+      "claim_id": "f_regress",
+      "statement": "Any adjustable knob requires a decision-maker to set it, and that decision-maker itself requires governing; if the governing is judgment it never bottoms out (regress).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+      "goals": [
+        "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      ]
+    },
+    {
+      "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_counter_hard",
+      "claim_id": "f_counter_hard",
+      "statement": "The per-tree counter is an existing mechanical count read off state with no evaluation.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+      "goals": [
+        "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      ]
+    }
+  ],
+  "claims": {
+    "f_ers_shape": {
+      "id": "f_ers_shape",
+      "statement": "ERS today checks reasoning SHAPE (grounded, has-falsifier, no-orphan) and does not model what the reasoner asserts to be true about the world.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f_shape_gap": {
+      "id": "f_shape_gap",
+      "statement": "A claim can be shape-valid and semantically false simultaneously; shape-checking cannot distinguish them.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f_wm_exists": {
+      "id": "f_wm_exists",
+      "statement": "reasoning_engine already contains a typed world-model: concepts, role-uses on edges, and typed relations, sufficient to test whether a referent exists and whether an asserted relation contradicts a populated one.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "f_grounding_unsolved": {
+      "id": "f_grounding_unsolved",
+      "statement": "Independent literature reports grounding failure (referents not matching context, hallucinated propositions) as the dominant failure mode even when the LLM is confined to pure translation.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "ans": {
+      "id": "ans",
+      "statement": "Transplant the world-model as a CONSISTENCY layer beside ERS: a claim is checked for whether its referents exist in the asserted model and whether it contradicts an already-populated relation. It checks consistency-against-asserted-model, NOT truth-against-world. Population of the model stays the human/reasoner's job, not ERS's.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "f_ers_shape",
+            "f_shape_gap",
+            "f_wm_exists"
+          ],
+          "rule": "shape-check has a known gap (f_shape_gap); the world-model can test the missing dimension (f_wm_exists); add it as a distinct consistency layer without claiming it closes the truth gap"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "cand_ans": {
+      "id": "cand_ans",
+      "statement": "Add world-model as an ERS consistency-check layer (not a truth oracle).",
+      "discriminator": "vs. leaving ERS shape-only, or vs. claiming full semantic verification"
+    }
+  },
+  "checks": {
+    "chk_falsify": {
+      "id": "chk_falsify",
+      "kind": "falsifier",
+      "target": "ans",
+      "method": "Find a case where the consistency layer gives false assurance — passes a claim that is still false.",
+      "result": "A claim can be fully consistent with the asserted model AND false, if the model itself is wrong (garbage-in). So the layer does NOT catch truth errors; it only catches claims inconsistent with what was asserted. This is a real limit, not a defect of the proposal — it is exactly why o_no_oracle_overclaim exists. The proposal survives ONLY in its narrowed form (consistency, not truth); the broad form (verifies correctness) is falsified.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "broad 'verifies truth' reading is false; only the narrow consistency claim holds",
+          "disposition": "fixed"
+        }
+      ]
+    },
+    "chk_oblige": {
+      "id": "chk_oblige",
+      "kind": "obligation",
+      "target": "ans",
+      "method": "Does it satisfy o_adds_power / o_no_oracle_overclaim / o_bounded?",
+      "result": "o_adds_power: yes — catches referent-nonexistence and relation-contradiction, neither reachable by shape-check. o_no_oracle_overclaim: satisfied by construction (consistency-only). o_bounded: satisfied — ERS reads an already-populated model, it does not populate it.",
+      "outcome": "satisfied",
+      "side_findings": null
+    },
+    "chk_relevance": {
+      "id": "chk_relevance",
+      "kind": "relevance",
+      "target": "ans",
+      "method": "Tie the answer to the goal.",
+      "result": "Goal asked whether to transplant the world-model into ERS. Answer says yes but only as a consistency layer with an explicit scope boundary — directly discharging the decision with its own limit named.",
+      "outcome": "satisfied",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "o_adds_power": "must let ERS catch at least one error class it provably cannot catch now",
+    "o_no_oracle_overclaim": "must not claim to verify TRUTH against the world — only consistency against the reasoner's own asserted model",
+    "o_bounded": "must not require ERS to itself populate the world-model via LLM (that reintroduces the unsolved grounding problem inside the checker)"
+  },
+  "committed": {
+    "answer": "ans",
+    "statement": "Transplant the world-model as a CONSISTENCY layer beside ERS: a claim is checked for whether its referents exist in the asserted model and whether it contradicts an already-populated relation. It checks consistency-against-asserted-model, NOT truth-against-world. Population of the model stays the human/reasoner's job, not ERS's.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "f_ers_shape",
+        "f_shape_gap",
+        "f_wm_exists",
+        "f_grounding_unsolved"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        "o_adds_power",
+        "o_no_oracle_overclaim",
+        "o_bounded"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "ans"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "cand_ans"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_falsify",
+        "chk_oblige",
+        "chk_relevance"
+      ]
+    ],
+    [
+      "commit",
+      "ans"
+    ]
+  ]
+}

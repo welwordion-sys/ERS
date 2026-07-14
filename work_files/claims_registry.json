@@ -1,0 +1,212 @@
+[
+  {
+    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::inv_no_knob",
+    "claim_id": "inv_no_knob",
+    "statement": "Loop variants (probabilistic firing, spontaneous association) are studied between clean benchmark runs by editing the fixed condition, never via an in-engine swappable parameter, and any weights used must be fixed/mechanical, never judged from state.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "f_regress"
+        ],
+        "rule": "a runtime parameter needs a chooser (f_regress); moving variant-selection to between-runs keeps the chooser outside the engine (the human experimenter), breaking the regress"
+      }
+    ],
+    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "goals": [
+      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+    ]
+  },
+  {
+    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_counter_hard",
+    "claim_id": "f_counter_hard",
+    "statement": "The per-tree counter is an existing mechanical count read off state with no evaluation.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "goals": [
+      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+    ]
+  },
+  {
+    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::inv_judgeless",
+    "claim_id": "inv_judgeless",
+    "statement": "Every drive fires on a hard read off existing machinery; no firing condition may require a judgment. Contingency fires on a fixed counter threshold; all other drives fire unconditionally; the counter alone contains volume.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "f_regress",
+          "f_counter_hard",
+          "f_judged_converge"
+        ],
+        "rule": "a judged firing condition reintroduces the regress (f_regress); a counter-threshold fire does not (f_counter_hard); therefore replace the judged convergence gate with a hard threshold"
+      }
+    ],
+    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "goals": [
+      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+    ]
+  },
+  {
+    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_judged_converge",
+    "claim_id": "f_judged_converge",
+    "statement": "'Fire contingency on convergence' requires a detector that judges whether the state is converging.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "goals": [
+      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+    ]
+  },
+  {
+    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_regress",
+    "claim_id": "f_regress",
+    "statement": "Any adjustable knob requires a decision-maker to set it, and that decision-maker itself requires governing; if the governing is judgment it never bottoms out (regress).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "goals": [
+      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+    ]
+  },
+  {
+    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::ans",
+    "claim_id": "ans",
+    "statement": "Adopt inv_judgeless + inv_no_knob: all drives fire on hard reads (contingency on a counter threshold, others unconditional), counter contains volume, no runtime knob; variants compared between clean runs.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "inv_judgeless",
+          "inv_no_knob"
+        ],
+        "rule": "conjoin the two invariants into the adopted loop discipline"
+      }
+    ],
+    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "goals": [
+      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+    ]
+  },
+  {
+    "reg_id": "worldmodel_transplant_gate.json::f_shape_gap",
+    "claim_id": "f_shape_gap",
+    "statement": "A claim can be shape-valid and semantically false simultaneously; shape-checking cannot distinguish them.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "worldmodel_transplant_gate.json",
+    "goals": [
+      "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+    ]
+  },
+  {
+    "reg_id": "worldmodel_transplant_gate.json::f_ers_shape",
+    "claim_id": "f_ers_shape",
+    "statement": "ERS today checks reasoning SHAPE (grounded, has-falsifier, no-orphan) and does not model what the reasoner asserts to be true about the world.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "worldmodel_transplant_gate.json",
+    "goals": [
+      "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+    ]
+  },
+  {
+    "reg_id": "worldmodel_transplant_gate.json::ans",
+    "claim_id": "ans",
+    "statement": "Transplant the world-model as a CONSISTENCY layer beside ERS: a claim is checked for whether its referents exist in the asserted model and whether it contradicts an already-populated relation. It checks consistency-against-asserted-model, NOT truth-against-world. Population of the model stays the human/reasoner's job, not ERS's.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "f_ers_shape",
+          "f_shape_gap",
+          "f_wm_exists"
+        ],
+        "rule": "shape-check has a known gap (f_shape_gap); the world-model can test the missing dimension (f_wm_exists); add it as a distinct consistency layer without claiming it closes the truth gap"
+      }
+    ],
+    "source_path": "worldmodel_transplant_gate.json",
+    "goals": [
+      "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+    ]
+  },
+  {
+    "reg_id": "worldmodel_transplant_gate.json::f_wm_exists",
+    "claim_id": "f_wm_exists",
+    "statement": "reasoning_engine already contains a typed world-model: concepts, role-uses on edges, and typed relations, sufficient to test whether a referent exists and whether an asserted relation contradicts a populated one.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "worldmodel_transplant_gate.json",
+    "goals": [
+      "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+    ]
+  },
+  {
+    "reg_id": "world_model_format_gate.json::ans_b",
+    "claim_id": "ans_b",
+    "statement": "Propagation is licensed per (predicate, relation, direction) CHANNEL by explicit declaration. Undeclared channels do not propagate. A relation's own transitivity is itself just a declared channel (part-of travels part-of, upward), so there is no general 'relations are transitive' rule and no exception mechanism.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "f_nondistribution",
+          "f_exceptions_unbounded",
+          "f_ers_format"
+        ],
+        "rule": "blanket transitivity requires enumerating an unbounded exception set (f_nondistribution + f_exceptions_unbounded); inverting the default to declare-to-travel makes the unbounded set the silent/inert one, which is the same structural-refusal discipline as ERS (f_ers_format)"
+      }
+    ],
+    "source_path": "world_model_format_gate.json",
+    "goals": [
+      "Settle the v0 world-model format: (a) the depth-0 collision primitive, and (b) how transitivity/propagation is licensed, such that the model's ground truth cannot be contaminated by unsound derivation."
+    ]
+  },
+  {
+    "reg_id": "world_model_format_gate.json::f_ers_format",
+    "claim_id": "f_ers_format",
+    "statement": "ERS enforces reasoning discipline by refusing malformed shapes at write time, not by evaluating whether the logic is good.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "world_model_format_gate.json",
+    "goals": [
+      "Settle the v0 world-model format: (a) the depth-0 collision primitive, and (b) how transitivity/propagation is licensed, such that the model's ground truth cannot be contaminated by unsound derivation."
+    ]
+  },
+  {
+    "reg_id": "world_model_format_gate.json::f_nondistribution",
+    "claim_id": "f_nondistribution",
+    "statement": "Property inheritance across a relation is non-uniform: part-of is transitive for itself (wheel part-of car part-of garage), but attributes do not distribute down it (car is-red does not license wheel is-red).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "world_model_format_gate.json",
+    "goals": [
+      "Settle the v0 world-model format: (a) the depth-0 collision primitive, and (b) how transitivity/propagation is licensed, such that the model's ground truth cannot be contaminated by unsound derivation."
+    ]
+  },
+  {
+    "reg_id": "world_model_format_gate.json::f_exceptions_unbounded",
+    "claim_id": "f_exceptions_unbounded",
+    "statement": "The set of predicates that do NOT travel a given relation is unbounded and cannot be enumerated; the set that DO travel it is small and enumerable.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "world_model_format_gate.json",
+    "goals": [
+      "Settle the v0 world-model format: (a) the depth-0 collision primitive, and (b) how transitivity/propagation is licensed, such that the model's ground truth cannot be contaminated by unsound derivation."
+    ]
+  }
+]
