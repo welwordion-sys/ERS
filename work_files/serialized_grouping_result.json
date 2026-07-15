@@ -1,0 +1,307 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Entscheide anhand des serialized-grouping-Tests mit echtem Core-Match, ob Grouping-als-Dispatch auf Addition gewinnt, und benenne den tatsaechlichen Mechanismus."
+  },
+  "prep_note": "Test nach Svens Reihenfolge: erst testen, dann serialisierung flicken.",
+  "prior_candidates": [
+    {
+      "reg_id": "grouping_memo_build.json::ans_core_dominates",
+      "claim_id": "ans_core_dominates",
+      "statement": "Der Core-Match IST memoisierbar (die Vorturn-Rivalitaet war ein Kategorienfehler), und die leere Zelle ist jetzt gefuellt: grouped+memo ist 25x LANGSAMER als flat+memo (4.913s vs 0.197s) bei identischer Aequivalenz und unveraendertem consistent-Ratio 1.03x. g_structs Core-Identitaets-Garantie ist strukturell echt, liefert aber nur 395 eingesparte consistent-Calls, waehrend die 689 dafuer noetigen find_core-Subgraphsuchen ~4.7s kosten. Auf memoisierter Baseline ist der Core-Match selbst der Kostentreiber, nicht das Backtracking, das er ersetzen soll. Grouping-fuer-Dispatch ist auf diesem Workload widerlegt; die Memoisierung allein (95x gegen flat_raw) ist die tragende Optimierung.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_empty",
+            "g_struct",
+            "g_lic",
+            "a_num"
+          ],
+          "rule": "Wenn die Ersparnis eines Mechanismus (geteilte Bindungen: 395 consistent-Calls) um zwei Groessenordnungen unter seinen Kosten liegt (689 Core-Suchen, ~4.7s), ist der Mechanismus auf diesem Workload nicht tragfaehig — unabhaengig davon, ob seine Garantie strukturell echt ist."
+        }
+      ],
+      "source_path": "grouping_memo_build.json",
+      "goals": [
+        "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+        "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
+      ]
+    },
+    {
+      "reg_id": "tree_store_format.json::ans_retract",
+      "claim_id": "ans_retract",
+      "statement": "ans_core_dominates wird ZURUECKGEZOGEN. Die gemessenen 25x stammten daraus, dass find_core (ein MCS-Konstruktionsverfahren) 689 mal im Dispatch-Pfad lief, um ein bereits bekanntes Muster neu zu entdecken. Das misst meinen Bau, nicht Grouping. Ob Grouping mit einem echten Core-Match gewinnt, ist UNGEMESSEN — nicht widerlegt.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "prior_ans",
+            "g_mcs",
+            "g_known"
+          ],
+          "rule": "Ein Messergebnis, das aus dem Aufruf eines Konstruktionsverfahrens zur Laufzeit stammt, misst den Aufruf, nicht den Mechanismus; es traegt keine Aussage ueber den Mechanismus."
+        }
+      ],
+      "source_path": "tree_store_format.json",
+      "goals": [
+        "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+        "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+      ]
+    },
+    {
+      "reg_id": "tree_store_format.json::prior_ans",
+      "claim_id": "prior_ans",
+      "statement": "Auf memoisierter Baseline ist der Core-Match selbst der Kostentreiber, nicht das Backtracking, das er ersetzen soll. Grouping-fuer-Dispatch ist auf diesem Workload widerlegt.",
+      "status": "assumed",
+      "negation_handling": "checked",
+      "derived_from": null,
+      "source_path": "tree_store_format.json",
+      "goals": [
+        "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+        "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+      ]
+    },
+    {
+      "reg_id": "grouping_memo_build.json::g_lic",
+      "claim_id": "g_lic",
+      "statement": "World-Model: 'memoisierbar' propagiert entlang 'ist-reine-funktion-von' auf derive_match_view, core_pattern UND core_match_ergebnis. degree_index ueber States ist INERT (unlizenziert).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "grouping_memo_build.json",
+      "goals": [
+        "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+        "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
+      ]
+    },
+    {
+      "reg_id": "tree_store_format.json::ans_format",
+      "claim_id": "ans_format",
+      "statement": "Das Format speichert children als geordnete typisierte Sequenz, weil die Node/String-Verschraenkung (Pattern NNSNNSSSNNSS) Einfuegereihenfolge ist und aus getrennten Mengen nicht rekonstruierbar; _find_and_try liest diese Reihenfolge und sperrt via visited, weshalb Umsortierung 4/25 Dispatch-Mismatches erzeugt. Invalidierung ueber sha256(Namen + Kantenmuster) statt nur Namen, weil eine Regel unter gleichem Namen ihr Muster aendern kann. JSON statt pickle, weil der Baum vollstaendig primitiv ist. Der Aequivalenztest muss ordnungssensitiv sein UND echtes Dispatch vergleichen — der erste _shape war blinder als sein Konsument und meldete PASS auf einem defekten Baum. Gewinn: 3.34s build -> 0.463s load.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_order",
+            "g_shape_blind",
+            "g_pure2",
+            "ans_retract"
+          ],
+          "rule": "Ein Serialisierungsformat ist genau dann korrekt, wenn es jede Eigenschaft erhaelt, auf die ein Konsument reagiert — Mengengleichheit genuegt nicht, wenn der Konsument die Reihenfolge liest."
+        }
+      ],
+      "source_path": "tree_store_format.json",
+      "goals": [
+        "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+        "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+      ]
+    }
+  ],
+  "claims": {
+    "prior_multiply": {
+      "id": "prior_multiply",
+      "statement": "Grouping+Memo gewinnt, weil die Ersparnisse orthogonal sind und sich multiplizieren (geteilte Bindungen + geteilte Listen).",
+      "status": "assumed",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": "checked",
+      "negation_note": "Gemessen: consistent nur 1.07x (12462->11690), also 772 gesparte Calls. Der Gewinn kommt aus invoc 14.83x (2921->197), nicht aus weniger Suche. Ersparnisse addieren sich nicht, sie liegen auf verschiedenen Achsen — und nur EINE traegt.",
+      "revises": null
+    },
+    "g_win": {
+      "id": "g_win",
+      "statement": "Gemessen (5 Wiederholungen): flat+memo median 0.183s, grouped+memo median 0.137s -> 1.33x. Worst case 1.18x. Verteilungen ueberlappen NICHT ([0.177..0.196] vs [0.134..0.149]). 0 mismatches gegen flat_raw ground truth auf 51 states, fires 51/51.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_invoc": {
+      "id": "g_invoc",
+      "statement": "Gemessen: invoc 2921 -> 197 (14.83x). consistent 12462 -> 11690 (1.07x). core probe=336 hit=149 miss=187, regeln_uebersprungen=4640.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_mcs_out": {
+      "id": "g_mcs_out",
+      "statement": "Aenderung gegenueber dem 0.04x-Lauf: find_core (exhaustive seed-pair MCS, Baukonstruktion) durch match_core ersetzt — gerichtete Einbettungssuche eines BEKANNTEN Kantenmusters mit Grad-Vorfilter (>=, da Core-Kanten Teilmenge der Host-Kanten). Sonst identischer Aufbau.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_cached0": {
+      "id": "g_cached0",
+      "statement": "Gemessen: core_cached=0. Die Core-Match-Memoisierung greift nie, weil visited jeden Baumknoten pro Dispatch ohnehin nur einmal besucht. Der Gewinn stammt allein aus match_core statt find_core.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "ans_win": {
+      "id": "ans_win",
+      "statement": "Grouping-als-Dispatch GEWINNT auf Addition: 1.33x median, stabil (Verteilungen ueberlappen nicht), aequivalent (0 mismatches). Der Mechanismus ist NICHT geteilte Bindungen: consistent bewegt sich nur 1.07x. Er ist gruppenweite NEGATIVE INFORMATION — 187 Core-Misses erschlagen 4640 Regelversuche, wodurch invoc um 14.83x faellt (2921->197). Grouping spart SETUP, nicht Suche. Das Ergebnis haengt vollstaendig daran, dass find_core (MCS-Baukonstruktion) aus dem Dispatch-Pfad raus ist; die Core-Match-Memoisierung ist wirkungslos (cached=0).",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_win",
+            "g_invoc",
+            "g_mcs_out",
+            "g_cached0",
+            "prior_multiply"
+          ],
+          "rule": "Der Mechanismus eines Gewinns ist die Achse, auf der die Messung sich bewegt — nicht die, auf der die These ihn erwartete."
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": {
+        "target": "prior_multiply",
+        "prior_text": "Grouping+Memo gewinnt, weil die Ersparnisse orthogonal sind und sich multiplizieren (geteilte Bindungen + geteilte Listen).",
+        "why": "consistent 1.07x widerlegt die Bindungs-Achse als Traeger; der Gewinn liegt allein auf der Invocation-Achse via negative Information."
+      }
+    }
+  },
+  "candidates": {
+    "c_win": {
+      "id": "c_win",
+      "statement": "Grouping-als-Dispatch gewinnt auf Addition (1.33x), Mechanismus = negative Information.",
+      "discriminator": "Konkurriert gegen c_noise (1.33x ist Rauschen/Messartefakt) und c_flat (flat+memo genuegt, 30% lohnt die Komplexitaet nicht). Unterscheidende Evidenz: 5 Wiederholungen, nicht-ueberlappende Verteilungen, worst case 1.18x."
+    },
+    "c_noise": {
+      "id": "c_noise",
+      "statement": "1.33x ist Messrauschen.",
+      "discriminator": "Gewinnt, falls die Verteilungen ueberlappen."
+    },
+    "c_flat": {
+      "id": "c_flat",
+      "statement": "30% Gewinn rechtfertigt die CoreTree-Komplexitaet nicht; flat+memo behalten.",
+      "discriminator": "Null-Option. Gewinnt, falls der Gewinn schmal UND die Komplexitaet hoch ist — Wertung, nicht Messung."
+    }
+  },
+  "checks": {
+    "k_noise": {
+      "id": "k_noise",
+      "kind": "falsifier",
+      "target": "c_win",
+      "method": "Gegen c_noise: 5 Wiederholungen beider Arme, Verteilungen vergleichen.",
+      "result": "flat [0.177,0.184,0.179,0.183,0.196] median 0.183; grouped [0.137,0.134,0.137,0.149,0.142] median 0.137. Ueberlappung: keine. Worst case (langsamstes grouped vs schnellstes flat) noch 1.18x. c_noise falsifiziert.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k_mech": {
+      "id": "k_mech",
+      "kind": "falsifier",
+      "target": "ans_win",
+      "method": "o_mech: ist der behauptete Mechanismus der gemessene? Pruefe die Bindungs-These gegen die consistent-Zahl.",
+      "result": "Die urspruengliche These (geteilte Bindungen sparen Backtracking) ist FALSIFIZIERT: consistent 1.07x, nur 772 gesparte Calls von 12462. Der gemessene Traeger ist invoc 14.83x via 4640 durch Core-Misses uebersprungene Regeln. Die Antwort wurde entsprechend umgeschrieben, nicht die Messung.",
+      "outcome": "failed",
+      "side_findings": [
+        {
+          "finding": "core_cached=0: die Core-Match-Memoisierung, die ich als zentralen Hebel gebaut habe, ist toter Code. visited besucht jeden Knoten ohnehin nur einmal pro Dispatch. Sie wuerde erst greifen, wenn Cores ueber States hinweg cachebar waeren — und das ist unlizenziert (degree_index/host_state ist INERT).",
+          "disposition": "filed"
+        },
+        {
+          "finding": "wall 1.33x bei invoc 14.83x: der Core-Match kostet selbst (336 probes). Der Nettogewinn ist real aber schmal; bei einem Workload mit hoeherem Hit-Index waere er groesser.",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "k_equiv": {
+      "id": "k_equiv",
+      "kind": "obligation",
+      "target": "ans_win",
+      "method": "o_equiv gegen flat_raw ground truth.",
+      "result": "51 states, fires 51/51, mismatches 0 fuer beide Arme.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k_rel": {
+      "id": "k_rel",
+      "kind": "relevance",
+      "target": "ans_win",
+      "method": "I9: bindet Evidenz ans Ziel (gewinnt Grouping? welcher Mechanismus?).",
+      "result": "Beides beantwortet: ja (1.33x stabil), Mechanismus = negative Information, nicht Bindungen. ans_core_dominates (0.04x) ist damit endgueltig als Bau-Artefakt erklaert: find_core im Dispatch-Pfad.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "id": "statement"
+  },
+  "committed": {
+    "answer": "ans_win",
+    "statement": "Grouping-als-Dispatch GEWINNT auf Addition: 1.33x median, stabil (Verteilungen ueberlappen nicht), aequivalent (0 mismatches). Der Mechanismus ist NICHT geteilte Bindungen: consistent bewegt sich nur 1.07x. Er ist gruppenweite NEGATIVE INFORMATION — 187 Core-Misses erschlagen 4640 Regelversuche, wodurch invoc um 14.83x faellt (2921->197). Grouping spart SETUP, nicht Suche. Das Ergebnis haengt vollstaendig daran, dass find_core (MCS-Baukonstruktion) aus dem Dispatch-Pfad raus ist; die Core-Match-Memoisierung ist wirkungslos (cached=0).",
+    "evidence_label": "assumed",
+    "assumptions_carried": [
+      "prior_multiply"
+    ],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "prior_multiply",
+        "g_win",
+        "g_invoc",
+        "g_mcs_out",
+        "g_cached0",
+        "ans_win"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        {
+          "id": "o_stable",
+          "statement": "Der Gewinn muss von Messrauschen unterscheidbar sein."
+        },
+        {
+          "id": "o_equiv",
+          "statement": "Gleiche feuernde Regel wie flat_raw auf jedem State."
+        },
+        {
+          "id": "o_mech",
+          "statement": "Der benannte Mechanismus muss der gemessene sein, nicht der erwartete."
+        }
+      ]
+    ],
+    [
+      "propose",
+      [
+        "c_win",
+        "c_noise",
+        "c_flat"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k_noise",
+        "k_mech",
+        "k_equiv",
+        "k_rel"
+      ]
+    ],
+    [
+      "commit",
+      "ans_win"
+    ]
+  ]
+}

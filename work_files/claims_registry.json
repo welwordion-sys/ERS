@@ -1,212 +1,532 @@
 [
   {
-    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::inv_no_knob",
-    "claim_id": "inv_no_knob",
-    "statement": "Loop variants (probabilistic firing, spontaneous association) are studied between clean benchmark runs by editing the fixed condition, never via an in-engine swappable parameter, and any weights used must be fixed/mechanical, never judged from state.",
+    "reg_id": "grouping_memo_build.json::ans_core_dominates",
+    "claim_id": "ans_core_dominates",
+    "statement": "Der Core-Match IST memoisierbar (die Vorturn-Rivalitaet war ein Kategorienfehler), und die leere Zelle ist jetzt gefuellt: grouped+memo ist 25x LANGSAMER als flat+memo (4.913s vs 0.197s) bei identischer Aequivalenz und unveraendertem consistent-Ratio 1.03x. g_structs Core-Identitaets-Garantie ist strukturell echt, liefert aber nur 395 eingesparte consistent-Calls, waehrend die 689 dafuer noetigen find_core-Subgraphsuchen ~4.7s kosten. Auf memoisierter Baseline ist der Core-Match selbst der Kostentreiber, nicht das Backtracking, das er ersetzen soll. Grouping-fuer-Dispatch ist auf diesem Workload widerlegt; die Memoisierung allein (95x gegen flat_raw) ist die tragende Optimierung.",
     "status": "derived",
     "negation_handling": null,
     "derived_from": [
       {
         "parents": [
-          "f_regress"
+          "g_empty",
+          "g_struct",
+          "g_lic",
+          "a_num"
         ],
-        "rule": "a runtime parameter needs a chooser (f_regress); moving variant-selection to between-runs keeps the chooser outside the engine (the human experimenter), breaking the regress"
+        "rule": "Wenn die Ersparnis eines Mechanismus (geteilte Bindungen: 395 consistent-Calls) um zwei Groessenordnungen unter seinen Kosten liegt (689 Core-Suchen, ~4.7s), ist der Mechanismus auf diesem Workload nicht tragfaehig — unabhaengig davon, ob seine Garantie strukturell echt ist."
       }
     ],
-    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "source_path": "grouping_memo_build.json",
     "goals": [
-      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+      "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
     ]
   },
   {
-    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_counter_hard",
-    "claim_id": "f_counter_hard",
-    "statement": "The per-tree counter is an existing mechanical count read off state with no evaluation.",
-    "status": "given",
-    "negation_handling": null,
+    "reg_id": "grouping_memo_build.json::prior_rivalry",
+    "claim_id": "prior_rivalry",
+    "statement": "Die ungemessene Groesse ist 'Core-Match gegen memoisiertem Lookup' — eine Rivalitaet zweier Mechanismen.",
+    "status": "assumed",
+    "negation_handling": "checked",
     "derived_from": null,
-    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "source_path": "grouping_memo_build.json",
     "goals": [
-      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+      "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
     ]
   },
   {
-    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::inv_judgeless",
-    "claim_id": "inv_judgeless",
-    "statement": "Every drive fires on a hard read off existing machinery; no firing condition may require a judgment. Contingency fires on a fixed counter threshold; all other drives fire unconditionally; the counter alone contains volume.",
+    "reg_id": "grouping_memo_build.json::g_empty",
+    "claim_id": "g_empty",
+    "statement": "Die offene Groesse ist die leere Zelle 'grouped+memo' — nie gemessen. flat+roh, flat+memo, grouped+roh liegen (als Arbeitshypothese) vor.",
     "status": "derived",
     "negation_handling": null,
     "derived_from": [
       {
         "parents": [
-          "f_regress",
-          "f_counter_hard",
-          "f_judged_converge"
+          "prior_rivalry",
+          "g_lic"
         ],
-        "rule": "a judged firing condition reintroduces the regress (f_regress); a counter-threshold fire does not (f_counter_hard); therefore replace the judged convergence gate with a hard threshold"
+        "rule": "Wenn beide Arme memoisierbar sind, ist die offene Groesse keine Rivalitaet sondern eine leere Zelle in der Kreuztabelle roh-x-memoisiert."
       }
     ],
-    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "source_path": "grouping_memo_build.json",
     "goals": [
-      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+      "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
     ]
   },
   {
-    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_judged_converge",
-    "claim_id": "f_judged_converge",
-    "statement": "'Fire contingency on convergence' requires a detector that judges whether the state is converging.",
+    "reg_id": "grouping_memo_build.json::g_lic",
+    "claim_id": "g_lic",
+    "statement": "World-Model: 'memoisierbar' propagiert entlang 'ist-reine-funktion-von' auf derive_match_view, core_pattern UND core_match_ergebnis. degree_index ueber States ist INERT (unlizenziert).",
     "status": "given",
     "negation_handling": null,
     "derived_from": null,
-    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "source_path": "grouping_memo_build.json",
     "goals": [
-      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+      "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
     ]
   },
   {
-    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::f_regress",
-    "claim_id": "f_regress",
-    "statement": "Any adjustable knob requires a decision-maker to set it, and that decision-maker itself requires governing; if the governing is judgment it never bottoms out (regress).",
+    "reg_id": "grouping_memo_build.json::a_num",
+    "claim_id": "a_num",
+    "statement": "Arbeitshypothese (UNREPRODUCED): flat_memo 77.34x, consistent-Ratio 1.03x, 15 Signaturen/3180 Targets, Hit-Index 56.3/26.",
+    "status": "assumed",
+    "negation_handling": "carried",
+    "derived_from": null,
+    "source_path": "grouping_memo_build.json",
+    "goals": [
+      "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+      "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
+    ]
+  },
+  {
+    "reg_id": "grouping_memo_build.json::g_struct",
+    "claim_id": "g_struct",
+    "statement": "Code-Fakt (crash-ueberlebend): Core-Identitaet innerhalb einer Gruppe ist Konstruktionsgarantie des CoreTree (_insert_into/_rule_map).",
     "status": "given",
     "negation_handling": null,
     "derived_from": null,
-    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "source_path": "grouping_memo_build.json",
     "goals": [
-      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+      "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
     ]
   },
   {
-    "reg_id": "/home/claude/reasoning_engine/loop_invariants_gate.json::ans",
-    "claim_id": "ans",
-    "statement": "Adopt inv_judgeless + inv_no_knob: all drives fire on hard reads (contingency on a counter threshold, others unconditional), counter contains volume, no runtime knob; variants compared between clean runs.",
+    "reg_id": "tree_store_format.json::g_mcs",
+    "claim_id": "g_mcs",
+    "statement": "Code-Fakt: find_core ist laut eigenem Docstring ein exhaustive seed-pair MCS-Finder ('for each unmapped A-node, try every unmapped B-node as a seed ... repeat until exhausted') — es sucht die groesste gemeinsame Struktur zweier UNBEKANNTER Graphen.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "tree_store_format.json",
+    "goals": [
+      "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+      "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+    ]
+  },
+  {
+    "reg_id": "tree_store_format.json::ans_retract",
+    "claim_id": "ans_retract",
+    "statement": "ans_core_dominates wird ZURUECKGEZOGEN. Die gemessenen 25x stammten daraus, dass find_core (ein MCS-Konstruktionsverfahren) 689 mal im Dispatch-Pfad lief, um ein bereits bekanntes Muster neu zu entdecken. Das misst meinen Bau, nicht Grouping. Ob Grouping mit einem echten Core-Match gewinnt, ist UNGEMESSEN — nicht widerlegt.",
     "status": "derived",
     "negation_handling": null,
     "derived_from": [
       {
         "parents": [
-          "inv_judgeless",
-          "inv_no_knob"
+          "prior_ans",
+          "g_mcs",
+          "g_known"
         ],
-        "rule": "conjoin the two invariants into the adopted loop discipline"
+        "rule": "Ein Messergebnis, das aus dem Aufruf eines Konstruktionsverfahrens zur Laufzeit stammt, misst den Aufruf, nicht den Mechanismus; es traegt keine Aussage ueber den Mechanismus."
       }
     ],
-    "source_path": "/home/claude/reasoning_engine/loop_invariants_gate.json",
+    "source_path": "tree_store_format.json",
     "goals": [
-      "Fix the generator loop's firing discipline so it produces questions without spawning a regress of decision-makers."
+      "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+      "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
     ]
   },
   {
-    "reg_id": "worldmodel_transplant_gate.json::f_shape_gap",
-    "claim_id": "f_shape_gap",
-    "statement": "A claim can be shape-valid and semantically false simultaneously; shape-checking cannot distinguish them.",
+    "reg_id": "tree_store_format.json::prior_ans",
+    "claim_id": "prior_ans",
+    "statement": "Auf memoisierter Baseline ist der Core-Match selbst der Kostentreiber, nicht das Backtracking, das er ersetzen soll. Grouping-fuer-Dispatch ist auf diesem Workload widerlegt.",
+    "status": "assumed",
+    "negation_handling": "checked",
+    "derived_from": null,
+    "source_path": "tree_store_format.json",
+    "goals": [
+      "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+      "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+    ]
+  },
+  {
+    "reg_id": "tree_store_format.json::g_shape_blind",
+    "claim_id": "g_shape_blind",
+    "statement": "Gemessen: der erste _shape-Vergleich benutzte sorted()+frozenset und meldete 'struktur identisch' auf genau dem Baum, der anders dispatchte. Der Fehler wurde nur durch echten Dispatch-Vergleich sichtbar.",
     "status": "given",
     "negation_handling": null,
     "derived_from": null,
-    "source_path": "worldmodel_transplant_gate.json",
+    "source_path": "tree_store_format.json",
     "goals": [
-      "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+      "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+      "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
     ]
   },
   {
-    "reg_id": "worldmodel_transplant_gate.json::f_ers_shape",
-    "claim_id": "f_ers_shape",
-    "statement": "ERS today checks reasoning SHAPE (grounded, has-falsifier, no-orphan) and does not model what the reasoner asserts to be true about the world.",
+    "reg_id": "tree_store_format.json::g_known",
+    "claim_id": "g_known",
+    "statement": "Code-Fakt: zur Dispatch-Zeit steht node.core_edges seit build_dispatch_tree fest. Das Muster ist bekannt; gesucht ist nur seine Einbettung.",
     "status": "given",
     "negation_handling": null,
     "derived_from": null,
-    "source_path": "worldmodel_transplant_gate.json",
+    "source_path": "tree_store_format.json",
     "goals": [
-      "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+      "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+      "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
     ]
   },
   {
-    "reg_id": "worldmodel_transplant_gate.json::ans",
-    "claim_id": "ans",
-    "statement": "Transplant the world-model as a CONSISTENCY layer beside ERS: a claim is checked for whether its referents exist in the asserted model and whether it contradicts an already-populated relation. It checks consistency-against-asserted-model, NOT truth-against-world. Population of the model stays the human/reasoner's job, not ERS's.",
+    "reg_id": "tree_store_format.json::ans_format",
+    "claim_id": "ans_format",
+    "statement": "Das Format speichert children als geordnete typisierte Sequenz, weil die Node/String-Verschraenkung (Pattern NNSNNSSSNNSS) Einfuegereihenfolge ist und aus getrennten Mengen nicht rekonstruierbar; _find_and_try liest diese Reihenfolge und sperrt via visited, weshalb Umsortierung 4/25 Dispatch-Mismatches erzeugt. Invalidierung ueber sha256(Namen + Kantenmuster) statt nur Namen, weil eine Regel unter gleichem Namen ihr Muster aendern kann. JSON statt pickle, weil der Baum vollstaendig primitiv ist. Der Aequivalenztest muss ordnungssensitiv sein UND echtes Dispatch vergleichen — der erste _shape war blinder als sein Konsument und meldete PASS auf einem defekten Baum. Gewinn: 3.34s build -> 0.463s load.",
     "status": "derived",
     "negation_handling": null,
     "derived_from": [
       {
         "parents": [
-          "f_ers_shape",
-          "f_shape_gap",
-          "f_wm_exists"
+          "g_order",
+          "g_shape_blind",
+          "g_pure2",
+          "ans_retract"
         ],
-        "rule": "shape-check has a known gap (f_shape_gap); the world-model can test the missing dimension (f_wm_exists); add it as a distinct consistency layer without claiming it closes the truth gap"
+        "rule": "Ein Serialisierungsformat ist genau dann korrekt, wenn es jede Eigenschaft erhaelt, auf die ein Konsument reagiert — Mengengleichheit genuegt nicht, wenn der Konsument die Reihenfolge liest."
       }
     ],
-    "source_path": "worldmodel_transplant_gate.json",
+    "source_path": "tree_store_format.json",
     "goals": [
-      "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+      "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+      "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
     ]
   },
   {
-    "reg_id": "worldmodel_transplant_gate.json::f_wm_exists",
-    "claim_id": "f_wm_exists",
-    "statement": "reasoning_engine already contains a typed world-model: concepts, role-uses on edges, and typed relations, sufficient to test whether a referent exists and whether an asserted relation contradicts a populated one.",
+    "reg_id": "tree_store_format.json::g_order",
+    "claim_id": "g_order",
+    "statement": "Gemessen: _find_and_try laeuft node.children in Reihenfolge ab und sperrt jede besuchte Regel im visited-Set. Eine Serialisierung, die children nach Typ umsortiert (erst CoreNodes, dann Strings), erzeugt 4/25 Dispatch-Mismatches bei identischer Menge, identischem _rule_map und identischen Fingerprints.",
     "status": "given",
     "negation_handling": null,
     "derived_from": null,
-    "source_path": "worldmodel_transplant_gate.json",
+    "source_path": "tree_store_format.json",
     "goals": [
-      "Decide whether the reasoning_engine internal world-model (typed concept graph + role-uses) should be transplanted into ERS as a semantic-consistency check layer, given ERS currently checks reasoning SHAPE only."
+      "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+      "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
     ]
   },
   {
-    "reg_id": "world_model_format_gate.json::ans_b",
-    "claim_id": "ans_b",
-    "statement": "Propagation is licensed per (predicate, relation, direction) CHANNEL by explicit declaration. Undeclared channels do not propagate. A relation's own transitivity is itself just a declared channel (part-of travels part-of, upward), so there is no general 'relations are transitive' rule and no exception mechanism.",
+    "reg_id": "tree_store_format.json::g_pure2",
+    "claim_id": "g_pure2",
+    "statement": "Gemessen: build_dispatch_tree(252) = 3.34s, load = 0.463s (7x). Baum ist vollstaendig primitiv (int/str/tuple), JSON-faehig ohne Pickle.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "tree_store_format.json",
+    "goals": [
+      "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+      "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+    ]
+  },
+  {
+    "reg_id": "rule_delta_fix.json::g_251",
+    "claim_id": "g_251",
+    "statement": "Gemessen: _rule_delta ist fuer 251/252 Regeln exakt aus _rule_map + _rule_edges rekonstruierbar. Genau eine Regel (add_finalise_1bit) weicht ab.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "rule_delta_fix.json",
+    "goals": [
+      "Schliesse die gefilte _rule_delta-Luecke im Serialisierungsformat und korrigiere ans_format, das den geladenen Baum als konsumenten-treu bezeichnete."
+    ]
+  },
+  {
+    "reg_id": "rule_delta_fix.json::prior_format",
+    "claim_id": "prior_format",
+    "statement": "Das Format erhaelt jede Eigenschaft, auf die ein Konsument reagiert (geprueft: dispatch/_find_and_try).",
+    "status": "assumed",
+    "negation_handling": "checked",
+    "derived_from": null,
+    "source_path": "rule_delta_fix.json",
+    "goals": [
+      "Schliesse die gefilte _rule_delta-Luecke im Serialisierungsformat und korrigiere ans_format, das den geladenen Baum als konsumenten-treu bezeichnete."
+    ]
+  },
+  {
+    "reg_id": "rule_delta_fix.json::g_xref",
+    "claim_id": "g_xref",
+    "statement": "Gemessen: cross_reference() auf gebautem Baum 10 Entdeckungen, auf geladenem OHNE _rule_delta 36. Nach dem Fix (speichern statt ableiten): beide 10, Struktur danach identisch.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "rule_delta_fix.json",
+    "goals": [
+      "Schliesse die gefilte _rule_delta-Luecke im Serialisierungsformat und korrigiere ans_format, das den geladenen Baum als konsumenten-treu bezeichnete."
+    ]
+  },
+  {
+    "reg_id": "rule_delta_fix.json::ans_store",
+    "claim_id": "ans_store",
+    "statement": "_rule_delta wird gespeichert, nicht abgeleitet. Es ist zu 251/252 rekonstruierbar, aber der Erstinsert-Pfad setzt es direkt auf ({},0.0,set()), waehrend die Ableitung ratio=1.0 liefert — und ratio steuert die Teilnahme an cross_reference(). _pairwise/_delta_cache bleiben ungespeichert: echte Caches ohne eigenen Setzpfad. Der Konsumenten-Test muss ALLE Konsumenten umfassen, nicht nur den, den man gerade baut: dispatch() war blind gegen diese Luecke, cross_reference() nicht.",
     "status": "derived",
     "negation_handling": null,
     "derived_from": [
       {
         "parents": [
-          "f_nondistribution",
-          "f_exceptions_unbounded",
-          "f_ers_format"
+          "g_251",
+          "g_insert",
+          "g_ratio_used",
+          "g_xref",
+          "prior_format"
         ],
-        "rule": "blanket transitivity requires enumerating an unbounded exception set (f_nondistribution + f_exceptions_unbounded); inverting the default to declare-to-travel makes the unbounded set the silent/inert one, which is the same structural-refusal discipline as ERS (f_ers_format)"
+        "rule": "Ein Zustand ist genau dann ableitbar statt speicherbar, wenn KEIN Pfad ihn ausserhalb der ableitenden Funktion setzt. Ein einziger Sonderpfad genuegt, um Ableitung zu disqualifizieren — 251/252 ist kein Argument, sondern eine Falle."
       }
     ],
-    "source_path": "world_model_format_gate.json",
+    "source_path": "rule_delta_fix.json",
     "goals": [
-      "Settle the v0 world-model format: (a) the depth-0 collision primitive, and (b) how transitivity/propagation is licensed, such that the model's ground truth cannot be contaminated by unsound derivation."
+      "Schliesse die gefilte _rule_delta-Luecke im Serialisierungsformat und korrigiere ans_format, das den geladenen Baum als konsumenten-treu bezeichnete."
     ]
   },
   {
-    "reg_id": "world_model_format_gate.json::f_ers_format",
-    "claim_id": "f_ers_format",
-    "statement": "ERS enforces reasoning discipline by refusing malformed shapes at write time, not by evaluating whether the logic is good.",
+    "reg_id": "rule_delta_fix.json::g_ratio_used",
+    "claim_id": "g_ratio_used",
+    "statement": "Code-Fakt: cross_reference() filtert Regeln mit _rule_delta[name][1] >= cross_ref_min_delta. ratio ist also verhaltenswirksam, kein Metadatum.",
     "status": "given",
     "negation_handling": null,
     "derived_from": null,
-    "source_path": "world_model_format_gate.json",
+    "source_path": "rule_delta_fix.json",
     "goals": [
-      "Settle the v0 world-model format: (a) the depth-0 collision primitive, and (b) how transitivity/propagation is licensed, such that the model's ground truth cannot be contaminated by unsound derivation."
+      "Schliesse die gefilte _rule_delta-Luecke im Serialisierungsformat und korrigiere ans_format, das den geladenen Baum als konsumenten-treu bezeichnete."
     ]
   },
   {
-    "reg_id": "world_model_format_gate.json::f_nondistribution",
-    "claim_id": "f_nondistribution",
-    "statement": "Property inheritance across a relation is non-uniform: part-of is transitive for itself (wheel part-of car part-of garage), but attributes do not distribute down it (car is-red does not license wheel is-red).",
+    "reg_id": "rule_delta_fix.json::g_insert",
+    "claim_id": "g_insert",
+    "statement": "Code-Fakt: CoreTree.insert setzt beim Erstinsert _rule_delta[name] = ({}, 0.0, set()) DIREKT, ohne _update_delta_info. _compute_delta_info liefert fuer dieselbe leere core_node_set ratio=1.0. Ableitung wuerde 0.0 still zu 1.0 machen.",
     "status": "given",
     "negation_handling": null,
     "derived_from": null,
-    "source_path": "world_model_format_gate.json",
+    "source_path": "rule_delta_fix.json",
     "goals": [
-      "Settle the v0 world-model format: (a) the depth-0 collision primitive, and (b) how transitivity/propagation is licensed, such that the model's ground truth cannot be contaminated by unsound derivation."
+      "Schliesse die gefilte _rule_delta-Luecke im Serialisierungsformat und korrigiere ans_format, das den geladenen Baum als konsumenten-treu bezeichnete."
     ]
   },
   {
-    "reg_id": "world_model_format_gate.json::f_exceptions_unbounded",
-    "claim_id": "f_exceptions_unbounded",
-    "statement": "The set of predicates that do NOT travel a given relation is unbounded and cannot be enumerated; the set that DO travel it is small and enumerable.",
+    "reg_id": "serialized_grouping_result.json::g_invoc",
+    "claim_id": "g_invoc",
+    "statement": "Gemessen: invoc 2921 -> 197 (14.83x). consistent 12462 -> 11690 (1.07x). core probe=336 hit=149 miss=187, regeln_uebersprungen=4640.",
     "status": "given",
     "negation_handling": null,
     "derived_from": null,
-    "source_path": "world_model_format_gate.json",
+    "source_path": "serialized_grouping_result.json",
     "goals": [
-      "Settle the v0 world-model format: (a) the depth-0 collision primitive, and (b) how transitivity/propagation is licensed, such that the model's ground truth cannot be contaminated by unsound derivation."
+      "Entscheide anhand des serialized-grouping-Tests mit echtem Core-Match, ob Grouping-als-Dispatch auf Addition gewinnt, und benenne den tatsaechlichen Mechanismus."
+    ]
+  },
+  {
+    "reg_id": "serialized_grouping_result.json::prior_multiply",
+    "claim_id": "prior_multiply",
+    "statement": "Grouping+Memo gewinnt, weil die Ersparnisse orthogonal sind und sich multiplizieren (geteilte Bindungen + geteilte Listen).",
+    "status": "assumed",
+    "negation_handling": "checked",
+    "derived_from": null,
+    "source_path": "serialized_grouping_result.json",
+    "goals": [
+      "Entscheide anhand des serialized-grouping-Tests mit echtem Core-Match, ob Grouping-als-Dispatch auf Addition gewinnt, und benenne den tatsaechlichen Mechanismus."
+    ]
+  },
+  {
+    "reg_id": "serialized_grouping_result.json::ans_win",
+    "claim_id": "ans_win",
+    "statement": "Grouping-als-Dispatch GEWINNT auf Addition: 1.33x median, stabil (Verteilungen ueberlappen nicht), aequivalent (0 mismatches). Der Mechanismus ist NICHT geteilte Bindungen: consistent bewegt sich nur 1.07x. Er ist gruppenweite NEGATIVE INFORMATION — 187 Core-Misses erschlagen 4640 Regelversuche, wodurch invoc um 14.83x faellt (2921->197). Grouping spart SETUP, nicht Suche. Das Ergebnis haengt vollstaendig daran, dass find_core (MCS-Baukonstruktion) aus dem Dispatch-Pfad raus ist; die Core-Match-Memoisierung ist wirkungslos (cached=0).",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_win",
+          "g_invoc",
+          "g_mcs_out",
+          "g_cached0",
+          "prior_multiply"
+        ],
+        "rule": "Der Mechanismus eines Gewinns ist die Achse, auf der die Messung sich bewegt — nicht die, auf der die These ihn erwartete."
+      }
+    ],
+    "source_path": "serialized_grouping_result.json",
+    "goals": [
+      "Entscheide anhand des serialized-grouping-Tests mit echtem Core-Match, ob Grouping-als-Dispatch auf Addition gewinnt, und benenne den tatsaechlichen Mechanismus."
+    ]
+  },
+  {
+    "reg_id": "serialized_grouping_result.json::g_win",
+    "claim_id": "g_win",
+    "statement": "Gemessen (5 Wiederholungen): flat+memo median 0.183s, grouped+memo median 0.137s -> 1.33x. Worst case 1.18x. Verteilungen ueberlappen NICHT ([0.177..0.196] vs [0.134..0.149]). 0 mismatches gegen flat_raw ground truth auf 51 states, fires 51/51.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "serialized_grouping_result.json",
+    "goals": [
+      "Entscheide anhand des serialized-grouping-Tests mit echtem Core-Match, ob Grouping-als-Dispatch auf Addition gewinnt, und benenne den tatsaechlichen Mechanismus."
+    ]
+  },
+  {
+    "reg_id": "serialized_grouping_result.json::g_cached0",
+    "claim_id": "g_cached0",
+    "statement": "Gemessen: core_cached=0. Die Core-Match-Memoisierung greift nie, weil visited jeden Baumknoten pro Dispatch ohnehin nur einmal besucht. Der Gewinn stammt allein aus match_core statt find_core.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "serialized_grouping_result.json",
+    "goals": [
+      "Entscheide anhand des serialized-grouping-Tests mit echtem Core-Match, ob Grouping-als-Dispatch auf Addition gewinnt, und benenne den tatsaechlichen Mechanismus."
+    ]
+  },
+  {
+    "reg_id": "serialized_grouping_result.json::g_mcs_out",
+    "claim_id": "g_mcs_out",
+    "statement": "Aenderung gegenueber dem 0.04x-Lauf: find_core (exhaustive seed-pair MCS, Baukonstruktion) durch match_core ersetzt — gerichtete Einbettungssuche eines BEKANNTEN Kantenmusters mit Grad-Vorfilter (>=, da Core-Kanten Teilmenge der Host-Kanten). Sonst identischer Aufbau.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "serialized_grouping_result.json",
+    "goals": [
+      "Entscheide anhand des serialized-grouping-Tests mit echtem Core-Match, ob Grouping-als-Dispatch auf Addition gewinnt, und benenne den tatsaechlichen Mechanismus."
+    ]
+  },
+  {
+    "reg_id": "selfsimilarity.json::ans_ss",
+    "claim_id": "ans_ss",
+    "statement": "GEMESSEN ist ein Arbeitspunkt: der Additionsbaum ist bereits selbstaehnlich (Jaccard 0.53-0.91), 56% der Core-Probes sind Fehlversuche, und trotzdem gewinnt Grouping 1.33x. ABGELEITET, nicht gemessen, ist die Richtung: bei steigender Selbstaehnlichkeit wachsen die Probe-Kosten linear mit der Geschwisterzahl, waehrend die diskriminierende Kraft je Core sinkt — im Grenzfall identischer Cores ist die negative Information wertlos. Die These gilt nur unterhalb der Verschmelzungsschwelle (min_ratio), da identische Cores beim Bau verschmolzen wuerden. Der Hebel gegen die Degradation ist vorhanden und ungenutzt: bei Jaccard 0.82 sind zwei Cores 2 Kanten auseinander, und CoreTree haelt _pairwise/_anchored_delta bereits vor — ein Geschwister-Match koennte die Vorgaenger-Bindung erben statt neu zu starten.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_jac",
+          "g_hit",
+          "g_nodelta",
+          "a_degr"
+        ],
+        "rule": "Ein Arbeitspunkt belegt einen Wert, keine Steigung; die Richtung folgt aus dem Mechanismus und bleibt bis zur Kurve eine Ableitung."
+      }
+    ],
+    "source_path": "selfsimilarity.json",
+    "goals": [
+      "Kläre, was mit groupings Performance bei multiplen selbstaehnlichen Gruppen passiert — und ob der Befund gemessen oder nur abgeleitet ist."
+    ]
+  },
+  {
+    "reg_id": "selfsimilarity.json::a_degr",
+    "claim_id": "a_degr",
+    "statement": "Grouping degradiert mit steigender Selbstaehnlichkeit: Probe-Kosten wachsen linear mit der Geschwisterzahl, die diskriminierende Kraft je Core sinkt.",
+    "status": "assumed",
+    "negation_handling": "carried",
+    "derived_from": null,
+    "source_path": "selfsimilarity.json",
+    "goals": [
+      "Kläre, was mit groupings Performance bei multiplen selbstaehnlichen Gruppen passiert — und ob der Befund gemessen oder nur abgeleitet ist."
+    ]
+  },
+  {
+    "reg_id": "selfsimilarity.json::g_jac",
+    "claim_id": "g_jac",
+    "statement": "Gemessen am Additionsbaum: Jaccard 0.53-0.91 zwischen allen 6 Geschwister-Cores auf Ebene 1; 9-10 gemeinsame Kanten je Paar. Der Baum IST bereits hochgradig selbstaehnlich.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "selfsimilarity.json",
+    "goals": [
+      "Kläre, was mit groupings Performance bei multiplen selbstaehnlichen Gruppen passiert — und ob der Befund gemessen oder nur abgeleitet ist."
+    ]
+  },
+  {
+    "reg_id": "selfsimilarity.json::g_hit",
+    "claim_id": "g_hit",
+    "statement": "Gemessen: 336 Core-Probes ueber 51 States, davon 149 Treffer und 187 Misses -> Hit-Rate 44%, 6.6 Probes/State, 3.7 Fehlversuche/State.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "selfsimilarity.json",
+    "goals": [
+      "Kläre, was mit groupings Performance bei multiplen selbstaehnlichen Gruppen passiert — und ob der Befund gemessen oder nur abgeleitet ist."
+    ]
+  },
+  {
+    "reg_id": "selfsimilarity.json::g_nodelta",
+    "claim_id": "g_nodelta",
+    "statement": "Code-Fakt: match_core startet fuer jeden Geschwister-Core bei null. CoreTree haelt _pairwise und _anchored_delta vor, der Dispatch-Pfad benutzt sie nicht.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "selfsimilarity.json",
+    "goals": [
+      "Kläre, was mit groupings Performance bei multiplen selbstaehnlichen Gruppen passiert — und ob der Befund gemessen oder nur abgeleitet ist."
+    ]
+  },
+  {
+    "reg_id": "determinism_fix.json::g_bench",
+    "claim_id": "g_bench",
+    "statement": "Folge: jeder Benchmark dieser Session (77.34x, 1.03x, 0.04x, 1.33x, Jaccard 0.53-0.91, Hit-Rate 44%) lief auf einer zufaellig gewaehlten Baumvariante. Kein Wert ist reproduzierbar, ohne den Seed mitzunennen.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "determinism_fix.json",
+    "goals": [
+      "Mache build_dispatch_tree prozessuebergreifend deterministisch, damit Serialisierung und Benchmarks ueberhaupt Bedeutung haben.",
+      "Kläre, was der Nicht-Determinismus fuer die bereits gemessenen Ergebnisse dieser Session bedeutet."
+    ]
+  },
+  {
+    "reg_id": "determinism_fix.json::g_proof",
+    "claim_id": "g_proof",
+    "statement": "Gemessen: drei SEPARATE Prozesse, gleiche Regelmenge -> drei strukturell verschiedene Baeume (shape-hash 76c0c9e5 / b4ef3eb9 / 242eae66; cross_reference 741 / 666 / 666). Mit PYTHONHASHSEED=0: dreimal identisch (291cb6e0, xref 1378). Die Hash-Randomisierung ist die Ursache, nicht eine Korrelation.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "determinism_fix.json",
+    "goals": [
+      "Mache build_dispatch_tree prozessuebergreifend deterministisch, damit Serialisierung und Benchmarks ueberhaupt Bedeutung haben.",
+      "Kläre, was der Nicht-Determinismus fuer die bereits gemessenen Ergebnisse dieser Session bedeutet."
+    ]
+  },
+  {
+    "reg_id": "determinism_fix.json::ans_det",
+    "claim_id": "ans_det",
+    "statement": "Der Determinismus ist NICHT hergestellt. Nachgewiesen und gefixt ist eine Wurzelquelle: _rule_edges lieferte pro Prozess eine andere Kantenreihenfolge, weil rel ein dict mit Node-OBJEKT-Keys ist und Node-Hash die Speicheradresse ist; edges.sort() macht den Input zur reinen Funktion der Regel (Input-Hash jetzt stabil ueber Prozesse). Eine ZWEITE, unlokalisierte Quelle sitzt in CoreTree.insert/_insert_into: bei nachweislich identischem Input divergieren die Baeume weiterhin (11f5185a/f6114f27/77508e83), waehrend find_core bei identischem Input stabil ist. Fuenf Patch-Runden auf geratene Stellen (638, 538, all_rules, candidates, subgroup_members) blieben wirkungslos — erst die getrennte Messung von Input- und Baum-Hash hat die Lage geklaert. Konsequenz: alle Messwerte dieser Session sind Samples aus einer Verteilung unbekannter Breite; der 1.33x-Befund ist weder widerlegt noch belegt.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_proof",
+          "g_spread",
+          "g_bench",
+          "a_two_only"
+        ],
+        "rule": "Ein Fix gilt erst als wirksam, wenn die Zielgroesse gemessen stabil ist — nicht wenn eine plausible Quelle beseitigt wurde."
+      }
+    ],
+    "source_path": "determinism_fix.json",
+    "goals": [
+      "Mache build_dispatch_tree prozessuebergreifend deterministisch, damit Serialisierung und Benchmarks ueberhaupt Bedeutung haben.",
+      "Kläre, was der Nicht-Determinismus fuer die bereits gemessenen Ergebnisse dieser Session bedeutet."
+    ]
+  },
+  {
+    "reg_id": "determinism_fix.json::a_two_only",
+    "claim_id": "a_two_only",
+    "statement": "Es gibt genau zwei Nicht-Determinismus-Quellen (Zeile 638 und 538).",
+    "status": "assumed",
+    "negation_handling": "carried",
+    "derived_from": null,
+    "source_path": "determinism_fix.json",
+    "goals": [
+      "Mache build_dispatch_tree prozessuebergreifend deterministisch, damit Serialisierung und Benchmarks ueberhaupt Bedeutung haben.",
+      "Kläre, was der Nicht-Determinismus fuer die bereits gemessenen Ergebnisse dieser Session bedeutet."
+    ]
+  },
+  {
+    "reg_id": "determinism_fix.json::g_spread",
+    "claim_id": "g_spread",
+    "statement": "Gemessen: cross_reference() schwankt ueber Baumvarianten zwischen 10 und 1378 Entdeckungen. Die Varianten sind nicht Permutationen gleicher Qualitaet, sondern strukturell verschieden.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "determinism_fix.json",
+    "goals": [
+      "Mache build_dispatch_tree prozessuebergreifend deterministisch, damit Serialisierung und Benchmarks ueberhaupt Bedeutung haben.",
+      "Kläre, was der Nicht-Determinismus fuer die bereits gemessenen Ergebnisse dieser Session bedeutet."
     ]
   }
 ]

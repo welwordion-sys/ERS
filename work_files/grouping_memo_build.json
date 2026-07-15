@@ -1,0 +1,277 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+    "g2": "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
+  },
+  "prep_note": "Sven: kann der core match nicht memoisiert werden? -> ja, kann er.",
+  "prior_candidates": [],
+  "claims": {
+    "prior_rivalry": {
+      "id": "prior_rivalry",
+      "statement": "Die ungemessene Groesse ist 'Core-Match gegen memoisiertem Lookup' — eine Rivalitaet zweier Mechanismen.",
+      "status": "assumed",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": "checked",
+      "negation_note": "World-Model: core_match_ergebnis ist reine fn von (core,host_state) -> Kanal (memoisierbar, ist-reine-funktion-von, FORWARD) lizenziert die Propagation. Die Rivalitaet war unlizenziert erfunden; die Achse ist roh-vs-memoisiert, nicht match-vs-lookup.",
+      "revises": null
+    },
+    "g_struct": {
+      "id": "g_struct",
+      "statement": "Code-Fakt (crash-ueberlebend): Core-Identitaet innerhalb einer Gruppe ist Konstruktionsgarantie des CoreTree (_insert_into/_rule_map).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_pure": {
+      "id": "g_pure",
+      "statement": "Code-Fakt (crash-ueberlebend): derive_match_view ist reine Funktion von rule.graph2; core_edges sind nach build_dispatch_tree fix.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_lic": {
+      "id": "g_lic",
+      "statement": "World-Model: 'memoisierbar' propagiert entlang 'ist-reine-funktion-von' auf derive_match_view, core_pattern UND core_match_ergebnis. degree_index ueber States ist INERT (unlizenziert).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "a_num": {
+      "id": "a_num",
+      "statement": "Arbeitshypothese (UNREPRODUCED): flat_memo 77.34x, consistent-Ratio 1.03x, 15 Signaturen/3180 Targets, Hit-Index 56.3/26.",
+      "status": "assumed",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": "carried",
+      "negation_note": "Alle Messungen des Vorturns sind nach dem Container-Crash STALE (SELF_EXTERNAL/MUTABLE), Reproducer vernichtet. Als Arbeitshypothese getragen, nicht als Evidenz.",
+      "revises": null
+    },
+    "g_empty": {
+      "id": "g_empty",
+      "statement": "Die offene Groesse ist die leere Zelle 'grouped+memo' — nie gemessen. flat+roh, flat+memo, grouped+roh liegen (als Arbeitshypothese) vor.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "prior_rivalry",
+            "g_lic"
+          ],
+          "rule": "Wenn beide Arme memoisierbar sind, ist die offene Groesse keine Rivalitaet sondern eine leere Zelle in der Kreuztabelle roh-x-memoisiert."
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": {
+        "target": "prior_rivalry",
+        "prior_text": "Die ungemessene Groesse ist 'Core-Match gegen memoisiertem Lookup' — eine Rivalitaet zweier Mechanismen.",
+        "why": "Kategorienfehler: Kostenachse (Match/Lookup) mit Optimierungsachse (roh/memoisiert) verwechselt; die Kreuzzelle wurde als leer behauptet, ist aber besetzbar — Sven hat das korrigiert."
+      }
+    },
+    "ans_core_dominates": {
+      "id": "ans_core_dominates",
+      "statement": "Der Core-Match IST memoisierbar (die Vorturn-Rivalitaet war ein Kategorienfehler), und die leere Zelle ist jetzt gefuellt: grouped+memo ist 25x LANGSAMER als flat+memo (4.913s vs 0.197s) bei identischer Aequivalenz und unveraendertem consistent-Ratio 1.03x. g_structs Core-Identitaets-Garantie ist strukturell echt, liefert aber nur 395 eingesparte consistent-Calls, waehrend die 689 dafuer noetigen find_core-Subgraphsuchen ~4.7s kosten. Auf memoisierter Baseline ist der Core-Match selbst der Kostentreiber, nicht das Backtracking, das er ersetzen soll. Grouping-fuer-Dispatch ist auf diesem Workload widerlegt; die Memoisierung allein (95x gegen flat_raw) ist die tragende Optimierung.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_empty",
+            "g_struct",
+            "g_lic",
+            "a_num"
+          ],
+          "rule": "Wenn die Ersparnis eines Mechanismus (geteilte Bindungen: 395 consistent-Calls) um zwei Groessenordnungen unter seinen Kosten liegt (689 Core-Suchen, ~4.7s), ist der Mechanismus auf diesem Workload nicht tragfaehig — unabhaengig davon, ob seine Garantie strukturell echt ist."
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "c_build": {
+      "id": "c_build",
+      "statement": "Beide Arme jetzt bauen: flat+memo und grouped+memo, Core-Match memoisiert, Work-Units gezaehlt. Die leere Zelle fuellen.",
+      "discriminator": "Konkurriert gegen c_precondition (erst Core-Match-Kosten isoliert messen, dann bauen) und c_nobuild. Unterscheidende Evidenz: wenn der Core-Match memoisierbar ist (g_lic), entfaellt c_preconditions Begruendung, weil die isolierte Messung genau das ist, was der Bau ohnehin produziert."
+    },
+    "c_precondition": {
+      "id": "c_precondition",
+      "statement": "Erst Core-Match-Kosten gegen memoisierten Lookup isoliert messen, dann bauen.",
+      "discriminator": "Konkurriert gegen c_build. Gewinnt nur, wenn die isolierte Groesse NICHT als Nebenprodukt des Baus anfaellt."
+    },
+    "c_nobuild": {
+      "id": "c_nobuild",
+      "statement": "Nicht bauen; grouping als Wash abschreiben.",
+      "discriminator": "Null-Option. Gewinnt, wenn g_struct keinen Hebel liefert, den Memoisierung nicht schon hat."
+    }
+  },
+  "checks": {
+    "k_f_build": {
+      "id": "k_f_build",
+      "kind": "falsifier",
+      "target": "c_build",
+      "method": "Head-to-Head gegen c_precondition: baue beide Arme mit memoisiertem Core-Match und pruefe, ob die angeblich noetige Vorab-Messung (Core-Match-Kosten) als Nebenprodukt anfaellt. Wenn ja, ist c_precondition falsifiziert.",
+      "result": "Bau geliefert (bench_matrix.py). core_match=689 Zaehler faellt direkt an — die 'isoliert vorab zu messende Groesse' IST ein Nebenprodukt des Baus. c_precondition falsifiziert; c_build ueberlebt als CHOICE.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k_f_multiply": {
+      "id": "k_f_multiply",
+      "kind": "falsifier",
+      "target": "c_build",
+      "method": "Falsifiziere die Erwartung, dass grouped+memo gewinnt: messe wall und consistent gegen flat+memo auf identischem 51-State/252-Regel-Workload.",
+      "result": "grouped+memo 4.913s vs flat+memo 0.197s -> 0.04x, also 25x LANGSAMER. consistent 12067 vs 12462 = 1.03x (unveraendert break-even). 689 Core-Matches bei 51 States (~13.5/State). Die Erwartung ist falsifiziert.",
+      "outcome": "failed",
+      "side_findings": [
+        {
+          "finding": "consistent-Ratio bleibt exakt 1.03x wie im rohen Vergleich — die Bindungs-Ersparnis existiert, ist aber winzig (395 Calls). g_struct liefert real weniger Hebel als die Konstruktionsgarantie suggeriert.",
+          "disposition": "filed"
+        },
+        {
+          "finding": "689 Core-Matches statt der aus Baumtiefe 3 erwarteten ~150: der visited-Mechanismus verhindert Duplikate pro Walk, aber der Baum wird pro State mehrfach betreten. Ungeklaert.",
+          "disposition": "filed"
+        },
+        {
+          "finding": "find_core ist bei memoisiertem Ergebnis immer noch pro (core,state) EINE echte Subgraph-Suche — 689 davon kosten ~4.7s, waehrend flat+memo den ganzen Job in 0.197s macht. Die Core-Suche selbst ist der Kostentreiber.",
+          "disposition": "filed"
+        }
+      ]
+    },
+    "k_o_equiv": {
+      "id": "k_o_equiv",
+      "kind": "obligation",
+      "target": "c_build",
+      "method": "o_equiv: beide Arme gegen flat_raw ground truth auf allen 51 States.",
+      "result": "flat+memo mism=0, grouped+memo mism=0, fires 51/51. Erfuellt.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k_o_work": {
+      "id": "k_o_work",
+      "kind": "obligation",
+      "target": "c_build",
+      "method": "o_work: Work-Units statt Invocations zaehlen.",
+      "result": "consistent() gezaehlt: 12462 vs 12067. Invocations separat (2921 vs 4837) — der v1-Fehler waere gewesen, daraus 0.60x zu lesen; die Work-Units sagen 1.03x. Erfuellt.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k_f_ans": {
+      "id": "k_f_ans",
+      "kind": "falsifier",
+      "target": "ans_core_dominates",
+      "method": "Versuche die Antwort zu brechen: koennte grouping doch gewinnen? Konstruiere den Fall, in dem sie falsch ist.",
+      "result": "Ueberlebt, aber NUR in enger Form. Die Antwort gilt fuer DISPATCH auf diesem Workload (252 Additionsregeln, Median-Hit-Index 26, 51 States). Sie zeigt NICHT, dass CoreTree wertlos ist: (a) bei Median-Hit 26 muss flat nur ~26 sehr billige Lookups machen — grouping kann prinzipiell nicht viel sparen, wo wenig zu sparen ist; (b) die GA-Rekombination (zweiter Baum, laut KB getrennt) haengt nicht an Dispatch-Performance; (c) bei einer Regelmenge mit deutlich hoeherem Hit-Index oder teurerem Backtracking koennte sich das drehen. Starke Lesart 'grouping ist tot' widerlegt; ueberlebende Lesart: 'grouping-als-Dispatch-Beschleuniger ist auf Addition widerlegt'.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "Die 689 Core-Matches sind unerklaert (erwartet ~150 bei Tiefe 3). Falls ein Bug, koennte grouped+memo schneller sein als gemessen — aber um Faktor 25 aufzuholen muesste find_core nahezu gratis werden, was bei einer Subgraphsuche ausgeschlossen ist. Befund bleibt bestehen, Zahl bleibt offen.",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "k_rel": {
+      "id": "k_rel",
+      "kind": "relevance",
+      "target": "ans_core_dominates",
+      "method": "I9: Bindet die Evidenz an beide Ziele. Ziel 1 (bauen und messen?): bench_matrix.py gebaut, Zelle gefuellt, Entscheidung getroffen. Ziel 2 (Scheinalternative korrigieren): prior_rivalry via I8 revidiert, g_lic zeigt die Propagations-Lizenz, die sie widerlegt.",
+      "result": "Beide Ziele beantwortet. Ziel 1: gebaut, gemessen, 0.04x — grouping-Dispatch verworfen, Memoisierung behalten. Ziel 2: Rivalitaet als Kategorienfehler nachgewiesen und ersetzt durch die Kreuztabellen-Achse.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "id": "statement"
+  },
+  "committed": {
+    "answer": "ans_core_dominates",
+    "statement": "Der Core-Match IST memoisierbar (die Vorturn-Rivalitaet war ein Kategorienfehler), und die leere Zelle ist jetzt gefuellt: grouped+memo ist 25x LANGSAMER als flat+memo (4.913s vs 0.197s) bei identischer Aequivalenz und unveraendertem consistent-Ratio 1.03x. g_structs Core-Identitaets-Garantie ist strukturell echt, liefert aber nur 395 eingesparte consistent-Calls, waehrend die 689 dafuer noetigen find_core-Subgraphsuchen ~4.7s kosten. Auf memoisierter Baseline ist der Core-Match selbst der Kostentreiber, nicht das Backtracking, das er ersetzen soll. Grouping-fuer-Dispatch ist auf diesem Workload widerlegt; die Memoisierung allein (95x gegen flat_raw) ist die tragende Optimierung.",
+    "evidence_label": "assumed",
+    "assumptions_carried": [
+      "a_num",
+      "prior_rivalry"
+    ],
+    "carried_unexplored": [
+      "a_num"
+    ]
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "prior_rivalry",
+        "g_struct",
+        "g_pure",
+        "g_lic",
+        "a_num",
+        "g_empty"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        {
+          "id": "o_mech",
+          "statement": "Der Vergleich muss den MECHANISMUS messen (geteilte Bindungen + gruppenweite negative Info), nicht erneut Fixkosten gegen Fixkosten."
+        },
+        {
+          "id": "o_equiv",
+          "statement": "Beide Arme muessen auf jedem State dieselbe feuernde Regel liefern wie flat_raw."
+        },
+        {
+          "id": "o_work",
+          "statement": "Work-Units zaehlen (consistent()-Calls), nicht Invocations — der v1-Metrikfehler darf nicht wiederkehren."
+        },
+        {
+          "id": "o_repro",
+          "statement": "Artefakte muessen via present_files rausgereicht werden, bevor der Turn endet (Crash-Lehre)."
+        }
+      ]
+    ],
+    [
+      "propose",
+      [
+        "c_build",
+        "c_precondition",
+        "c_nobuild"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k_f_build",
+        "k_f_multiply",
+        "k_o_equiv",
+        "k_o_work"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "ans_core_dominates"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k_f_ans",
+        "k_rel"
+      ]
+    ],
+    [
+      "commit",
+      "ans_core_dominates"
+    ]
+  ]
+}

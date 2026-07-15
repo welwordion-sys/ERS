@@ -1,0 +1,337 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Mache build_dispatch_tree prozessuebergreifend deterministisch, damit Serialisierung und Benchmarks ueberhaupt Bedeutung haben.",
+    "g2": "Kläre, was der Nicht-Determinismus fuer die bereits gemessenen Ergebnisse dieser Session bedeutet."
+  },
+  "prep_note": "Sven: determinismus fix, skills anwenden.",
+  "prior_candidates": [
+    {
+      "reg_id": "grouping_memo_build.json::ans_core_dominates",
+      "claim_id": "ans_core_dominates",
+      "statement": "Der Core-Match IST memoisierbar (die Vorturn-Rivalitaet war ein Kategorienfehler), und die leere Zelle ist jetzt gefuellt: grouped+memo ist 25x LANGSAMER als flat+memo (4.913s vs 0.197s) bei identischer Aequivalenz und unveraendertem consistent-Ratio 1.03x. g_structs Core-Identitaets-Garantie ist strukturell echt, liefert aber nur 395 eingesparte consistent-Calls, waehrend die 689 dafuer noetigen find_core-Subgraphsuchen ~4.7s kosten. Auf memoisierter Baseline ist der Core-Match selbst der Kostentreiber, nicht das Backtracking, das er ersetzen soll. Grouping-fuer-Dispatch ist auf diesem Workload widerlegt; die Memoisierung allein (95x gegen flat_raw) ist die tragende Optimierung.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_empty",
+            "g_struct",
+            "g_lic",
+            "a_num"
+          ],
+          "rule": "Wenn die Ersparnis eines Mechanismus (geteilte Bindungen: 395 consistent-Calls) um zwei Groessenordnungen unter seinen Kosten liegt (689 Core-Suchen, ~4.7s), ist der Mechanismus auf diesem Workload nicht tragfaehig — unabhaengig davon, ob seine Garantie strukturell echt ist."
+        }
+      ],
+      "source_path": "grouping_memo_build.json",
+      "goals": [
+        "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+        "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
+      ]
+    },
+    {
+      "reg_id": "tree_store_format.json::ans_format",
+      "claim_id": "ans_format",
+      "statement": "Das Format speichert children als geordnete typisierte Sequenz, weil die Node/String-Verschraenkung (Pattern NNSNNSSSNNSS) Einfuegereihenfolge ist und aus getrennten Mengen nicht rekonstruierbar; _find_and_try liest diese Reihenfolge und sperrt via visited, weshalb Umsortierung 4/25 Dispatch-Mismatches erzeugt. Invalidierung ueber sha256(Namen + Kantenmuster) statt nur Namen, weil eine Regel unter gleichem Namen ihr Muster aendern kann. JSON statt pickle, weil der Baum vollstaendig primitiv ist. Der Aequivalenztest muss ordnungssensitiv sein UND echtes Dispatch vergleichen — der erste _shape war blinder als sein Konsument und meldete PASS auf einem defekten Baum. Gewinn: 3.34s build -> 0.463s load.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_order",
+            "g_shape_blind",
+            "g_pure2",
+            "ans_retract"
+          ],
+          "rule": "Ein Serialisierungsformat ist genau dann korrekt, wenn es jede Eigenschaft erhaelt, auf die ein Konsument reagiert — Mengengleichheit genuegt nicht, wenn der Konsument die Reihenfolge liest."
+        }
+      ],
+      "source_path": "tree_store_format.json",
+      "goals": [
+        "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+        "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+      ]
+    },
+    {
+      "reg_id": "tree_store_format.json::ans_retract",
+      "claim_id": "ans_retract",
+      "statement": "ans_core_dominates wird ZURUECKGEZOGEN. Die gemessenen 25x stammten daraus, dass find_core (ein MCS-Konstruktionsverfahren) 689 mal im Dispatch-Pfad lief, um ein bereits bekanntes Muster neu zu entdecken. Das misst meinen Bau, nicht Grouping. Ob Grouping mit einem echten Core-Match gewinnt, ist UNGEMESSEN — nicht widerlegt.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "prior_ans",
+            "g_mcs",
+            "g_known"
+          ],
+          "rule": "Ein Messergebnis, das aus dem Aufruf eines Konstruktionsverfahrens zur Laufzeit stammt, misst den Aufruf, nicht den Mechanismus; es traegt keine Aussage ueber den Mechanismus."
+        }
+      ],
+      "source_path": "tree_store_format.json",
+      "goals": [
+        "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+        "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+      ]
+    },
+    {
+      "reg_id": "rule_delta_fix.json::ans_store",
+      "claim_id": "ans_store",
+      "statement": "_rule_delta wird gespeichert, nicht abgeleitet. Es ist zu 251/252 rekonstruierbar, aber der Erstinsert-Pfad setzt es direkt auf ({},0.0,set()), waehrend die Ableitung ratio=1.0 liefert — und ratio steuert die Teilnahme an cross_reference(). _pairwise/_delta_cache bleiben ungespeichert: echte Caches ohne eigenen Setzpfad. Der Konsumenten-Test muss ALLE Konsumenten umfassen, nicht nur den, den man gerade baut: dispatch() war blind gegen diese Luecke, cross_reference() nicht.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_251",
+            "g_insert",
+            "g_ratio_used",
+            "g_xref",
+            "prior_format"
+          ],
+          "rule": "Ein Zustand ist genau dann ableitbar statt speicherbar, wenn KEIN Pfad ihn ausserhalb der ableitenden Funktion setzt. Ein einziger Sonderpfad genuegt, um Ableitung zu disqualifizieren — 251/252 ist kein Argument, sondern eine Falle."
+        }
+      ],
+      "source_path": "rule_delta_fix.json",
+      "goals": [
+        "Schliesse die gefilte _rule_delta-Luecke im Serialisierungsformat und korrigiere ans_format, das den geladenen Baum als konsumenten-treu bezeichnete."
+      ]
+    },
+    {
+      "reg_id": "selfsimilarity.json::ans_ss",
+      "claim_id": "ans_ss",
+      "statement": "GEMESSEN ist ein Arbeitspunkt: der Additionsbaum ist bereits selbstaehnlich (Jaccard 0.53-0.91), 56% der Core-Probes sind Fehlversuche, und trotzdem gewinnt Grouping 1.33x. ABGELEITET, nicht gemessen, ist die Richtung: bei steigender Selbstaehnlichkeit wachsen die Probe-Kosten linear mit der Geschwisterzahl, waehrend die diskriminierende Kraft je Core sinkt — im Grenzfall identischer Cores ist die negative Information wertlos. Die These gilt nur unterhalb der Verschmelzungsschwelle (min_ratio), da identische Cores beim Bau verschmolzen wuerden. Der Hebel gegen die Degradation ist vorhanden und ungenutzt: bei Jaccard 0.82 sind zwei Cores 2 Kanten auseinander, und CoreTree haelt _pairwise/_anchored_delta bereits vor — ein Geschwister-Match koennte die Vorgaenger-Bindung erben statt neu zu starten.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_jac",
+            "g_hit",
+            "g_nodelta",
+            "a_degr"
+          ],
+          "rule": "Ein Arbeitspunkt belegt einen Wert, keine Steigung; die Richtung folgt aus dem Mechanismus und bleibt bis zur Kurve eine Ableitung."
+        }
+      ],
+      "source_path": "selfsimilarity.json",
+      "goals": [
+        "Kläre, was mit groupings Performance bei multiplen selbstaehnlichen Gruppen passiert — und ob der Befund gemessen oder nur abgeleitet ist."
+      ]
+    }
+  ],
+  "claims": {
+    "g_proof": {
+      "id": "g_proof",
+      "statement": "Gemessen: drei SEPARATE Prozesse, gleiche Regelmenge -> drei strukturell verschiedene Baeume (shape-hash 76c0c9e5 / b4ef3eb9 / 242eae66; cross_reference 741 / 666 / 666). Mit PYTHONHASHSEED=0: dreimal identisch (291cb6e0, xref 1378). Die Hash-Randomisierung ist die Ursache, nicht eine Korrelation.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_two": {
+      "id": "g_two",
+      "statement": "Code-Fakt: ZWEI Stellen waehlen aus einem frozenset von STRINGS. core_tree.py:638 ref_member = next(iter(node.members)) — members ist ein frozenset von Regelnamen. core_tree.py:538 a = next(iter(others)) — others = key - {d}, key ist frozenset von Regelnamen. Zeile 507 next(iter(warm_map)) iteriert ein dict mit int-Keys (insertion-order, stabil) und ist NICHT betroffen.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_spread": {
+      "id": "g_spread",
+      "statement": "Gemessen: cross_reference() schwankt ueber Baumvarianten zwischen 10 und 1378 Entdeckungen. Die Varianten sind nicht Permutationen gleicher Qualitaet, sondern strukturell verschieden.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_bench": {
+      "id": "g_bench",
+      "statement": "Folge: jeder Benchmark dieser Session (77.34x, 1.03x, 0.04x, 1.33x, Jaccard 0.53-0.91, Hit-Rate 44%) lief auf einer zufaellig gewaehlten Baumvariante. Kein Wert ist reproduzierbar, ohne den Seed mitzunennen.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "a_two_only": {
+      "id": "a_two_only",
+      "statement": "Es gibt genau zwei Nicht-Determinismus-Quellen (Zeile 638 und 538).",
+      "status": "assumed",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": "carried",
+      "negation_note": "Geprueft wurden die per grep gefundenen next(iter())-Stellen und Zeile 507. NICHT ausgeschlossen ist, dass eine weitere Stelle indirekt ueber Set-Iteration waehlt (z.B. in core_finder._grow_from oder ueber dict-Iteration von set-abgeleiteten Keys). Der PYTHONHASHSEED=0-Beweis zeigt nur, dass ALLE Quellen hash-basiert sind, nicht dass es genau zwei sind.",
+      "revises": null
+    },
+    "ans_det": {
+      "id": "ans_det",
+      "statement": "Der Determinismus ist NICHT hergestellt. Nachgewiesen und gefixt ist eine Wurzelquelle: _rule_edges lieferte pro Prozess eine andere Kantenreihenfolge, weil rel ein dict mit Node-OBJEKT-Keys ist und Node-Hash die Speicheradresse ist; edges.sort() macht den Input zur reinen Funktion der Regel (Input-Hash jetzt stabil ueber Prozesse). Eine ZWEITE, unlokalisierte Quelle sitzt in CoreTree.insert/_insert_into: bei nachweislich identischem Input divergieren die Baeume weiterhin (11f5185a/f6114f27/77508e83), waehrend find_core bei identischem Input stabil ist. Fuenf Patch-Runden auf geratene Stellen (638, 538, all_rules, candidates, subgroup_members) blieben wirkungslos — erst die getrennte Messung von Input- und Baum-Hash hat die Lage geklaert. Konsequenz: alle Messwerte dieser Session sind Samples aus einer Verteilung unbekannter Breite; der 1.33x-Befund ist weder widerlegt noch belegt.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_proof",
+            "g_spread",
+            "g_bench",
+            "a_two_only"
+          ],
+          "rule": "Ein Fix gilt erst als wirksam, wenn die Zielgroesse gemessen stabil ist — nicht wenn eine plausible Quelle beseitigt wurde."
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "c_sorted": {
+      "id": "c_sorted",
+      "statement": "An beiden Stellen sorted(...) statt next(iter(...)): ref_member = sorted(node.members)[0], a = sorted(others)[0]. Deterministisch an der Quelle, unabhaengig vom Prozess.",
+      "discriminator": "Konkurriert gegen c_seed (PYTHONHASHSEED=0 im Runner setzen) und c_list (members als geordnete Liste statt frozenset fuehren). Unterscheidende Evidenz: c_seed verletzt o_nohide — es fixiert die Zufallswahl, statt sie zu beseitigen, und bricht sobald jemand den Runner ohne Env-Var startet."
+    },
+    "c_seed": {
+      "id": "c_seed",
+      "statement": "PYTHONHASHSEED=0 im Testrunner setzen.",
+      "discriminator": "Gewinnt, falls das Ziel nur Reproduzierbarkeit IM Test waere und nicht Determinismus des Bauartefakts."
+    },
+    "c_list": {
+      "id": "c_list",
+      "statement": "members als geordnete Liste statt frozenset fuehren.",
+      "discriminator": "Gewinnt, falls die Set-Semantik von members nirgends gebraucht wird."
+    }
+  },
+  "checks": {
+    "k_f_two": {
+      "id": "k_f_two",
+      "kind": "falsifier",
+      "target": "a_two_only",
+      "method": "Patche beide behaupteten Quellen (638, 538) und pruefe drei separate Prozesse auf Shape-Hash-Gleichheit.",
+      "result": "FALSIFIZIERT. Nach dem Patch weiterhin drei verschiedene Baeume (5b1cd130/18517078/216953c0). Danach vier weitere Quellen gepatcht (all_rules, candidates, subgroup_members, _rule_edges) — immer noch divergent. Die Annahme 'genau zwei Quellen' war falsch; ich hatte sie als carried markiert, was den Fehler auffing.",
+      "outcome": "failed",
+      "side_findings": [
+        {
+          "finding": "Ich habe fuenf Patch-Runden lang Stellen ERRATEN statt die Divergenz einzugrenzen. Erst der Isolator (Input-Hash vs Baum-Hash getrennt messen) hat Klarheit gebracht. Das ist die Methode, die von Anfang an haette laufen muessen.",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "k_f_root": {
+      "id": "k_f_root",
+      "kind": "falsifier",
+      "target": "c_sorted",
+      "method": "Grenze die Divergenz ein: messe getrennt, ob der INPUT (_rule_edges) oder der BAU divergiert.",
+      "result": "ZWEI Quellen nachgewiesen, nicht eine. (1) _rule_edges lieferte pro Prozess andere REIHENFOLGE bei identischem Inhalt (sortierter Hash stabil 5e9750cf, roher 4d94e961 vs 4e8706f7) — Ursache: rel ist dict mit Node-OBJEKT-Keys, Node-Hash = Speicheradresse. Gefixt durch edges.sort(). (2) Danach ist der Input stabil (6575316e75 dreimal), der Baum divergiert TROTZDEM (11f5185a/f6114f27/77508e83). find_core ist bei identischem Input stabil (ratio+safe_core gleich). Die Restquelle sitzt in CoreTree.insert/_insert_into und ist NICHT lokalisiert.",
+      "outcome": "failed",
+      "side_findings": [
+        {
+          "finding": "Restquelle in CoreTree.insert/_insert_into unlokalisiert. Der Determinismus ist NICHT hergestellt.",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "k_f_ans": {
+      "id": "k_f_ans",
+      "kind": "falsifier",
+      "target": "ans_det",
+      "method": "Versuche die Antwort zu brechen: ist 'nicht hergestellt' zu pessimistisch — reicht der _rule_edges-Fix vielleicht doch?",
+      "result": "Ueberlebt. Drei Prozesse nach dem Fix: shape abf7f50d/a3753c2f/f23d7b0d — verschieden. xref 3/3/1378. Der Fix hat die Streuung reduziert (xref bei 2 von 3 gleich), aber Determinismus ist binaer: entweder alle Prozesse liefern denselben Baum oder nicht. Sie tun es nicht.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "Der _rule_edges-Fix ist unabhaengig von der Restquelle korrekt und behaltenswert: er macht den Input zur reinen Funktion der Regel. Nicht zurueckrollen.",
+          "disposition": "fixed"
+        }
+      ]
+    },
+    "k_rel": {
+      "id": "k_rel",
+      "kind": "relevance",
+      "target": "ans_det",
+      "method": "I9: bindet Evidenz an beide Ziele (Determinismus herstellen; Konsequenz fuer Messwerte klaeren).",
+      "result": "Ziel 1: nicht erreicht, Zwischenstand exakt dokumentiert inkl. Isolator-Methode fuer die naechste Runde. Ziel 2: erreicht — alle Werte sind Samples, Reproduktion braucht Seed oder den fertigen Fix.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "id": "statement"
+  },
+  "committed": {
+    "answer": "ans_det",
+    "statement": "Der Determinismus ist NICHT hergestellt. Nachgewiesen und gefixt ist eine Wurzelquelle: _rule_edges lieferte pro Prozess eine andere Kantenreihenfolge, weil rel ein dict mit Node-OBJEKT-Keys ist und Node-Hash die Speicheradresse ist; edges.sort() macht den Input zur reinen Funktion der Regel (Input-Hash jetzt stabil ueber Prozesse). Eine ZWEITE, unlokalisierte Quelle sitzt in CoreTree.insert/_insert_into: bei nachweislich identischem Input divergieren die Baeume weiterhin (11f5185a/f6114f27/77508e83), waehrend find_core bei identischem Input stabil ist. Fuenf Patch-Runden auf geratene Stellen (638, 538, all_rules, candidates, subgroup_members) blieben wirkungslos — erst die getrennte Messung von Input- und Baum-Hash hat die Lage geklaert. Konsequenz: alle Messwerte dieser Session sind Samples aus einer Verteilung unbekannter Breite; der 1.33x-Befund ist weder widerlegt noch belegt.",
+    "evidence_label": "assumed",
+    "assumptions_carried": [
+      "a_two_only"
+    ],
+    "carried_unexplored": [
+      "a_two_only"
+    ]
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "g_proof",
+        "g_two",
+        "g_spread",
+        "g_bench",
+        "a_two_only"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        {
+          "id": "o_det",
+          "statement": "Drei separate Prozesse muessen denselben Baum bauen — nachgewiesen ueber Shape-Hash UND cross_reference-Zahl, nicht nur ueber eine Groesse."
+        },
+        {
+          "id": "o_nohide",
+          "statement": "Der Fix darf den Nicht-Determinismus nicht verstecken (PYTHONHASHSEED setzen), sondern muss ihn an der Quelle beseitigen."
+        },
+        {
+          "id": "o_equiv",
+          "statement": "Der deterministische Baum muss weiterhin aequivalent dispatchen (0 mismatches gegen flat_raw)."
+        },
+        {
+          "id": "o_bench",
+          "statement": "Die Konsequenz fuer die bereits gemessenen Werte muss explizit benannt werden, nicht stillschweigend uebergangen."
+        }
+      ]
+    ],
+    [
+      "propose",
+      [
+        "c_sorted",
+        "c_seed",
+        "c_list"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "ans_det"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k_f_ans",
+        "k_rel"
+      ]
+    ],
+    [
+      "commit",
+      "ans_det"
+    ]
+  ]
+}

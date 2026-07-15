@@ -1,0 +1,305 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Kläre, was mit groupings Performance bei multiplen selbstaehnlichen Gruppen passiert — und ob der Befund gemessen oder nur abgeleitet ist."
+  },
+  "prep_note": "Svens Frage; ich hatte sie ungegatet beantwortet.",
+  "prior_candidates": [
+    {
+      "reg_id": "grouping_memo_build.json::ans_core_dominates",
+      "claim_id": "ans_core_dominates",
+      "statement": "Der Core-Match IST memoisierbar (die Vorturn-Rivalitaet war ein Kategorienfehler), und die leere Zelle ist jetzt gefuellt: grouped+memo ist 25x LANGSAMER als flat+memo (4.913s vs 0.197s) bei identischer Aequivalenz und unveraendertem consistent-Ratio 1.03x. g_structs Core-Identitaets-Garantie ist strukturell echt, liefert aber nur 395 eingesparte consistent-Calls, waehrend die 689 dafuer noetigen find_core-Subgraphsuchen ~4.7s kosten. Auf memoisierter Baseline ist der Core-Match selbst der Kostentreiber, nicht das Backtracking, das er ersetzen soll. Grouping-fuer-Dispatch ist auf diesem Workload widerlegt; die Memoisierung allein (95x gegen flat_raw) ist die tragende Optimierung.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_empty",
+            "g_struct",
+            "g_lic",
+            "a_num"
+          ],
+          "rule": "Wenn die Ersparnis eines Mechanismus (geteilte Bindungen: 395 consistent-Calls) um zwei Groessenordnungen unter seinen Kosten liegt (689 Core-Suchen, ~4.7s), ist der Mechanismus auf diesem Workload nicht tragfaehig — unabhaengig davon, ob seine Garantie strukturell echt ist."
+        }
+      ],
+      "source_path": "grouping_memo_build.json",
+      "goals": [
+        "Entscheide, ob grouped+memo (mit memoisiertem Core-Match) gegen flat+memo gebaut und gemessen werden soll, oder ob eine Vorbedingung das blockiert.",
+        "Korrigiere die Scheinalternative 'Core-Match gegen memoisiertem Lookup' aus dem Vorturn."
+      ]
+    },
+    {
+      "reg_id": "rule_delta_fix.json::ans_store",
+      "claim_id": "ans_store",
+      "statement": "_rule_delta wird gespeichert, nicht abgeleitet. Es ist zu 251/252 rekonstruierbar, aber der Erstinsert-Pfad setzt es direkt auf ({},0.0,set()), waehrend die Ableitung ratio=1.0 liefert — und ratio steuert die Teilnahme an cross_reference(). _pairwise/_delta_cache bleiben ungespeichert: echte Caches ohne eigenen Setzpfad. Der Konsumenten-Test muss ALLE Konsumenten umfassen, nicht nur den, den man gerade baut: dispatch() war blind gegen diese Luecke, cross_reference() nicht.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_251",
+            "g_insert",
+            "g_ratio_used",
+            "g_xref",
+            "prior_format"
+          ],
+          "rule": "Ein Zustand ist genau dann ableitbar statt speicherbar, wenn KEIN Pfad ihn ausserhalb der ableitenden Funktion setzt. Ein einziger Sonderpfad genuegt, um Ableitung zu disqualifizieren — 251/252 ist kein Argument, sondern eine Falle."
+        }
+      ],
+      "source_path": "rule_delta_fix.json",
+      "goals": [
+        "Schliesse die gefilte _rule_delta-Luecke im Serialisierungsformat und korrigiere ans_format, das den geladenen Baum als konsumenten-treu bezeichnete."
+      ]
+    },
+    {
+      "reg_id": "tree_store_format.json::g_shape_blind",
+      "claim_id": "g_shape_blind",
+      "statement": "Gemessen: der erste _shape-Vergleich benutzte sorted()+frozenset und meldete 'struktur identisch' auf genau dem Baum, der anders dispatchte. Der Fehler wurde nur durch echten Dispatch-Vergleich sichtbar.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "tree_store_format.json",
+      "goals": [
+        "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+        "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+      ]
+    },
+    {
+      "reg_id": "tree_store_format.json::ans_format",
+      "claim_id": "ans_format",
+      "statement": "Das Format speichert children als geordnete typisierte Sequenz, weil die Node/String-Verschraenkung (Pattern NNSNNSSSNNSS) Einfuegereihenfolge ist und aus getrennten Mengen nicht rekonstruierbar; _find_and_try liest diese Reihenfolge und sperrt via visited, weshalb Umsortierung 4/25 Dispatch-Mismatches erzeugt. Invalidierung ueber sha256(Namen + Kantenmuster) statt nur Namen, weil eine Regel unter gleichem Namen ihr Muster aendern kann. JSON statt pickle, weil der Baum vollstaendig primitiv ist. Der Aequivalenztest muss ordnungssensitiv sein UND echtes Dispatch vergleichen — der erste _shape war blinder als sein Konsument und meldete PASS auf einem defekten Baum. Gewinn: 3.34s build -> 0.463s load.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_order",
+            "g_shape_blind",
+            "g_pure2",
+            "ans_retract"
+          ],
+          "rule": "Ein Serialisierungsformat ist genau dann korrekt, wenn es jede Eigenschaft erhaelt, auf die ein Konsument reagiert — Mengengleichheit genuegt nicht, wenn der Konsument die Reihenfolge liest."
+        }
+      ],
+      "source_path": "tree_store_format.json",
+      "goals": [
+        "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+        "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+      ]
+    },
+    {
+      "reg_id": "tree_store_format.json::ans_retract",
+      "claim_id": "ans_retract",
+      "statement": "ans_core_dominates wird ZURUECKGEZOGEN. Die gemessenen 25x stammten daraus, dass find_core (ein MCS-Konstruktionsverfahren) 689 mal im Dispatch-Pfad lief, um ein bereits bekanntes Muster neu zu entdecken. Das misst meinen Bau, nicht Grouping. Ob Grouping mit einem echten Core-Match gewinnt, ist UNGEMESSEN — nicht widerlegt.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "prior_ans",
+            "g_mcs",
+            "g_known"
+          ],
+          "rule": "Ein Messergebnis, das aus dem Aufruf eines Konstruktionsverfahrens zur Laufzeit stammt, misst den Aufruf, nicht den Mechanismus; es traegt keine Aussage ueber den Mechanismus."
+        }
+      ],
+      "source_path": "tree_store_format.json",
+      "goals": [
+        "Gate das Serialisierungsformat von tree_store.py (children-Reihenfolge als Strukturbestandteil, Ruleset-Fingerprint als Invalidierung) bevor kuenftige Sessions es erben.",
+        "Ziehe den auf falscher Grundlage committeten Befund ans_core_dominates zurueck."
+      ]
+    }
+  ],
+  "claims": {
+    "g_jac": {
+      "id": "g_jac",
+      "statement": "Gemessen am Additionsbaum: Jaccard 0.53-0.91 zwischen allen 6 Geschwister-Cores auf Ebene 1; 9-10 gemeinsame Kanten je Paar. Der Baum IST bereits hochgradig selbstaehnlich.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_hit": {
+      "id": "g_hit",
+      "statement": "Gemessen: 336 Core-Probes ueber 51 States, davon 149 Treffer und 187 Misses -> Hit-Rate 44%, 6.6 Probes/State, 3.7 Fehlversuche/State.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_nodelta": {
+      "id": "g_nodelta",
+      "statement": "Code-Fakt: match_core startet fuer jeden Geschwister-Core bei null. CoreTree haelt _pairwise und _anchored_delta vor, der Dispatch-Pfad benutzt sie nicht.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "a_degr": {
+      "id": "a_degr",
+      "statement": "Grouping degradiert mit steigender Selbstaehnlichkeit: Probe-Kosten wachsen linear mit der Geschwisterzahl, die diskriminierende Kraft je Core sinkt.",
+      "status": "assumed",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": "carried",
+      "negation_note": "ABGELEITET aus dem Mechanismus, NICHT gemessen: es existiert nur EIN Baum mit EINER Jaccard-Verteilung. Die Kurve Hit-Rate gegen Speedup ueber variierende Selbstaehnlichkeit ist nie erhoben worden.",
+      "revises": null
+    },
+    "ans_ss": {
+      "id": "ans_ss",
+      "statement": "GEMESSEN ist ein Arbeitspunkt: der Additionsbaum ist bereits selbstaehnlich (Jaccard 0.53-0.91), 56% der Core-Probes sind Fehlversuche, und trotzdem gewinnt Grouping 1.33x. ABGELEITET, nicht gemessen, ist die Richtung: bei steigender Selbstaehnlichkeit wachsen die Probe-Kosten linear mit der Geschwisterzahl, waehrend die diskriminierende Kraft je Core sinkt — im Grenzfall identischer Cores ist die negative Information wertlos. Die These gilt nur unterhalb der Verschmelzungsschwelle (min_ratio), da identische Cores beim Bau verschmolzen wuerden. Der Hebel gegen die Degradation ist vorhanden und ungenutzt: bei Jaccard 0.82 sind zwei Cores 2 Kanten auseinander, und CoreTree haelt _pairwise/_anchored_delta bereits vor — ein Geschwister-Match koennte die Vorgaenger-Bindung erben statt neu zu starten.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_jac",
+            "g_hit",
+            "g_nodelta",
+            "a_degr"
+          ],
+          "rule": "Ein Arbeitspunkt belegt einen Wert, keine Steigung; die Richtung folgt aus dem Mechanismus und bleibt bis zur Kurve eine Ableitung."
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "c_derived": {
+      "id": "c_derived",
+      "statement": "Der Degradations-Befund gilt als ABGELEITET und wird so ausgewiesen; der Arbeitspunkt (1.33x bei 44% Hit-Rate, 6 Geschwister) ist das einzig Gemessene.",
+      "discriminator": "Konkurriert gegen c_measured (den Befund als gemessen ausgeben, gestuetzt auf g_jac+g_hit). Unterscheidende Evidenz: g_jac/g_hit sind EIN Punkt der Kurve; eine Steigung braucht mindestens zwei."
+    },
+    "c_measured": {
+      "id": "c_measured",
+      "statement": "Jaccard 0.53-0.91 plus 44% Hit-Rate belegen die Degradation.",
+      "discriminator": "Gewinnt, falls ein einzelner Punkt eine Steigung belegen kann."
+    }
+  },
+  "checks": {
+    "k_f": {
+      "id": "k_f",
+      "kind": "falsifier",
+      "target": "c_derived",
+      "method": "Gegen c_measured: kann aus g_jac + g_hit die Steigung abgelesen werden? Pruefe, ob mehr als ein Arbeitspunkt vorliegt.",
+      "result": "Nein. Gemessen ist genau EIN Baum: 6 Geschwister, Jaccard 0.53-0.91, Hit-Rate 44%, Speedup 1.33x. Das ist ein Punkt. Der Satz 'degradiert bei MEHR Selbstaehnlichkeit' behauptet eine Steigung und ist aus einem Punkt nicht ableitbar. c_measured falsifiziert; c_derived ueberlebt.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "Ich habe den Befund im Vorturn ohne Gate und ohne World-Model geliefert und die Ableitung erst am Schluss als Vorbehalt genannt — die Reihenfolge, die Sven wiederholt korrigiert.",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "k_f2": {
+      "id": "k_f2",
+      "kind": "falsifier",
+      "target": "a_degr",
+      "method": "Versuche die Degradations-These zu brechen: gibt es einen Grund, warum mehr Selbstaehnlichkeit NICHT schadet?",
+      "result": "Ueberlebt eng, mit Gegengrund. Der Mechanismus (Probe-Kosten linear, Diskriminierung sinkt) ist strukturell plausibel und deckt sich mit 56% Fehlversuchen. ABER: bei identischen Cores wuerde der CoreTree sie beim BAU verschmelzen statt als Geschwister anzulegen — die Degradation traefe also nur den Bereich 'aehnlich aber nicht gleich', und wo genau der Bau trennt, ist ungeprueft. Die These ist damit nicht allgemein, sondern gilt fuer Cores unterhalb der Verschmelzungsschwelle (min_ratio).",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "Verschmelzungsschwelle min_ratio bestimmt, welche Aehnlichkeit ueberhaupt als Geschwister existiert. Ungeprueft, ob die 0.91-Paare knapp unter der Schwelle liegen.",
+          "disposition": "filed"
+        }
+      ]
+    },
+    "k_f_ans": {
+      "id": "k_f_ans",
+      "kind": "falsifier",
+      "target": "ans_ss",
+      "method": "Versuche die Antwort zu brechen: ist die Trennung gemessen/abgeleitet selbst haltbar, oder schmuggelt sie eine Steigung ein?",
+      "result": "Ueberlebt. Die Antwort behauptet als GEMESSEN nur Werte an einem Punkt (Jaccard-Spanne, 56% Fehlversuche, 1.33x) und markiert die Richtung explizit als abgeleitet inkl. Geltungsgrenze (unterhalb min_ratio). Ein Rest bleibt: die Aussage '56% Fehlversuche UND trotzdem 1.33x' legt nahe, Selbstaehnlichkeit sei bereits verkraftet — das ist eine Lesart, kein Messergebnis, denn ohne Vergleichsbaum ist unbekannt, wieviel Speedup ohne die Aehnlichkeit moeglich waere. Der Punkt ist im Text als Arbeitspunkt markiert, nicht als Robustheitsbeleg.",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "Unbekannt bleibt der kontrafaktische Speedup bei diskriminierenderen Cores — 1.33x koennte ein gedaempfter Wert sein, nicht die Obergrenze.",
+          "disposition": "carried"
+        }
+      ]
+    },
+    "k_rel": {
+      "id": "k_rel",
+      "kind": "relevance",
+      "target": "ans_ss",
+      "method": "I9: bindet Evidenz an Svens Frage.",
+      "result": "Frage beantwortet: gemessen ist der Arbeitspunkt, abgeleitet die Richtung; der Hebel (_pairwise/_anchored_delta ungenutzt) ist Code-Fakt.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "id": "statement"
+  },
+  "committed": {
+    "answer": "ans_ss",
+    "statement": "GEMESSEN ist ein Arbeitspunkt: der Additionsbaum ist bereits selbstaehnlich (Jaccard 0.53-0.91), 56% der Core-Probes sind Fehlversuche, und trotzdem gewinnt Grouping 1.33x. ABGELEITET, nicht gemessen, ist die Richtung: bei steigender Selbstaehnlichkeit wachsen die Probe-Kosten linear mit der Geschwisterzahl, waehrend die diskriminierende Kraft je Core sinkt — im Grenzfall identischer Cores ist die negative Information wertlos. Die These gilt nur unterhalb der Verschmelzungsschwelle (min_ratio), da identische Cores beim Bau verschmolzen wuerden. Der Hebel gegen die Degradation ist vorhanden und ungenutzt: bei Jaccard 0.82 sind zwei Cores 2 Kanten auseinander, und CoreTree haelt _pairwise/_anchored_delta bereits vor — ein Geschwister-Match koennte die Vorgaenger-Bindung erben statt neu zu starten.",
+    "evidence_label": "assumed",
+    "assumptions_carried": [
+      "a_degr"
+    ],
+    "carried_unexplored": [
+      "a_degr"
+    ]
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "g_jac",
+        "g_hit",
+        "g_nodelta",
+        "a_degr"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        {
+          "id": "o_evid",
+          "statement": "Ein Skalierungsbefund muss als gemessen oder als abgeleitet gekennzeichnet sein; abgeleitet darf nicht als gemessen auftreten."
+        }
+      ]
+    ],
+    [
+      "propose",
+      [
+        "c_derived",
+        "c_measured"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k_f",
+        "k_f2"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "ans_ss"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k_f_ans",
+        "k_rel"
+      ]
+    ],
+    [
+      "commit",
+      "ans_ss"
+    ]
+  ]
+}
