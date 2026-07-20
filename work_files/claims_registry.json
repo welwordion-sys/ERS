@@ -528,5 +528,2052 @@
       "Mache build_dispatch_tree prozessuebergreifend deterministisch, damit Serialisierung und Benchmarks ueberhaupt Bedeutung haben.",
       "Kläre, was der Nicht-Determinismus fuer die bereits gemessenen Ergebnisse dieser Session bedeutet."
     ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_cov",
+    "claim_id": "g_cov",
+    "statement": "all_rules() liefert 257/257; Gate1 collect_all==flat auf 16 states (range(4)^2), 0 Mismatches, nicht vakuum (collect_all liefert echte Matches, geprueft auf 1+1=2).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_roots",
+    "claim_id": "g_roots",
+    "statement": "Volle Registry 257: build ergibt 6 Wurzeln. roots[0..4] sind je 1 kantenlose Regel (core_edges=0, members=1); roots[5] traegt 252 Member, core_edges=9, 8 CoreNode-Kinder.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_prune",
+    "claim_id": "g_prune",
+    "statement": "matcher.py:374: bei Core-Miss returnt _collect_walk und ueberspringt len(under) Regeln ungeprueft. Das ist der einzige Einsparmechanismus der Gruppierung.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::ans_audit",
+    "claim_id": "ans_audit",
+    "statement": "Belegt ist ein Bugfix, kein Wald. Konkret belegt: (a) kantenlose Regeln haengen nicht mehr unter fremdem Core, sondern tragen eigene triviale Wurzeln — der Kollateral-Miss ist weg; (b) collect_all == flat auf 16 Additions-States, nicht vakuum; (c) 257/257 Abdeckung; (d) Serialisierung roots-vollstaendig (FORMAT_VERSION 2). NICHT belegt: dass die Mehrwurzel-Logik funktioniert — der Fallback-Pfad :297 feuerte bei 257 Inserts nie, alle 5 Zusatzwurzeln stammen aus dem kantenlosen Sonderfall :265, tragen 1 Member und leeren Core, und koennen per Konstruktion nie prunen. Der Wald ist strukturell korrekt und derzeit funktional ein Baum plus 5 ungruppierbare Regeln. Reichweite aller Gruen-Meldungen: Additionsregeln, range(4)^2 bzw. range(3)^2, PYTHONHASHSEED 0/1/2/7/42.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_roots",
+          "g_cov",
+          "g_fallback_never",
+          "g_prune",
+          "g_slow"
+        ],
+        "rule": "Zuschreibung: ein Nutzen zaehlt nur als belegt, wenn eine Messung ohne den Umbau anders ausfiele. Die 5 Zusatzwurzeln stammen saemtlich aus dem kantenlosen Sonderfall und koennen nicht prunen, also traegt die Mehrwurzel-Logik keine der Gruen-Meldungen."
+      }
+    ],
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_slow",
+    "claim_id": "g_slow",
+    "statement": "test_matcher misst grouping 0.60-0.63x gegenueber flat, d.h. langsamer als flat, mismatches=0.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_fallback_never",
+    "claim_id": "g_fallback_never",
+    "statement": "Der Pfad \"passt unter keine Wurzel -> eigene Wurzel\" (core_tree.py:297-304) ist bei 257 Inserts NIE gefeuert. Alle 5 Zusatzwurzeln stammen aus dem kantenlosen Pfad (:265), der ohne Test sofort eine Wurzel anlegt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_cov",
+    "claim_id": "g_cov",
+    "statement": "all_rules() liefert 257/257; Gate1 collect_all==flat auf 16 states (range(4)^2), 0 Mismatches, nicht vakuum (collect_all liefert echte Matches, geprueft auf 1+1=2).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_slow",
+    "claim_id": "g_slow",
+    "statement": "test_matcher misst grouping 0.60-0.63x gegenueber flat, d.h. langsamer als flat, mismatches=0.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_fallback_never",
+    "claim_id": "g_fallback_never",
+    "statement": "Der Pfad \"passt unter keine Wurzel -> eigene Wurzel\" (core_tree.py:297-304) ist bei 257 Inserts NIE gefeuert. Alle 5 Zusatzwurzeln stammen aus dem kantenlosen Pfad (:265), der ohne Test sofort eine Wurzel anlegt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::ans_audit",
+    "claim_id": "ans_audit",
+    "statement": "Belegt ist ein Bugfix, kein Wald. Konkret belegt: (a) kantenlose Regeln haengen nicht mehr unter fremdem Core, sondern tragen eigene triviale Wurzeln — der Kollateral-Miss ist weg; (b) collect_all == flat auf 16 Additions-States, nicht vakuum; (c) 257/257 Abdeckung; (d) Serialisierung roots-vollstaendig (FORMAT_VERSION 2). NICHT belegt: dass die Mehrwurzel-Logik funktioniert — der Fallback-Pfad :297 feuerte bei 257 Inserts nie, alle 5 Zusatzwurzeln stammen aus dem kantenlosen Sonderfall :265, tragen 1 Member und leeren Core, und koennen per Konstruktion nie prunen. Der Wald ist strukturell korrekt und derzeit funktional ein Baum plus 5 ungruppierbare Regeln. Reichweite aller Gruen-Meldungen: Additionsregeln, range(4)^2 bzw. range(3)^2, PYTHONHASHSEED 0/1/2/7/42.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_roots",
+          "g_cov",
+          "g_fallback_never",
+          "g_prune",
+          "g_slow"
+        ],
+        "rule": "Zuschreibung: ein Nutzen zaehlt nur als belegt, wenn eine Messung ohne den Umbau anders ausfiele. Die 5 Zusatzwurzeln stammen saemtlich aus dem kantenlosen Sonderfall und koennen nicht prunen, also traegt die Mehrwurzel-Logik keine der Gruen-Meldungen."
+      }
+    ],
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_prune",
+    "claim_id": "g_prune",
+    "statement": "matcher.py:374: bei Core-Miss returnt _collect_walk und ueberspringt len(under) Regeln ungeprueft. Das ist der einzige Einsparmechanismus der Gruppierung.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_roots",
+    "claim_id": "g_roots",
+    "statement": "Volle Registry 257: build ergibt 6 Wurzeln. roots[0..4] sind je 1 kantenlose Regel (core_edges=0, members=1); roots[5] traegt 252 Member, core_edges=9, 8 CoreNode-Kinder.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_prune",
+    "claim_id": "g_prune",
+    "statement": "matcher.py:374: bei Core-Miss returnt _collect_walk und ueberspringt len(under) Regeln ungeprueft. Das ist der einzige Einsparmechanismus der Gruppierung.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_fallback_never",
+    "claim_id": "g_fallback_never",
+    "statement": "Der Pfad \"passt unter keine Wurzel -> eigene Wurzel\" (core_tree.py:297-304) ist bei 257 Inserts NIE gefeuert. Alle 5 Zusatzwurzeln stammen aus dem kantenlosen Pfad (:265), der ohne Test sofort eine Wurzel anlegt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::ans_audit",
+    "claim_id": "ans_audit",
+    "statement": "Belegt ist ein Bugfix, kein Wald. Konkret belegt: (a) kantenlose Regeln haengen nicht mehr unter fremdem Core, sondern tragen eigene triviale Wurzeln — der Kollateral-Miss ist weg; (b) collect_all == flat auf 16 Additions-States, nicht vakuum; (c) 257/257 Abdeckung; (d) Serialisierung roots-vollstaendig (FORMAT_VERSION 2). NICHT belegt: dass die Mehrwurzel-Logik funktioniert — der Fallback-Pfad :297 feuerte bei 257 Inserts nie, alle 5 Zusatzwurzeln stammen aus dem kantenlosen Sonderfall :265, tragen 1 Member und leeren Core, und koennen per Konstruktion nie prunen. Der Wald ist strukturell korrekt und derzeit funktional ein Baum plus 5 ungruppierbare Regeln. Reichweite aller Gruen-Meldungen: Additionsregeln, range(4)^2 bzw. range(3)^2, PYTHONHASHSEED 0/1/2/7/42.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_roots",
+          "g_cov",
+          "g_fallback_never",
+          "g_prune",
+          "g_slow"
+        ],
+        "rule": "Zuschreibung: ein Nutzen zaehlt nur als belegt, wenn eine Messung ohne den Umbau anders ausfiele. Die 5 Zusatzwurzeln stammen saemtlich aus dem kantenlosen Sonderfall und koennen nicht prunen, also traegt die Mehrwurzel-Logik keine der Gruen-Meldungen."
+      }
+    ],
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_slow",
+    "claim_id": "g_slow",
+    "statement": "test_matcher misst grouping 0.60-0.63x gegenueber flat, d.h. langsamer als flat, mismatches=0.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_roots",
+    "claim_id": "g_roots",
+    "statement": "Volle Registry 257: build ergibt 6 Wurzeln. roots[0..4] sind je 1 kantenlose Regel (core_edges=0, members=1); roots[5] traegt 252 Member, core_edges=9, 8 CoreNode-Kinder.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_cov",
+    "claim_id": "g_cov",
+    "statement": "all_rules() liefert 257/257; Gate1 collect_all==flat auf 16 states (range(4)^2), 0 Mismatches, nicht vakuum (collect_all liefert echte Matches, geprueft auf 1+1=2).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_cov",
+    "claim_id": "g_cov",
+    "statement": "all_rules() liefert 257/257; Gate1 collect_all==flat auf 16 states (range(4)^2), 0 Mismatches, nicht vakuum (collect_all liefert echte Matches, geprueft auf 1+1=2).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::ans_audit",
+    "claim_id": "ans_audit",
+    "statement": "Belegt ist ein Bugfix, kein Wald. Konkret belegt: (a) kantenlose Regeln haengen nicht mehr unter fremdem Core, sondern tragen eigene triviale Wurzeln — der Kollateral-Miss ist weg; (b) collect_all == flat auf 16 Additions-States, nicht vakuum; (c) 257/257 Abdeckung; (d) Serialisierung roots-vollstaendig (FORMAT_VERSION 2). NICHT belegt: dass die Mehrwurzel-Logik funktioniert — der Fallback-Pfad :297 feuerte bei 257 Inserts nie, alle 5 Zusatzwurzeln stammen aus dem kantenlosen Sonderfall :265, tragen 1 Member und leeren Core, und koennen per Konstruktion nie prunen. Der Wald ist strukturell korrekt und derzeit funktional ein Baum plus 5 ungruppierbare Regeln. Reichweite aller Gruen-Meldungen: Additionsregeln, range(4)^2 bzw. range(3)^2, PYTHONHASHSEED 0/1/2/7/42.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_roots",
+          "g_cov",
+          "g_fallback_never",
+          "g_prune",
+          "g_slow"
+        ],
+        "rule": "Zuschreibung: ein Nutzen zaehlt nur als belegt, wenn eine Messung ohne den Umbau anders ausfiele. Die 5 Zusatzwurzeln stammen saemtlich aus dem kantenlosen Sonderfall und koennen nicht prunen, also traegt die Mehrwurzel-Logik keine der Gruen-Meldungen."
+      }
+    ],
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_roots",
+    "claim_id": "g_roots",
+    "statement": "Volle Registry 257: build ergibt 6 Wurzeln. roots[0..4] sind je 1 kantenlose Regel (core_edges=0, members=1); roots[5] traegt 252 Member, core_edges=9, 8 CoreNode-Kinder.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_prune",
+    "claim_id": "g_prune",
+    "statement": "matcher.py:374: bei Core-Miss returnt _collect_walk und ueberspringt len(under) Regeln ungeprueft. Das ist der einzige Einsparmechanismus der Gruppierung.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_fallback_never",
+    "claim_id": "g_fallback_never",
+    "statement": "Der Pfad \"passt unter keine Wurzel -> eigene Wurzel\" (core_tree.py:297-304) ist bei 257 Inserts NIE gefeuert. Alle 5 Zusatzwurzeln stammen aus dem kantenlosen Pfad (:265), der ohne Test sofort eine Wurzel anlegt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "forest_audit.json::g_slow",
+    "claim_id": "g_slow",
+    "statement": "test_matcher misst grouping 0.60-0.63x gegenueber flat, d.h. langsamer als flat, mismatches=0.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "forest_audit.json",
+    "goals": [
+      "Belegt vs unbelegt trennen fuer alle Behauptungen dieser Session zum CoreTree-Wald-Umbau.",
+      "Feststellen ob die Wald-Struktur den beanspruchten Nutzen hat oder ob er woanders herkommt."
+    ]
+  },
+  {
+    "reg_id": "delta_check.json::g_anchor",
+    "claim_id": "g_anchor",
+    "statement": "Die Messung vergleicht jede Core-Differenz gegen den WURZEL-Core (gemeinsamer Anker), nicht gegen den jeweiligen Elternknoten. Zwei Knoten mit gleicher Wurzel-Differenz koennen unter Eltern mit verschiedenen Cores haengen.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "delta_check.json",
+    "goals": [
+      "Nachcheck: haelt die Delta-Messung (12 Klassen, 64/80 Knoten dupliziert, 52 einsparbar)?",
+      "Ist Svens Praemisse (eindeutige Nodezuweisung -> Vergleichbarkeit) korrekt begruendet?"
+    ]
+  },
+  {
+    "reg_id": "delta_check.json::g_class8",
+    "claim_id": "g_class8",
+    "statement": "Groesste Klasse: 8 Knoten, alle core_edges-Groesse 14, gleiche kanonische Signatur, Mitglieder u.a. bit_add_00_c0_term_*, bit_add_00_c0_cont_*, bit_add_01_c0_term_* — also gleiche Struktur bei verschiedener Bit-Kombination.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "delta_check.json",
+    "goals": [
+      "Nachcheck: haelt die Delta-Messung (12 Klassen, 64/80 Knoten dupliziert, 52 einsparbar)?",
+      "Ist Svens Praemisse (eindeutige Nodezuweisung -> Vergleichbarkeit) korrekt begruendet?"
+    ]
+  },
+  {
+    "reg_id": "delta_check.json::g_meas",
+    "claim_id": "g_meas",
+    "statement": "Gemessen gegen roots[5] (einzige nicht-triviale Wurzel), PYTHONHASHSEED=0, volle Registry 257: 81 CoreNodes, 28 verschiedene kanonisierte Differenzen ggue. Wurzel-Core, 12 Differenzen kommen mehrfach vor, 64 von 80 Knoten liegen in Mehrfach-Klassen, 52 Knoten waeren bei Deduplizierung einsparbar.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "delta_check.json",
+    "goals": [
+      "Nachcheck: haelt die Delta-Messung (12 Klassen, 64/80 Knoten dupliziert, 52 einsparbar)?",
+      "Ist Svens Praemisse (eindeutige Nodezuweisung -> Vergleichbarkeit) korrekt begruendet?"
+    ]
+  },
+  {
+    "reg_id": "delta_check.json::g_canon",
+    "claim_id": "g_canon",
+    "statement": "_canonicalize_delta (core_tree.py:456) renummeriert delta-lokale Node-Ids deterministisch nach attachment-edge-Signatur; Docstring: \"comparable across independently-extracted Delta objects\". Vergleichbarkeit stammt aus der Kanonisierung, nicht aus einem Host-Match.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "delta_check.json",
+    "goals": [
+      "Nachcheck: haelt die Delta-Messung (12 Klassen, 64/80 Knoten dupliziert, 52 einsparbar)?",
+      "Ist Svens Praemisse (eindeutige Nodezuweisung -> Vergleichbarkeit) korrekt begruendet?"
+    ]
+  },
+  {
+    "reg_id": "delta_check.json::g_template",
+    "claim_id": "g_template",
+    "statement": "Core-Differenzen leben im Template-Space. _make_node und _materialize_fragment_core vergeben frische symbolische Ids. Ein Host-Match existiert zum Zeitpunkt des Core-Vergleichs nicht.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "delta_check.json",
+    "goals": [
+      "Nachcheck: haelt die Delta-Messung (12 Klassen, 64/80 Knoten dupliziert, 52 einsparbar)?",
+      "Ist Svens Praemisse (eindeutige Nodezuweisung -> Vergleichbarkeit) korrekt begruendet?"
+    ]
+  },
+  {
+    "reg_id": "delta_check.json::ans_delta",
+    "claim_id": "ans_delta",
+    "statement": "Svens Praemisse ist im Ergebnis richtig und in der Begruendung falsch: Vergleichbarkeit der Core-Differenzen kommt NICHT aus eindeutiger Nodezuweisung beim Regel-Treffer (die existiert im Template-Space gar nicht), sondern aus _canonicalize_delta, das delta-lokale Ids deterministisch nach attachment-edge-Signatur renummeriert. Gemessen: 81 CoreNodes unter roots[5], 28 verschiedene kanonisierte Wurzel-Differenzen, 12 davon mehrfach, 64 von 80 Knoten in Mehrfach-Klassen. Belegt ist STRUKTURGLEICHHEIT unter kanonischer Signatur bei uebereinstimmender roher Core-Groesse. NICHT belegt: (a) Isomorphie kantenweise (kein Test gefahren, Groessengleichheit ist nur notwendig); (b) dass 52 Knoten tatsaechlich einsparbar sind — der Wurzel-Anker traegt Strukturgleichheit, nicht Zusammenlegbarkeit, dafuer waeren die Eltern-Cores massgeblich. 52 ist eine Obergrenze.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_canon",
+          "g_template",
+          "g_meas",
+          "g_class8",
+          "g_anchor"
+        ],
+        "rule": "Trennung Ergebnis/Begruendung: eine Messung kann korrekt sein und ihre angegebene Rechtfertigung trotzdem falsch; die Zuschreibung folgt dem Code (g_canon), nicht der Intuition. Reichweitengrenzen folgen aus dem Messaufbau (g_anchor)."
+      }
+    ],
+    "source_path": "delta_check.json",
+    "goals": [
+      "Nachcheck: haelt die Delta-Messung (12 Klassen, 64/80 Knoten dupliziert, 52 einsparbar)?",
+      "Ist Svens Praemisse (eindeutige Nodezuweisung -> Vergleichbarkeit) korrekt begruendet?"
+    ]
+  },
+  {
+    "reg_id": "redundancy.json::g_prior_delta",
+    "claim_id": "g_prior_delta",
+    "statement": "Aus delta_check.json::ans_delta (committed diese Session): 12 kanonisierte Core-Differenzen kommen mehrfach vor, 64/80 Knoten in Mehrfach-Klassen, 52 ist eine OBERGRENZE der Strukturgleichheit, keine gemessene Einsparung. Kantenweiser Isomorphietest steht aus.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "redundancy.json",
+    "goals": [
+      "Sehen die 12 Delta-Klassen und die 1352 cross_reference-Kanten DIESELBE Redundanz, oder zwei verschiedene?",
+      "Feststellen ob eine Deduplizierung/DAG die gemessene Redundanz tatsaechlich beseitigen wuerde."
+    ]
+  },
+  {
+    "reg_id": "redundancy.json::g_xref_1352",
+    "claim_id": "g_xref_1352",
+    "statement": "Gemessen diese Session, PYTHONHASHSEED=0, EIN Baum: cross_reference meldet 1378 Sekundaer-Cores, davon 1352 zwischen Regeln verschiedener Aeste derselben Wurzel, 26 am selben Elternknoten, 0 ueber Wurzeln.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "redundancy.json",
+    "goals": [
+      "Sehen die 12 Delta-Klassen und die 1352 cross_reference-Kanten DIESELBE Redundanz, oder zwei verschiedene?",
+      "Feststellen ob eine Deduplizierung/DAG die gemessene Redundanz tatsaechlich beseitigen wuerde."
+    ]
+  },
+  {
+    "reg_id": "redundancy.json::g_two_spaces",
+    "claim_id": "g_two_spaces",
+    "statement": "Die beiden Mechanismen arbeiten auf verschiedenen Bezugsgroessen: die 12 Klassen vergleichen CORE-Differenzen von CoreNodes gegen den Wurzel-Core (_anchored_delta_for_edges). cross_reference vergleicht DELTA-REGIONEN einzelner REGELN relativ zu ihrem jeweiligen Regel-Core (_rule_delta, delta_a/delta_b) via find_core.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "redundancy.json",
+    "goals": [
+      "Sehen die 12 Delta-Klassen und die 1352 cross_reference-Kanten DIESELBE Redundanz, oder zwei verschiedene?",
+      "Feststellen ob eine Deduplizierung/DAG die gemessene Redundanz tatsaechlich beseitigen wuerde."
+    ]
+  },
+  {
+    "reg_id": "redundancy.json::g_overlap",
+    "claim_id": "g_overlap",
+    "statement": "Gemessen nach Registrierung der Falsifikatoren, PYTHONHASHSEED=0, roots[5]: die 12 Klassen erzeugen 640 Regelpaare (Paare aus verschiedenen strukturgleichen Knoten); cross_reference meldet 1378 Paare. Schnittmenge 208. Nur-Klassen 432, nur-xref 1170. Ueberlappung bezogen auf die Klassen-Paare: 32.5%.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "redundancy.json",
+    "goals": [
+      "Sehen die 12 Delta-Klassen und die 1352 cross_reference-Kanten DIESELBE Redundanz, oder zwei verschiedene?",
+      "Feststellen ob eine Deduplizierung/DAG die gemessene Redundanz tatsaechlich beseitigen wuerde."
+    ]
+  },
+  {
+    "reg_id": "redundancy.json::ans_red",
+    "claim_id": "ans_red",
+    "statement": "Weder dieselbe noch getrennte Redundanz: die beiden Mechanismen ueberlappen teilweise. Gemessen (ein Baum, ein Seed): 640 Regelpaare aus den 12 Core-Differenz-Klassen, 1378 aus cross_reference, Schnittmenge 208 — 32.5% der Klassen-Paare. 432 Paare sieht nur die Klassen-Sicht (strukturgleiche Knoten INNERHALB der Core-Hierarchie), 1170 nur cross_reference (Fragmente AUSSERHALB jedes Cores, laut Docstring nicht durch stepwise growth findbar). Die Bezugsraeume sind verschieden (Core-Differenz gegen Wurzel vs Delta-Region gegen Regel-Core), deshalb ist Ueberlappung statt Deckung erwartbar. ENTSCHEIDENDE EINSCHRAENKUNG: alle Zahlen sind ein Sample. imported_g_spread belegt, dass cross_reference ueber Baumvarianten zwischen 10 und 1378 Entdeckungen schwankt, und g_order (Vorzyklus) belegt, dass die Baumform reihenfolgeabhaengig ist. Die Schnittmenge ist daher NICHT als Konstante belegt. Ein DAG wuerde die 208 gemeinsamen Paare adressieren; ob er die 432 oder die 1170 beseitigt, ist ungemessen.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_overlap",
+          "g_two_spaces",
+          "g_prior_delta",
+          "g_xref_1352",
+          "imported_g_spread"
+        ],
+        "rule": "Mengenvergleich auf gemeinsamer Bezugsgroesse (Regelpaare), plus Einordnung jeder Zahl gegen die bekannte Streuung der erzeugenden Funktion. Wo die erzeugende Funktion nachweislich streut, ist ein Einzelwert ein Sample, keine Eigenschaft."
+      }
+    ],
+    "source_path": "redundancy.json",
+    "goals": [
+      "Sehen die 12 Delta-Klassen und die 1352 cross_reference-Kanten DIESELBE Redundanz, oder zwei verschiedene?",
+      "Feststellen ob eine Deduplizierung/DAG die gemessene Redundanz tatsaechlich beseitigen wuerde."
+    ]
+  },
+  {
+    "reg_id": "redundancy.json::imported_g_spread",
+    "claim_id": "imported_g_spread",
+    "statement": "Gemessen: cross_reference() schwankt ueber Baumvarianten zwischen 10 und 1378 Entdeckungen. Die Varianten sind nicht Permutationen gleicher Qualitaet, sondern strukturell verschieden.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "redundancy.json",
+    "goals": [
+      "Sehen die 12 Delta-Klassen und die 1352 cross_reference-Kanten DIESELBE Redundanz, oder zwei verschiedene?",
+      "Feststellen ob eine Deduplizierung/DAG die gemessene Redundanz tatsaechlich beseitigen wuerde."
+    ]
+  },
+  {
+    "reg_id": "dag_proto.json::g_acc_correct",
+    "claim_id": "g_acc_correct",
+    "statement": "Erreicht die Suchfront einen Knoten ueber zwei Wege, haben BEIDE Elterncores gematcht (sonst waere der jeweilige Weg am Core-Miss-return :374 gestorben). Beide Deltas sind also gleichzeitig im Host-Graph enthalten, nicht alternativ. acc_ab und acc_cd binden verschiedene Core-Nodes (disjunkte Schluessel) an denselben Host-Subgraph — sie sind komplementaer, nicht rivalisierend. Ein Widerspruch wuerde bedeuten, dass derselbe Core-Node an zwei Host-Nodes gebunden ist; dann haette einer der Core-Matches nicht matchen duerfen.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "dag_proto.json",
+    "goals": [
+      "Prototyp: insert sucht nach dem ersten Treffer WEITER und haengt alle passenden Aeste an (DAG statt Baum). Beseitigt das die Reihenfolgeabhaengigkeit der Baumform?",
+      "Falls ja: ist der DAG deshalb korrekt, oder ist Determinismus aus anderem Grund eingetreten?",
+      "Bleiben collect_all == flat und die 3 Gates gruen?"
+    ]
+  },
+  {
+    "reg_id": "dag_proto.json::g_control",
+    "claim_id": "g_control",
+    "statement": "KONTROLLE, Baseline unveraendert, PYTHONHASHSEED=0, Seeds 0/1/2/3, volle Registry 257: vier VERSCHIEDENE Baumformen, Knotenzahlen 53/64/43/53, je 6 Wurzeln, 257/257 Regeln. Die Baseline divergiert bei genau diesen Seeds weiter.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "dag_proto.json",
+    "goals": [
+      "Prototyp: insert sucht nach dem ersten Treffer WEITER und haengt alle passenden Aeste an (DAG statt Baum). Beseitigt das die Reihenfolgeabhaengigkeit der Baumform?",
+      "Falls ja: ist der DAG deshalb korrekt, oder ist Determinismus aus anderem Grund eingetreten?",
+      "Bleiben collect_all == flat und die 3 Gates gruen?"
+    ]
+  },
+  {
+    "reg_id": "dag_proto.json::ans_proto",
+    "claim_id": "ans_proto",
+    "statement": "Der Prototyp ist gescheitert, und zwar auf beiden Achsen. (1) DETERMINISMUS: Weitersuchen statt break beseitigt die Reihenfolgeabhaengigkeit NICHT — vier Seeds, vier verschiedene Baumformen (65/70/50/96 Knoten), waehrend die Kontrolle bei denselben Seeds ebenfalls divergiert (53/64/43/53). Die vorab registrierte Ursache haelt: _insert_into CASE 2 (_lift_prior_into_subgroup) und Fusion bauen den Baum WAEHREND des Einfuegens um und haengen am Baumzustand zum Einfuegezeitpunkt; welche Aeste eine Regel bekommt, ist eine andere Frage als wann geschrumpft/fusioniert wird. Die Streuung wurde sogar groesser. (2) KORREKTHEIT: Gate1 3/16 rot, grouped=0 gegen flat=1 bei 2+3 — der Prototyp verliert Matches. Damit ist Svens acc-Frage empirisch entschieden: der Ein-Weg-Seed schneidet Kombinationen ab (Fall 2), visited auf id(node) allein traegt einen DAG nicht. FOLGERUNG: der DAG ist nicht durch Entfernen von first-match beim Einfuegen zu haben. Reichweite: Baumform ueber volle Registry 257 und 4 Seeds; Gate1 auf Additionsregeln, range(4)^2, ein Baum.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_control",
+          "g_proto_shape",
+          "g_proto_gate1",
+          "g_acc_correct",
+          "g_seed_combo"
+        ],
+        "rule": "Kontrollierter Vergleich: Prototyp gegen unveraenderte Baseline auf identischem Seed-Satz, plus vorab registrierte Vorhersagen. Ein Prototyp, der die vorhergesagte Wirkung verfehlt UND ein Korrektheits-Gate bricht, ist auf beiden Achsen widerlegt."
+      }
+    ],
+    "source_path": "dag_proto.json",
+    "goals": [
+      "Prototyp: insert sucht nach dem ersten Treffer WEITER und haengt alle passenden Aeste an (DAG statt Baum). Beseitigt das die Reihenfolgeabhaengigkeit der Baumform?",
+      "Falls ja: ist der DAG deshalb korrekt, oder ist Determinismus aus anderem Grund eingetreten?",
+      "Bleiben collect_all == flat und die 3 Gates gruen?"
+    ]
+  },
+  {
+    "reg_id": "dag_proto.json::g_proto_gate1",
+    "claim_id": "g_proto_gate1",
+    "statement": "PROTOTYP Gate1 (collect_all == flat, volle Registry, range(4)^2): 3 von 16 States weichen ab, nonempty=13. Erste Abweichung bei 2+3: grouped=0, flat=1 — der Prototyp VERLIERT einen Match, den flat findet.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "dag_proto.json",
+    "goals": [
+      "Prototyp: insert sucht nach dem ersten Treffer WEITER und haengt alle passenden Aeste an (DAG statt Baum). Beseitigt das die Reihenfolgeabhaengigkeit der Baumform?",
+      "Falls ja: ist der DAG deshalb korrekt, oder ist Determinismus aus anderem Grund eingetreten?",
+      "Bleiben collect_all == flat und die 3 Gates gruen?"
+    ]
+  },
+  {
+    "reg_id": "dag_proto.json::g_proto_shape",
+    "claim_id": "g_proto_shape",
+    "statement": "PROTOTYP (kein break ueber roots, kein return-True beim ersten Kind; Abstieg in JEDES abdeckende Kind), gleiche Seeds 0/1/2/3: ebenfalls vier VERSCHIEDENE Baumformen, Knotenzahlen 65/70/50/96. Determinismus NICHT eingetreten. Die Streuung ist groesser als die Baseline (43-64 -> 50-96).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "dag_proto.json",
+    "goals": [
+      "Prototyp: insert sucht nach dem ersten Treffer WEITER und haengt alle passenden Aeste an (DAG statt Baum). Beseitigt das die Reihenfolgeabhaengigkeit der Baumform?",
+      "Falls ja: ist der DAG deshalb korrekt, oder ist Determinismus aus anderem Grund eingetreten?",
+      "Bleiben collect_all == flat und die 3 Gates gruen?"
+    ]
+  },
+  {
+    "reg_id": "dag_proto.json::g_seed_combo",
+    "claim_id": "g_seed_combo",
+    "statement": "Offene Praezisierung aus Svens Einwand \"die Regel wird ueber alle Kombinationspaare erreicht\": kommen ab und cd MEHRFACH im Host-Graph vor, ist die Frage nicht welche Bindung gewinnt, sondern welche KOMBINATION geseedet wird. Ein Seed aus nur einem Weg koennte Kombinationen abschneiden, die match_all ohne Seed faende — aber nur, falls der Seed als harte Vorbedingung wirkt und nicht als blosser Startpunkt. Ungemessen.",
+    "status": "assumed",
+    "negation_handling": "checked",
+    "derived_from": null,
+    "source_path": "dag_proto.json",
+    "goals": [
+      "Prototyp: insert sucht nach dem ersten Treffer WEITER und haengt alle passenden Aeste an (DAG statt Baum). Beseitigt das die Reihenfolgeabhaengigkeit der Baumform?",
+      "Falls ja: ist der DAG deshalb korrekt, oder ist Determinismus aus anderem Grund eingetreten?",
+      "Bleiben collect_all == flat und die 3 Gates gruen?"
+    ]
+  },
+  {
+    "reg_id": "multiocc.json::ans_occ",
+    "claim_id": "ans_occ",
+    "statement": "Auf der gemessenen Menge (volle Registry 257, 16 Additions-States, range(4)^2) kommt kein Core mehrfach vor: 0 von 16 Regel-Vorkommen haben mehr als eine Match-Stelle. Damit ist die Bindung eines Knotens eindeutig, unabhaengig vom Anmarschweg, und es gibt nichts zu revidieren — Svens Rueckwaerts-Markierung ist auf dieser Menge exakt, nicht lueckenhaft, und meine gegenteilige Behauptung (g_collapse_axis) ist widerlegt. Der Gate1-Fehler hat eine andere, jetzt gemessene Ursache: der Prototyp haengt 112 Regeln mehrfach ein (bei 0 Mehr-Eltern-Knoten), und visited:386 hakt eine Regel beim ersten von mehreren redundanten Aesten ab — konkret add_init_01_term_term bei 2+3, eingehaengt an Tiefe 1 UND 2. Das ist ein Prototyp-Defekt, kein prinzipielles DAG- oder Suchproblem. NICHT BELEGT: dass Eindeutigkeit aus der Spine-Kodierung FOLGT. Gemessen ist eine Eigenschaft von 16 kleinen Additionsgraphen, kein Reachability-Beweis. Fuer Subtraktion (0-n Teilbaeume, Marker-Kanten) ist sie ungemessen, und die Analogie Addition->Subtraktion hat in diesem Projekt bereits 30 Phantom-Regeln erzeugt.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_occ",
+          "g_cause",
+          "g_proto_multi",
+          "g_gate1_fail"
+        ],
+        "rule": "Direkte Zaehlung schlaegt Erschliessung: die Ursachenzuschreibung folgt der gemessenen Vorkommenszahl, nicht der Plausibilitaet des Mechanismus. Reichweite bleibt an die gemessene Menge gebunden."
+      }
+    ],
+    "source_path": "multiocc.json",
+    "goals": [
+      "Kommen Cores in den Test-Graphen MEHRFACH vor? Davon haengt ab, ob Svens Rueckwaerts-Markierung exakt oder lueckenhaft ist.",
+      "Ist Mehrfachvorkommen die Ursache des gemessenen Gate1-Fehlers (3/16), oder hat der eine andere Ursache?"
+    ]
+  },
+  {
+    "reg_id": "multiocc.json::g_gate1_fail",
+    "claim_id": "g_gate1_fail",
+    "statement": "Gemessen (DAG-Prototyp, verworfen): Gate1 3/16 Abweichungen, bei 2+3 grouped=0 vs flat=1. Der Prototyp verliert einen Match, den flat findet.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "multiocc.json",
+    "goals": [
+      "Kommen Cores in den Test-Graphen MEHRFACH vor? Davon haengt ab, ob Svens Rueckwaerts-Markierung exakt oder lueckenhaft ist.",
+      "Ist Mehrfachvorkommen die Ursache des gemessenen Gate1-Fehlers (3/16), oder hat der eine andere Ursache?"
+    ]
+  },
+  {
+    "reg_id": "multiocc.json::g_proto_multi",
+    "claim_id": "g_proto_multi",
+    "statement": "Gemessen am Prototyp: 112 Regeln sind an mehr als einer Stelle eingehaengt, aber 0 CoreNodes haben mehr als einen Elter. Der Prototyp erzeugt keinen DAG auf Knotenebene, sondern parallele redundante Aeste.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "multiocc.json",
+    "goals": [
+      "Kommen Cores in den Test-Graphen MEHRFACH vor? Davon haengt ab, ob Svens Rueckwaerts-Markierung exakt oder lueckenhaft ist.",
+      "Ist Mehrfachvorkommen die Ursache des gemessenen Gate1-Fehlers (3/16), oder hat der eine andere Ursache?"
+    ]
+  },
+  {
+    "reg_id": "multiocc.json::g_cause",
+    "claim_id": "g_cause",
+    "statement": "Gemessen: die bei Gate1 verlorene Regel ist add_init_01_term_term bei State 2+3. Sie ist im PROTOTYP an ZWEI Stellen eingehaengt (Tiefe 1 und 2, beide Core-Groesse 11). matcher.py:386 (c not in visited) hakt sie beim ersten Ast ab; der zweite sieht sie nie.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "multiocc.json",
+    "goals": [
+      "Kommen Cores in den Test-Graphen MEHRFACH vor? Davon haengt ab, ob Svens Rueckwaerts-Markierung exakt oder lueckenhaft ist.",
+      "Ist Mehrfachvorkommen die Ursache des gemessenen Gate1-Fehlers (3/16), oder hat der eine andere Ursache?"
+    ]
+  },
+  {
+    "reg_id": "multiocc.json::g_occ",
+    "claim_id": "g_occ",
+    "statement": "Gemessen, PYTHONHASHSEED=0, volle Registry 257, 16 States (range(4)^2): Regel-Vorkommen mit >=1 Match: 16. Davon mit MEHR ALS EINER Match-Stelle: 0. Kein Core kommt in einem der Testgraphen zweimal vor.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "multiocc.json",
+    "goals": [
+      "Kommen Cores in den Test-Graphen MEHRFACH vor? Davon haengt ab, ob Svens Rueckwaerts-Markierung exakt oder lueckenhaft ist.",
+      "Ist Mehrfachvorkommen die Ursache des gemessenen Gate1-Fehlers (3/16), oder hat der eine andere Ursache?"
+    ]
+  },
+  {
+    "reg_id": "exclusions.json::g_determinism",
+    "claim_id": "g_determinism",
+    "statement": "_grow_from:129 Docstring \"No randomness — deterministic greedy growth\". Bei identischem Input (A_edges,B_edges,a0,b0,seed_map) ist das Ergebnis identisch.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "exclusions.json",
+    "goals": [
+      "Welche Knotenpaarungen A->B muessen NICHT explizit getestet werden wegen frueherer Vergleiche?",
+      "Svens Einwand: eine Ausschlussregel, die erst durch das Anschauen des Paares entsteht, spart keine Zeit — sie IST die Arbeit. Welche meiner drei Quellen ueberleben das?"
+    ]
+  },
+  {
+    "reg_id": "exclusions.json::g_inj_not_excl",
+    "claim_id": "g_inj_not_excl",
+    "statement": "Eine auf Injektivitaet verworfene Paarung ist KEIN Ausschluss: S(a_v,b_y) existiert als eigenes Seed-Paar und wuerde a_v->b_y realisieren. Die Verwerfung gilt nur innerhalb der einen Wachstumsinstanz, in der b_y schon belegt war.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "exclusions.json",
+    "goals": [
+      "Welche Knotenpaarungen A->B muessen NICHT explizit getestet werden wegen frueherer Vergleiche?",
+      "Svens Einwand: eine Ausschlussregel, die erst durch das Anschauen des Paares entsteht, spart keine Zeit — sie IST die Arbeit. Welche meiner drei Quellen ueberleben das?"
+    ]
+  },
+  {
+    "reg_id": "exclusions.json::g_case1",
+    "claim_id": "g_case1",
+    "statement": "Aus der naiven Fallanalyse: hat eine Struktur M n Knoten mit Bijektion phi, so erreichen genau n Seed-Paare (a_i, phi(a_i)) mit a_i in M dieselbe Struktur M. Die uebrigen n^2-n Paare (a in M, b in M, b != phi(a)) starten fehlausgerichtet.",
+    "status": "assumed",
+    "negation_handling": "checked",
+    "derived_from": null,
+    "source_path": "exclusions.json",
+    "goals": [
+      "Welche Knotenpaarungen A->B muessen NICHT explizit getestet werden wegen frueherer Vergleiche?",
+      "Svens Einwand: eine Ausschlussregel, die erst durch das Anschauen des Paares entsteht, spart keine Zeit — sie IST die Arbeit. Welche meiner drei Quellen ueberleben das?"
+    ]
+  },
+  {
+    "reg_id": "exclusions.json::g_sven_obj",
+    "claim_id": "g_sven_obj",
+    "statement": "SVENS EINWAND: eine Erkenntnis \"Paar (a_v,b_y) ist typinkompatibel\", die dadurch entsteht, dass das Wachstum a_v erreicht und den Kandidaten verwirft, hat die Arbeit BEREITS geleistet. Sie als Ausschluss fuer spaetere Tests zu verkaufen ist kein Zeitgewinn — die Kosten sind schon angefallen.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "exclusions.json",
+    "goals": [
+      "Welche Knotenpaarungen A->B muessen NICHT explizit getestet werden wegen frueherer Vergleiche?",
+      "Svens Einwand: eine Ausschlussregel, die erst durch das Anschauen des Paares entsteht, spart keine Zeit — sie IST die Arbeit. Welche meiner drei Quellen ueberleben das?"
+    ]
+  },
+  {
+    "reg_id": "exclusions.json::g_typecheck",
+    "claim_id": "g_typecheck",
+    "statement": "_grow_from filtert Kandidaten inline waehrend des Wachstums: :102/:107 pruefen kind und typ, :104/:109 pruefen Injektivitaet (be[1] not in node_map_r). Der Typcheck passiert INNERHALB des Wachstums an der Frontier, nicht vorab ueber Paare.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "exclusions.json",
+    "goals": [
+      "Welche Knotenpaarungen A->B muessen NICHT explizit getestet werden wegen frueherer Vergleiche?",
+      "Svens Einwand: eine Ausschlussregel, die erst durch das Anschauen des Paares entsteht, spart keine Zeit — sie IST die Arbeit. Welche meiner drei Quellen ueberleben das?"
+    ]
+  },
+  {
+    "reg_id": "exclusions.json::ans_excl",
+    "claim_id": "ans_excl",
+    "statement": "Svens Einwand haelt und trifft Quelle 1. Die Trennung ist nicht wahr/falsch, sondern ZEITPUNKT DER PRAEMISSEN-VERFUEGBARKEIT. (1) Typinkompatibilitaet aus abgeschlossenem Wachstum: KEINE Ersparnis. Der Check sitzt inline im Frontier-Walk (_grow_from:102/107); die Erkenntnis entsteht durch genau die Arbeit, die sie sparen soll. Sie ist hoechstens AMORTISIERBAR (Typkompatibilitaet ist Paar-Eigenschaft, also uebertragbar auf andere Seed-Paare) — aber die Wiederverwendungszahl ist ungemessen, also ist der Nutzen unbelegt. (2) Transitivitaet: prunt den Interior einer bekannten Korrespondenz, nicht die Frontier; realer aber begrenzter Nutzen. (3) Redundante Seeds: ECHTE Ersparnis — nach einem Wachstum liegt node_map vor, die n-1 restlichen Seeds (a_i, phi(a_i)) sind daraus ablesbar ohne sie zu laufen. Praemisse liegt VOR der eingesparten Arbeit. BEDINGUNG: (3) haengt an g_case1 (alle n Seeds innerhalb M liefern dieselbe Struktur), was ASSUMED und ungemessen ist — g_determinism deckt es NICHT, weil der Input (a0,b0) sich unterscheidet. Und: eine auf Injektivitaet verworfene Paarung ist KEIN Ausschluss (S(a_v,b_y) existiert als eigenes Seed-Paar) — solche Paare muessen weiterhin getestet werden.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_typecheck",
+          "g_sven_obj",
+          "g_determinism",
+          "g_inj_not_excl",
+          "g_case1"
+        ],
+        "rule": "Eine Ausschlussregel spart nur dann, wenn ihre Praemisse vor der eingesparten Arbeit verfuegbar ist. Regeln werden nach diesem Kriterium sortiert, nicht nach ihrer Wahrheit."
+      }
+    ],
+    "source_path": "exclusions.json",
+    "goals": [
+      "Welche Knotenpaarungen A->B muessen NICHT explizit getestet werden wegen frueherer Vergleiche?",
+      "Svens Einwand: eine Ausschlussregel, die erst durch das Anschauen des Paares entsteht, spart keine Zeit — sie IST die Arbeit. Welche meiner drei Quellen ueberleben das?"
+    ]
+  },
+  {
+    "reg_id": "landscape.json::imported_a_degr",
+    "claim_id": "imported_a_degr",
+    "statement": "Grouping degradiert mit steigender Selbstaehnlichkeit: Probe-Kosten wachsen linear mit der Geschwisterzahl, die diskriminierende Kraft je Core sinkt.",
+    "status": "assumed",
+    "negation_handling": "carried",
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::g_tree_uses",
+    "claim_id": "g_tree_uses",
+    "statement": "Der Baumbau nutzt von dieser Extraktion NUR safe_core und ratio: _insert_into:708 newN_core = node.core_edges & matched_core (Schnittmenge), :711 Ratio-Gate gegen min_ratio. subgraphs und contested werden nicht gelesen.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::g_completeness_gap",
+    "claim_id": "g_completeness_gap",
+    "statement": "Die Unvollstaendigkeit sitzt in _grow_from:129 (greedy max, kein Backtracking): das Ergebnis ist eine MAXIMALE Struktur pro Seed, nicht die MAXIMUM. find_all_cores behebt die find_core-spezifischen Verluste (elimination, global_map, break), erbt aber dieselbe Greedy-Luecke — verifiziert: es ruft _grow_from bei :270 ohne seed_map.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::g_cost_seedloop",
+    "claim_id": "g_cost_seedloop",
+    "statement": "find_core:191-192 probiert |A|x|B| Seed-Paare pro Runde, jeder Call ist ein Frontier-Walk. grouping_core_hash_cache dokumentiert: build_tree brauchte O(N^2) find_core-Calls, \"213 rules -> ~22k calls\", geloest per Struktur-Hash-Cache auf ~20 echte Calls. Der Cache sitzt auf PAAR-Ebene, nicht in der Seed-Schleife.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::imported_ans_ss",
+    "claim_id": "imported_ans_ss",
+    "statement": "GEMESSEN ist ein Arbeitspunkt: der Additionsbaum ist bereits selbstaehnlich (Jaccard 0.53-0.91), 56% der Core-Probes sind Fehlversuche, und trotzdem gewinnt Grouping 1.33x. ABGELEITET, nicht gemessen, ist die Richtung: bei steigender Selbstaehnlichkeit wachsen die Probe-Kosten linear mit der Geschwisterzahl, waehrend die diskriminierende Kraft je Core sinkt — im Grenzfall identischer Cores ist die negative Information wertlos. Die These gilt nur unterhalb der Verschmelzungsschwelle (min_ratio), da identische Cores beim Bau verschmolzen wuerden. Der Hebel gegen die Degradation ist vorhanden und ungenutzt: bei Jaccard 0.82 sind zwei Cores 2 Kanten auseinander, und CoreTree haelt _pairwise/_anchored_delta bereits vor — ein Geschwister-Match koennte die Vorgaenger-Bindung erben statt neu zu starten.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "imported_g_jac",
+          "imported_g_hit",
+          "imported_g_nodelta",
+          "imported_a_degr"
+        ],
+        "rule": "Ein Arbeitspunkt belegt einen Wert, keine Steigung; die Richtung folgt aus dem Mechanismus und bleibt bis zur Kurve eine Ableitung. (imported, parents not re-grounded — external provenance)"
+      }
+    ],
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::imported_g_nodelta",
+    "claim_id": "imported_g_nodelta",
+    "statement": "Code-Fakt: match_core startet fuer jeden Geschwister-Core bei null. CoreTree haelt _pairwise und _anchored_delta vor, der Dispatch-Pfad benutzt sie nicht.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::g_prune_value",
+    "claim_id": "g_prune_value",
+    "statement": "Der einzige Einsparmechanismus der Gruppierung ist matcher.py:374: Core-Miss -> return, len(under) Regeln uebersprungen. Das ist gruppenweite negative Information und setzt voraus, dass der Core KORREKT gruppiert — sonst sind die Regeln still weg.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::g_law_vs_cache",
+    "claim_id": "g_law_vs_cache",
+    "statement": "Svens Unterscheidung, geprueft und zutreffend: Typkompatibilitaet ist eine Paar-Eigenschaft (kind/typ), cachebar und lokal informativ, aber ohne Entailment-Kraft — sie sagt nichts ueber andere Paarungen. Quelle 3 (n-1 redundante Seeds aus node_map ablesbar) ist ein Entailment: aus einem Ergebnis folgen n-1 weitere ohne Inspektion.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::g_extract_now",
+    "claim_id": "g_extract_now",
+    "statement": "find_core extrahiert pro Regelpaar: safe_core (Kantenmenge), contested (unterschwellige Funde), subgraphs (Liste akzeptierter Embeddings), ratio. Verworfen wird: alle nicht-besten Embeddings pro Runde (:201 best_size), alle Runden nach dem ersten unterschwelligen Fund (:226 break), alle nicht-gewaehlten Kandidaten pro Frontier-Schritt (:129 max). contested hat 0 Konsumenten im Repo.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::ans_land",
+    "claim_id": "ans_land",
+    "statement": "Die Landschaft ist WEDER frei NOCH gekoppelt — sie zerfaellt entlang der Frage, ob eine Information vom Primitiv GESEHEN wird. Drei Kostenposten, aus dem Code ablesbar: (a) GRATIS: contested (find_core:225), subgraphs, und die pro Frontier-Schritt verworfenen Kandidaten (_grow_from:129 max ueber cands) sind BEREITS berechnet und werden nur nicht weitergereicht. Sie kosten kein Backtracking, nur Weiterreichen. contested hat 0 Konsumenten. (b) SPEICHER: alle Embeddings pro Runde behalten statt best_size (:201), alle Runden statt break (:226) — find_all_cores tut genau das bereits und ruft dasselbe Primitiv. Kostet Speicher und Seed-Schleife, keine neue Suchtiefe. (c) RECHENZEIT: die MAXIMUM-Struktur pro Seed. Das ist der EINZIGE Posten, der ein anderes Primitiv braucht (Backtracking in _grow_from), weil greedy nie zurueckgeht und die groessere Struktur nie SIEHT. Was der Baumbau davon nutzt: NUR safe_core und ratio (_insert_into:708 Schnittmenge, :711 Ratio-Gate). Die gesamte Struktur-Information (welche Embeddings, welche Alternativen, welche unterschwelligen Funde) wird berechnet und verworfen, bevor der Bau sie sehen koennte. Deshalb kann der Bau keine Wurzeln verschmelzen und keine Kombinationsaeste bilden: nicht weil die Information fehlt, sondern weil sie eine Ebene tiefer weggeworfen wird. Die Kosten-Nutzen-Lage ist derzeit negativ gemessen: grouping 0.60-0.63x gegen flat, also langsamer als keine Gruppierung; frueher 1.33x bei 56% Fehl-Probes (imported_ans_ss). Der einzige Nutzen des ganzen Baus ist der Prune (matcher.py:374, gruppenweite negative Information), und der setzt Bau-Korrektheit voraus. REICHWEITE: alle Messungen dieser Session auf Additionsregeln, range(4)^2, ein Baum, und die erzeugende Funktion streut nachweislich (imported_g_spread: cross_reference 10..1378 ueber Baumvarianten). Fuer Subtraktion ungemessen.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_extract_now",
+          "g_tree_uses",
+          "g_completeness_gap",
+          "g_cost_seedloop",
+          "g_prune_value",
+          "g_measured_slow",
+          "g_law_vs_cache",
+          "imported_ans_ss"
+        ],
+        "rule": "Sortierung der Kosten nach dem Kriterium \"sieht das Primitiv es?\": was gesehen und verworfen wird ist gratis wiederzugewinnen; was gespeichert werden muss kostet Speicher; was nie gesehen wird kostet ein anderes Primitiv. Diese Dreiteilung folgt aus den Fundstellen, nicht aus einer Bewertung."
+      }
+    ],
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::imported_g_jac",
+    "claim_id": "imported_g_jac",
+    "statement": "Gemessen am Additionsbaum: Jaccard 0.53-0.91 zwischen allen 6 Geschwister-Cores auf Ebene 1; 9-10 gemeinsame Kanten je Paar. Der Baum IST bereits hochgradig selbstaehnlich.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::imported_g_hit",
+    "claim_id": "imported_g_hit",
+    "statement": "Gemessen: 336 Core-Probes ueber 51 States, davon 149 Treffer und 187 Misses -> Hit-Rate 44%, 6.6 Probes/State, 3.7 Fehlversuche/State.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "landscape.json::g_measured_slow",
+    "claim_id": "g_measured_slow",
+    "statement": "Gemessen diese Session: grouping 0.60-0.63x gegenueber flat, mismatches=0. Die Gruppierung ist derzeit LANGSAMER als gar keine Gruppierung. Aus selfsimilarity.json::ans_ss (frueher): 56% der Core-Probes sind Fehlversuche, Jaccard 0.53-0.91, damals 1.33x.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "landscape.json",
+    "goals": [
+      "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+      "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+      "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+    ]
+  },
+  {
+    "reg_id": "chain.json::g_reach",
+    "claim_id": "g_reach",
+    "statement": "Korrektheitskriterium des DAG ist ERREICHBARKEIT, nicht Form: jeder Core erreicht jedes seiner Member ueber die Zwischencores, die beide enthalten. _shape misst die Anordnung, nicht die Relation. Zwei reihenfolgeverschiedene Baeume mit gleicher Erreichbarkeit sind im relevanten Sinn GLEICH.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "chain.json",
+    "goals": [
+      "Die Determinismus-Kette pruefen: vollstaendiger Vergleich => eindeutige Core-Menge => eindeutige Halbordnung => deterministischer DAG => stabile GA-Gruppen.",
+      "Svens Symmetriekarte pruefen: Mehrdeutigkeit A->B entsteht nur aus Automorphismen von A; einmal pro Graph statt pro Paar."
+    ]
+  },
+  {
+    "reg_id": "chain.json::g_greedy",
+    "claim_id": "g_greedy",
+    "statement": "_grow_from waehlt chosen = max(cands, key=score_cand): ein Kandidat pro Frontier-Schritt, nie revidiert. find_core und find_all_cores rufen beide dieses Primitiv (verifiziert: :270 ohne seed_map). Der Vergleich ist an der Wurzel greedy, also unvollstaendig.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "chain.json",
+    "goals": [
+      "Die Determinismus-Kette pruefen: vollstaendiger Vergleich => eindeutige Core-Menge => eindeutige Halbordnung => deterministischer DAG => stabile GA-Gruppen.",
+      "Svens Symmetriekarte pruefen: Mehrdeutigkeit A->B entsteht nur aus Automorphismen von A; einmal pro Graph statt pro Paar."
+    ]
+  },
+  {
+    "reg_id": "chain.json::g_poset",
+    "claim_id": "g_poset",
+    "statement": "Cores bilden unter Kanten-Mengeninklusion eine partielle Ordnung. Antisymmetrie vorausgesetzt ist die Hasse-Struktur (unmittelbare Vorgaenger) durch die Elementmenge EINDEUTIG bestimmt — keine Konstruktionswahl. Ein Knoten haengt unter seinen unmittelbaren Vorgaengern; mehrere unvergleichbare Vorgaenger = DAG, kein Widerspruch.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "chain.json",
+    "goals": [
+      "Die Determinismus-Kette pruefen: vollstaendiger Vergleich => eindeutige Core-Menge => eindeutige Halbordnung => deterministischer DAG => stabile GA-Gruppen.",
+      "Svens Symmetriekarte pruefen: Mehrdeutigkeit A->B entsteht nur aus Automorphismen von A; einmal pro Graph statt pro Paar."
+    ]
+  },
+  {
+    "reg_id": "chain.json::g_amort",
+    "claim_id": "g_amort",
+    "statement": "Die Symmetriekarte von A ist einmal pro Graph berechenbar (Automorphismus-Findung, im allgemeinen so teuer wie Subgraph-Iso, aber n mal statt n^2). Sie amortisiert ueber alle B, gegen die A verglichen wird. Nutzen nur bei innerer Symmetrie: ohne Symmetrie ist die Karte leer und die n Berechnungen sind umsonst.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "chain.json",
+    "goals": [
+      "Die Determinismus-Kette pruefen: vollstaendiger Vergleich => eindeutige Core-Menge => eindeutige Halbordnung => deterministischer DAG => stabile GA-Gruppen.",
+      "Svens Symmetriekarte pruefen: Mehrdeutigkeit A->B entsteht nur aus Automorphismen von A; einmal pro Graph statt pro Paar."
+    ]
+  },
+  {
+    "reg_id": "chain.json::g_neg_nonmonotone",
+    "claim_id": "g_neg_nonmonotone",
+    "statement": "Negative Ergebnisse sind NICHT monoton: jede Kante veraendert zwei Knoten. \"core x geschnitten core y zu klein\" ist eine Momentaufnahme — eine erreichbare Kante kann einen externen Knoten (Kante Core->extern) oder zwei externe (Kante extern-extern) in den Core ziehen und den ratio ueber min_ratio heben. find_core:226 break behandelt \"zu klein\" faelschlich als terminal.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "chain.json",
+    "goals": [
+      "Die Determinismus-Kette pruefen: vollstaendiger Vergleich => eindeutige Core-Menge => eindeutige Halbordnung => deterministischer DAG => stabile GA-Gruppen.",
+      "Svens Symmetriekarte pruefen: Mehrdeutigkeit A->B entsteht nur aus Automorphismen von A; einmal pro Graph statt pro Paar."
+    ]
+  },
+  {
+    "reg_id": "chain.json::ans_chain",
+    "claim_id": "ans_chain",
+    "statement": "Die Determinismus-Landschaft ist geschlossen und reduziert auf EINE Quelle. Vollstaendiger Vergleich => eindeutige (antisymmetrische) Core-Menge => eindeutige Halbordnung unter Mengeninklusion (g_poset) => deterministischer DAG im Sinne der ERREICHBARKEIT, nicht der Form (g_reach). Die drei scheinbaren Risiken — mehrdeutige Anordnung, mehrdeutige Core-Menge, koexistierende Duplikat-Cores — sind alle dasselbe: unvollstaendiger Vergleich (g_antisym). Es gibt keine separate Kanonisierung noetig, WENN der Aufbau die Halbordnung nur ABLEITET. Svens Symmetriekarte traegt den schwachen Anspruch: A-Automorphismen sagen a priori (nur an A gebunden, einmal pro Graph, amortisiert ueber alle B), welche greedy-Kandidatenwahlen redundant sind — die richtige Verankerung der frueheren Quelle-3. Den starken Anspruch (Karte ersetzt A->B) traegt sie nicht. EIN offener Punkt bleibt und ist genau die Entwurfsfrage (chk_multi, OPEN): ob der Aufbau des DAG die Halbordnung nur ableitet (dann reicht vollstaendiger Vergleich) oder selbst waehlt (dann braucht es zusaetzlich Aufbau-Kanonisierung). Der gescheiterte Prototyp ist kein Beweis dafuer, weil er keinen vollstaendigen Vergleich hatte. REICHWEITE: die Kette ist rein strukturell (Ordnungstheorie, Monotonie), ohne Spine-Annahme und ohne Haeufigkeit — sie gilt universell. Die offene Frage ist konstruktiv, nicht empirisch: \"vollstaendiger Vergleich\" ist noch zu bauen; greedy _grow_from liefert ihn nicht (g_greedy).",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_greedy",
+          "g_pos_monotone",
+          "g_neg_nonmonotone",
+          "g_poset",
+          "g_reach",
+          "g_antisym",
+          "g_symmetry",
+          "g_amort"
+        ],
+        "rule": "Reduktion mehrerer scheinbarer Quellen auf eine durch Nachweis, dass jede nur unter fehlendem Vergleich auftritt. Positiv/negativ-Asymmetrie und Ordnungstheorie liefern die Implikationskette ohne Haeufigkeitsargument."
+      }
+    ],
+    "source_path": "chain.json",
+    "goals": [
+      "Die Determinismus-Kette pruefen: vollstaendiger Vergleich => eindeutige Core-Menge => eindeutige Halbordnung => deterministischer DAG => stabile GA-Gruppen.",
+      "Svens Symmetriekarte pruefen: Mehrdeutigkeit A->B entsteht nur aus Automorphismen von A; einmal pro Graph statt pro Paar."
+    ]
+  },
+  {
+    "reg_id": "chain.json::g_symmetry",
+    "claim_id": "g_symmetry",
+    "statement": "Mehrdeutigkeit bei A->B entsteht, wenn A innere Symmetrie hat: mehrere A-Knoten, durch einen Automorphismus von A ineinander ueberfuehrbar, austauschbar auf B abbildbar. Die Automorphismus-Struktur haengt NUR an A, nicht an B. Der greedy max(cands) waehlt zwischen genau solchen aequivalenten Kandidaten.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "chain.json",
+    "goals": [
+      "Die Determinismus-Kette pruefen: vollstaendiger Vergleich => eindeutige Core-Menge => eindeutige Halbordnung => deterministischer DAG => stabile GA-Gruppen.",
+      "Svens Symmetriekarte pruefen: Mehrdeutigkeit A->B entsteht nur aus Automorphismen von A; einmal pro Graph statt pro Paar."
+    ]
+  },
+  {
+    "reg_id": "chain.json::g_pos_monotone",
+    "claim_id": "g_pos_monotone",
+    "statement": "Positive Ergebnisse sind monoton: was als gemeinsam gefunden ist, bleibt gemeinsam. Transitivitaet traegt es, keine spaetere Kante nimmt es weg. Bereits Gefundenes muss nicht erneut getestet werden — nur der Rest.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "chain.json",
+    "goals": [
+      "Die Determinismus-Kette pruefen: vollstaendiger Vergleich => eindeutige Core-Menge => eindeutige Halbordnung => deterministischer DAG => stabile GA-Gruppen.",
+      "Svens Symmetriekarte pruefen: Mehrdeutigkeit A->B entsteht nur aus Automorphismen von A; einmal pro Graph statt pro Paar."
+    ]
+  },
+  {
+    "reg_id": "chain.json::g_antisym",
+    "claim_id": "g_antisym",
+    "statement": "Zwei Cores mit gleicher Kantenmenge koennen nur als verschiedene Knoten koexistieren, wenn sie NIE verglichen wurden. Ein Vergleich liefert \"identisch\" (positiv, monoton) und kollabiert sie. Der Antisymmetrie-Bruch ist also kein eigenes Risiko, sondern eine Erscheinungsform unvollstaendigen Vergleichs.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "chain.json",
+    "goals": [
+      "Die Determinismus-Kette pruefen: vollstaendiger Vergleich => eindeutige Core-Menge => eindeutige Halbordnung => deterministischer DAG => stabile GA-Gruppen.",
+      "Svens Symmetriekarte pruefen: Mehrdeutigkeit A->B entsteht nur aus Automorphismen von A; einmal pro Graph statt pro Paar."
+    ]
+  },
+  {
+    "reg_id": "regimes.json::g_inj_impl",
+    "claim_id": "g_inj_impl",
+    "statement": "Die Injektivitaet (be[1] not in node_map_r) ist eine Eigenschaft der IMPLEMENTIERUNG _grow_from, nicht des Problems. Sie erzwingt eine 1:1-Abbildung innerhalb EINER Wachstumsinstanz.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "regimes.json",
+    "goals": [
+      "Svens Zwei-Regime-Aussage korrekt fassen: strikter Schnitt bei Kanten-Symmetrie -> \"no match at node\" ist terminal; exakte Symmetrie -> beide Karten (A und B) sind nutzbar.",
+      "Meine Trichotomie pruefen — insbesondere ob \"Fall 3 (kollidierend, nicht-symmetrisch)\" eine Eigenschaft des PROBLEMS ist oder ein Artefakt der Injektivitaets-IMPLEMENTIERUNG."
+    ]
+  },
+  {
+    "reg_id": "regimes.json::g_naive_def",
+    "claim_id": "g_naive_def",
+    "statement": "Das Ziel ist ein UNIVERSELLES, VOLLSTAENDIGES Verfahren: die naive Referenz zaehlt jede moegliche Bindung auf. Vollstaendigkeit ist definiert ueber die Menge der Embeddings, nicht ueber eine einzelne Abbildung.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "regimes.json",
+    "goals": [
+      "Svens Zwei-Regime-Aussage korrekt fassen: strikter Schnitt bei Kanten-Symmetrie -> \"no match at node\" ist terminal; exakte Symmetrie -> beide Karten (A und B) sind nutzbar.",
+      "Meine Trichotomie pruefen — insbesondere ob \"Fall 3 (kollidierend, nicht-symmetrisch)\" eine Eigenschaft des PROBLEMS ist oder ein Artefakt der Injektivitaets-IMPLEMENTIERUNG."
+    ]
+  },
+  {
+    "reg_id": "regimes.json::g_sven_regimes",
+    "claim_id": "g_sven_regimes",
+    "statement": "Svens zwei Regime: (1) Strikter Schnitt bei Kanten-Symmetrie: wenn am Knoten kein Match ist, ist am Knoten kein Match — terminal, kein Fehlerraum. (2) Exakte Symmetrie: beide Karten, die von Graph A und die von Graph B, sind nutzbar. Sven hat NICHT gesagt, dass Injektivitaet gefordert ist.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "regimes.json",
+    "goals": [
+      "Svens Zwei-Regime-Aussage korrekt fassen: strikter Schnitt bei Kanten-Symmetrie -> \"no match at node\" ist terminal; exakte Symmetrie -> beide Karten (A und B) sind nutzbar.",
+      "Meine Trichotomie pruefen — insbesondere ob \"Fall 3 (kollidierend, nicht-symmetrisch)\" eine Eigenschaft des PROBLEMS ist oder ein Artefakt der Injektivitaets-IMPLEMENTIERUNG."
+    ]
+  },
+  {
+    "reg_id": "regimes.json::g_my_claim",
+    "claim_id": "g_my_claim",
+    "statement": "Meine Trichotomie: (1) abwesend — kein Kandidat passiert den Typ-Filter; (2) symmetrisch — Kandidaten automorph austauschbar; (3) kollidierend nicht-symmetrisch — Injektivitaet erzwingt eine Wahl zwischen echt verschiedenen Strukturen. Ich habe Fall 3 als Problemfall praesentiert.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "regimes.json",
+    "goals": [
+      "Svens Zwei-Regime-Aussage korrekt fassen: strikter Schnitt bei Kanten-Symmetrie -> \"no match at node\" ist terminal; exakte Symmetrie -> beide Karten (A und B) sind nutzbar.",
+      "Meine Trichotomie pruefen — insbesondere ob \"Fall 3 (kollidierend, nicht-symmetrisch)\" eine Eigenschaft des PROBLEMS ist oder ein Artefakt der Injektivitaets-IMPLEMENTIERUNG."
+    ]
+  },
+  {
+    "reg_id": "regimes.json::ans_regimes",
+    "claim_id": "ans_regimes",
+    "statement": "Sven hat recht auf beiden Punkten. (1) Meine Trichotomie war falsch: \"Fall 3 — kollidierend, nicht-symmetrisch\" existiert nur unter der Injektivitaets-Regel EINER Wachstumsinstanz (_grow_from:104/109), also als Implementierungsartefakt. Im Mengenbild — das Verfahren zaehlt die MENGE der Embeddings auf — ist der B-Knoten keine exklusive Ressource: jeder Kandidat setzt ein eigenes Embedding fort, Verzweigung ist Aufzaehlung, kein Konflikt, keine Wahl, kein Verlust. Es bleibt Svens Dichotomie: ABWESEND (kein Kandidat passiert den Typ-Filter -> terminal, die einzige echte lokale Negativitaet) oder VORHANDEN (jeder Kandidat wird zu einem Embedding; bei exakter Symmetrie sind die Embeddings aequivalent). (2) Bei exakter Symmetrie sind BEIDE Karten nutzbar: A-Automorphismen und B-Automorphismen liefern dieselbe Klasseneinteilung — man kann die billigere Seite rechnen oder beide zur Gegenpruefung verwenden. Meine Fassung hatte nur die B-Seite betrachtet. KONSEQUENZ FUER PUNKT 1 (Vergleichsprimitiv): die Design-Alternative (a) \"alle maximalen Embeddings\" vs (b) \"eines plus Symmetriekarte\" war falsch aufgespannt — sie setzte voraus, dass an Verzweigungen GEWAEHLT werden muss. Muss es nicht: das Primitiv zaehlt auf. Die Kostenfrage bleibt (Aufzaehlung kann gross werden, Symmetrie-Klassen reduzieren sie), aber die KORREKTHEITSFRAGE \"geht ein Fall verloren\" verschwindet: verloren geht nur, was man durch Exklusivitaet verdraengt, und Exklusivitaet ist keine Problemanforderung.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_sven_regimes",
+          "g_inj_impl",
+          "g_my_claim",
+          "g_naive_def"
+        ],
+        "rule": "Ein Fall, der nur unter einer Implementierungsentscheidung existiert, ist kein Problemfall (o_prob_vs_impl). Die Fallunterscheidung ist gegen die Problemdefinition (Mengenbild) zu pruefen, nicht gegen die vorhandene Implementierung."
+      }
+    ],
+    "source_path": "regimes.json",
+    "goals": [
+      "Svens Zwei-Regime-Aussage korrekt fassen: strikter Schnitt bei Kanten-Symmetrie -> \"no match at node\" ist terminal; exakte Symmetrie -> beide Karten (A und B) sind nutzbar.",
+      "Meine Trichotomie pruefen — insbesondere ob \"Fall 3 (kollidierend, nicht-symmetrisch)\" eine Eigenschaft des PROBLEMS ist oder ein Artefakt der Injektivitaets-IMPLEMENTIERUNG."
+    ]
+  },
+  {
+    "reg_id": "primitive_design.json::g_sym_collapse",
+    "claim_id": "g_sym_collapse",
+    "statement": "Kandidaten derselben Symmetrieklasse erzeugen aequivalente Fortsetzungen. Es genuegt, EINEN Repraesentanten pro Klasse fortzusetzen und die Klassengroesse/Automorphismen zu notieren. Die uebrigen Embeddings sind bei Bedarf durch Anwendung der Automorphismen rekonstruierbar — Aufzaehlung modulo Symmetrie.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "primitive_design.json",
+    "goals": [
+      "Entwurf des Vergleichsprimitivs: Aufzaehlung aller Embeddings mit Symmetrie-Kollaps, statt Wachstum mit Wahl.",
+      "Der Entwurf muss die Kette tragen (vollstaendiger Vergleich -> eindeutige Core-Menge) und universell sein.",
+      "Jede Entwurfsentscheidung braucht eine Begruendung aus den committeten Zyklen oder ist als offen markiert."
+    ]
+  },
+  {
+    "reg_id": "primitive_design.json::ans_design",
+    "claim_id": "ans_design",
+    "statement": "ENTWURF DES PRIMITIVS (D1-D6), ERS-geprueft: D1 ZUSTAND: ein Embedding-Zustand ist (node_map, matched, frontier), PRO PFAD im Verzweigungsbaum — keine globale Sperre, kein node_map_r als Exklusivitaet. D2 SCHRITT: an der naechsten Frontier-Kante Kandidaten per Typ/Kind-Filter bestimmen. Leer -> Zweig terminal (einzige lokale Negativitaet, monoton). Sonst: VERZWEIGE ueber alle Kandidaten — Aufzaehlung, keine Wahl, kein Score, kein max. D3 SYMMETRIE-KOLLAPS: Kandidaten derselben Automorphismus-Klasse (beidseitig berechenbar, einmal pro Graph, vorab) -> ein Repraesentant wird fortgesetzt, Klassenzugehoerigkeit notiert. Rekonstruktionsregel: fehlende Embeddings = Automorphismus-Bilder der Repraesentanten. Leere Symmetrie -> Identitaet, volle Aufzaehlung. D4 REPRAESENTATION: Verzweigungsbaum/Trie ueber Bindungsentscheidungen, append-only, Praefix-Teilung. Blaetter = maximale Embeddings (Terminierung: jeder Schritt konsumiert endliche Ressourcen). D5 SCHNITTSTELLE: Rueckgabe ist die Embedding-Menge modulo Symmetrie MIT node_maps und Klassenkarten — daraus Core-Menge (fuer die Halbordnung der Kette) und Karten (fuer positive Transitivitaet). KEIN best-only, KEIN ratio-Gate im Primitiv: min_ratio ist Konsumenten-Politik, nicht Primitiv-Eigenschaft. D6 SEED-REDUNDANZ: Seeds, die in einem bereits aufgezaehlten Embedding als gebundenes Paar vorkommen, reproduzieren dessen Teilbaum — ueberspringbar per Nachschlag in den vorhandenen node_maps (Praemisse liegt VOR der Arbeit, echtes Entailment). VOLLSTAENDIGKEIT: jedes maximale Embedding ist Blatt ODER Automorphismus-Bild eines Blatts (Induktionsargument chk_d_complete). KOSTEN: exponentiell in echten strukturellen Alternativen — unvermeidbar, da die Antwortmenge selbst exponentiell sein kann; Symmetrie reduziert nur automorphe Redundanz, Praefix-Teilung nur Speicher, Seeds nur Startpunkte. OFFEN bleibt aus chain.json: ob der DAG-AUFBAU aus dieser Menge ableitet oder waehlt (chk_multi) — naechster Entwurfsschritt, nicht Teil des Primitivs.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_from_regimes",
+          "g_from_chain",
+          "g_state_shape",
+          "g_share",
+          "g_sym_collapse",
+          "g_termination"
+        ],
+        "rule": "Jede Entwurfsentscheidung ist aus einem committeten Zyklus abgeleitet oder als Repraesentationswahl ohne Korrektheitswirkung markiert; die Vollstaendigkeit steht auf einem Induktionsargument, nicht auf Messung."
+      }
+    ],
+    "source_path": "primitive_design.json",
+    "goals": [
+      "Entwurf des Vergleichsprimitivs: Aufzaehlung aller Embeddings mit Symmetrie-Kollaps, statt Wachstum mit Wahl.",
+      "Der Entwurf muss die Kette tragen (vollstaendiger Vergleich -> eindeutige Core-Menge) und universell sein.",
+      "Jede Entwurfsentscheidung braucht eine Begruendung aus den committeten Zyklen oder ist als offen markiert."
+    ]
+  },
+  {
+    "reg_id": "primitive_design.json::g_from_chain",
+    "claim_id": "g_from_chain",
+    "statement": "Vollstaendiger Vergleich => eindeutige Core-Menge => eindeutige Halbordnung => deterministischer DAG (Erreichbarkeit, nicht Form). Positive Ergebnisse sind monoton und transitiv (Karten komponierbar). Der eine offene Punkt: ob der DAG-Aufbau ableitet oder waehlt (chk_multi).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "primitive_design.json",
+    "goals": [
+      "Entwurf des Vergleichsprimitivs: Aufzaehlung aller Embeddings mit Symmetrie-Kollaps, statt Wachstum mit Wahl.",
+      "Der Entwurf muss die Kette tragen (vollstaendiger Vergleich -> eindeutige Core-Menge) und universell sein.",
+      "Jede Entwurfsentscheidung braucht eine Begruendung aus den committeten Zyklen oder ist als offen markiert."
+    ]
+  },
+  {
+    "reg_id": "primitive_design.json::g_state_shape",
+    "claim_id": "g_state_shape",
+    "statement": "Ein Embedding-Zustand ist (node_map, matched_edges, frontier). Im Mengenbild ist der Zustand PRO EMBEDDING, nicht global: kein node_map_r als globale Sperre, kein seed_map-Zwang ueber Runden.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "primitive_design.json",
+    "goals": [
+      "Entwurf des Vergleichsprimitivs: Aufzaehlung aller Embeddings mit Symmetrie-Kollaps, statt Wachstum mit Wahl.",
+      "Der Entwurf muss die Kette tragen (vollstaendiger Vergleich -> eindeutige Core-Menge) und universell sein.",
+      "Jede Entwurfsentscheidung braucht eine Begruendung aus den committeten Zyklen oder ist als offen markiert."
+    ]
+  },
+  {
+    "reg_id": "primitive_design.json::g_share",
+    "claim_id": "g_share",
+    "statement": "Embeddings, die sich erst spaet verzweigen, teilen ihr Praefix. Naive Kopie des Zustands pro Verzweigung dupliziert das Praefix; ein Verzweigungsbaum (Trie ueber Bindungsentscheidungen) teilt es. Das ist Repraesentation, keine Korrektheitsfrage.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "primitive_design.json",
+    "goals": [
+      "Entwurf des Vergleichsprimitivs: Aufzaehlung aller Embeddings mit Symmetrie-Kollaps, statt Wachstum mit Wahl.",
+      "Der Entwurf muss die Kette tragen (vollstaendiger Vergleich -> eindeutige Core-Menge) und universell sein.",
+      "Jede Entwurfsentscheidung braucht eine Begruendung aus den committeten Zyklen oder ist als offen markiert."
+    ]
+  },
+  {
+    "reg_id": "primitive_design.json::g_termination",
+    "claim_id": "g_termination",
+    "statement": "Jeder Schritt bindet einen bisher ungebundenen A-Knoten oder konsumiert eine Kante. Beide Ressourcen sind endlich, kein Schritt macht etwas rueckgaengig -> das Verfahren terminiert. Maximale Embeddings sind die Blaetter des Verzweigungsbaums.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "primitive_design.json",
+    "goals": [
+      "Entwurf des Vergleichsprimitivs: Aufzaehlung aller Embeddings mit Symmetrie-Kollaps, statt Wachstum mit Wahl.",
+      "Der Entwurf muss die Kette tragen (vollstaendiger Vergleich -> eindeutige Core-Menge) und universell sein.",
+      "Jede Entwurfsentscheidung braucht eine Begruendung aus den committeten Zyklen oder ist als offen markiert."
+    ]
+  },
+  {
+    "reg_id": "primitive_design.json::g_from_regimes",
+    "claim_id": "g_from_regimes",
+    "statement": "Das Primitiv zaehlt die MENGE der Embeddings auf. Verzweigung ist Aufzaehlung, kein Konflikt. Einzige lokale Negativitaet: kein Kandidat passiert den Typ/Kind-Filter (terminal, monoton). Exklusivitaet ist keine Problemanforderung. Symmetrieklassen sind beidseitig (A- und B-Automorphismen) berechenbar.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "primitive_design.json",
+    "goals": [
+      "Entwurf des Vergleichsprimitivs: Aufzaehlung aller Embeddings mit Symmetrie-Kollaps, statt Wachstum mit Wahl.",
+      "Der Entwurf muss die Kette tragen (vollstaendiger Vergleich -> eindeutige Core-Menge) und universell sein.",
+      "Jede Entwurfsentscheidung braucht eine Begruendung aus den committeten Zyklen oder ist als offen markiert."
+    ]
+  },
+  {
+    "reg_id": "dag_build.json::g_poset2",
+    "claim_id": "g_poset2",
+    "statement": "Die Core-Menge bildet unter Kanten-Mengeninklusion eine Halbordnung. Die Hasse-Struktur (unmittelbare Vorgaenger) ist durch die Menge EINDEUTIG bestimmt. Member-Zuordnung: Regel r gehoert zu Core c gdw ein Embedding von r c als matched-Menge hat — auch das eine Ableitung aus der Eingabe.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "dag_build.json",
+    "goals": [
+      "chk_multi entscheiden: ist der DAG-Aufbau aus der vollstaendigen Embedding-Menge eine ABLEITUNG (jeder Schritt erzwungen) oder enthaelt er eine WAHL (Kanonisierung noetig)?",
+      "Falls Ableitung: den Aufbau als Konstruktionsfolge D7-D10 festhalten.",
+      "Falls Wahl: die Wahlstelle benennen und die Kanonisierungsregel ableiten."
+    ]
+  },
+  {
+    "reg_id": "dag_build.json::g_core_def",
+    "claim_id": "g_core_def",
+    "statement": "Ein CORE ist eine Kantenmenge, die als matched-Menge eines Embeddings auftritt. Die CORE-MENGE der Regelfamilie ist die Vereinigung ueber alle Paare und alle Embeddings — eine MENGE (Duplikate kollabieren per Gleichheit der Kantenmenge, g_antisym aus chain). Keine Konstruktion, reine Sammlung.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "dag_build.json",
+    "goals": [
+      "chk_multi entscheiden: ist der DAG-Aufbau aus der vollstaendigen Embedding-Menge eine ABLEITUNG (jeder Schritt erzwungen) oder enthaelt er eine WAHL (Kanonisierung noetig)?",
+      "Falls Ableitung: den Aufbau als Konstruktionsfolge D7-D10 festhalten.",
+      "Falls Wahl: die Wahlstelle benennen und die Kanonisierungsregel ableiten."
+    ]
+  },
+  {
+    "reg_id": "dag_build.json::g_old_choices",
+    "claim_id": "g_old_choices",
+    "statement": "Die Wahlstellen des ALTEN Aufbaus: (1) first-match ueber roots/children (break/return), (2) CASE-2 Core-Shrink WAEHREND des Inserts (_lift_prior_into_subgroup, haengt am Baumzustand), (3) Fusion nur wenn Geschwister zufaellig schon da (:747), (4) min_ratio-Gate im Insert-Pfad. Alle vier existieren, weil der alte Aufbau INKREMENTELL in eine bestehende Struktur einfuegt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "dag_build.json",
+    "goals": [
+      "chk_multi entscheiden: ist der DAG-Aufbau aus der vollstaendigen Embedding-Menge eine ABLEITUNG (jeder Schritt erzwungen) oder enthaelt er eine WAHL (Kanonisierung noetig)?",
+      "Falls Ableitung: den Aufbau als Konstruktionsfolge D7-D10 festhalten.",
+      "Falls Wahl: die Wahlstelle benennen und die Kanonisierungsregel ableiten."
+    ]
+  },
+  {
+    "reg_id": "dag_build.json::g_input",
+    "claim_id": "g_input",
+    "statement": "Eingabe des Aufbaus: pro Regelpaar (A,B) die Embedding-Menge modulo Symmetrie, mit node_maps und Klassenkarten. Fuer n Regeln: die Familie aller paarweisen Embedding-Mengen. Eine Funktion allein der Regelmenge — reihenfolgeunabhaengig per Konstruktion des Primitivs.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "dag_build.json",
+    "goals": [
+      "chk_multi entscheiden: ist der DAG-Aufbau aus der vollstaendigen Embedding-Menge eine ABLEITUNG (jeder Schritt erzwungen) oder enthaelt er eine WAHL (Kanonisierung noetig)?",
+      "Falls Ableitung: den Aufbau als Konstruktionsfolge D7-D10 festhalten.",
+      "Falls Wahl: die Wahlstelle benennen und die Kanonisierungsregel ableiten."
+    ]
+  },
+  {
+    "reg_id": "dag_build.json::g_reach2",
+    "claim_id": "g_reach2",
+    "statement": "Korrektheitskriterium: Erreichbarkeit — jeder Core erreicht jedes Member ueber die Zwischencores, die beide enthalten. Sven: es ist egal ueber welchen Pfad, solange alle Pfade da sind. Anordnung folgt automatisch aus der Halbordnung (Svens Ableitung, chain-Zyklus).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "dag_build.json",
+    "goals": [
+      "chk_multi entscheiden: ist der DAG-Aufbau aus der vollstaendigen Embedding-Menge eine ABLEITUNG (jeder Schritt erzwungen) oder enthaelt er eine WAHL (Kanonisierung noetig)?",
+      "Falls Ableitung: den Aufbau als Konstruktionsfolge D7-D10 festhalten.",
+      "Falls Wahl: die Wahlstelle benennen und die Kanonisierungsregel ableiten."
+    ]
+  },
+  {
+    "reg_id": "dag_build.json::ans_build",
+    "claim_id": "ans_build",
+    "statement": "chk_multi ist ENTSCHIEDEN: der Aufbau ist eine ABLEITUNG, keine Wahl — Kanonisierung ist unnoetig. Konstruktionsfolge D7-D10: D7 SAMMELN: Core-Menge = Menge der matched-Mengen aller maximalen Embeddings aller Paare. Duplikate kollabieren per Mengengleichheit. Jede matched-Menge wird Core — keine Bedingung, kein ratio, kein Filter im Aufbau. D8 ORDNEN: Halbordnung per Kanten-Mengeninklusion — Funktion der Menge. D9 VERKABELN: Hasse-Kanten (Inklusion ohne Zwischenelement). Mehrere unvergleichbare Vorgaenger -> mehrere Eltern -> DAG. Erreichbarkeit statt Form ist das Kriterium. D10 ZUORDNEN: Regel r haengt an JEDEM Core, der matched-Menge eines ihrer Embeddings ist. Das beantwortet die offene Ein-Pfad-vs-jeder-Pfad-Frage: die Ableitung liefert jeden. INKREMENTELL (GA-Fall): neue Regel -> Primitiv gegen alle bisherigen (n Paarvergleiche), matched-Mengen in die Core-Menge einlegen (Mengenvereinigung, kommutativ), Halbordnung ablesen. Die vier alten Wahlstellen (first-match, Shrink-waehrend-Insert, zufallsabhaengige Fusion, ratio-Gate) waren Artefakte des Einfuegens-in-gewachsene-Struktur und entfallen, weil die Zielstruktur eine Menge plus abgeleitete Relation ist. NUTZENFILTER (z.B. nur Cores mit >=2 Membern als Gruppierungsknoten) sind Konsumenten-Politik, nachgelagert, und deterministisch solange die Filterregel eine Funktion der Menge ist. KOSTEN ehrlich: Kern-Kosten liegen im Primitiv (exponentiell in echten Alternativen); der Aufbau selbst ist polynomiell in der Core-Menge (Inklusionstests paarweise). Damit ist die Kette geschlossen: Primitiv (D1-D6) liefert reihenfolgeunabhaengige Eingabe, Aufbau (D7-D10) ist eine Funktion davon -> der DAG ist deterministisch im Erreichbarkeits-Sinn, tauglich als GA-Input (Gruppenmutation auf stabilen Gruppen).",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_input",
+          "g_core_def",
+          "g_poset2",
+          "g_old_choices",
+          "g_reach2"
+        ],
+        "rule": "Ein Aufbau ist Ableitung gdw jeder Schritt eine Funktion der Eingabe ist. Nachgewiesen pro Schritt (Sammeln/Ordnen/Verkabeln/Zuordnen) und fuer den inkrementellen Fall ueber Kommutativitaet der Mengenvereinigung. Wahlstellen des alten Codes als Artefakte des Einfuegens-in-Struktur identifiziert."
+      }
+    ],
+    "source_path": "dag_build.json",
+    "goals": [
+      "chk_multi entscheiden: ist der DAG-Aufbau aus der vollstaendigen Embedding-Menge eine ABLEITUNG (jeder Schritt erzwungen) oder enthaelt er eine WAHL (Kanonisierung noetig)?",
+      "Falls Ableitung: den Aufbau als Konstruktionsfolge D7-D10 festhalten.",
+      "Falls Wahl: die Wahlstelle benennen und die Kanonisierungsregel ableiten."
+    ]
+  },
+  {
+    "reg_id": "impl_s1.json::g_ref",
+    "claim_id": "g_ref",
+    "statement": "Unabhaengige Referenz gebaut (o_indep): Brute-Force ueber alle injektiven Teilabbildungen, matched per Definition, Dominanzfilter. Teilt kein Primitiv mit enum_core2.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "impl_s1.json",
+    "goals": [
+      "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+      "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+    ]
+  },
+  {
+    "reg_id": "impl_s1.json::g_green",
+    "claim_id": "g_green",
+    "statement": "Nach den Fixes: 300/300 randomisierte Faelle identisch mit der Referenz unter dem Vertrag, Familien-Check PASS, 7/7 Haertefaelle PASS (inkl. asymmetrische Kollision: 2 Embeddings wo _grow_from per Injektivitaets-Sperre 1 liefert; Mehrfachvorkommen: beide Stellen).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "impl_s1.json",
+    "goals": [
+      "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+      "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+    ]
+  },
+  {
+    "reg_id": "impl_s1.json::g_contract",
+    "claim_id": "g_contract",
+    "statement": "SPEZIFIKATIONSENTSCHEIDUNG (beidseitig angewandt): pro Seed zaehlt die Seed-BINDUNGSKOMPONENTE; ertraglose Zwischenbindungen werden gestrichen und koennen die Bindung zerreissen — abgetrennte Teile findet ihr eigener Seed. Familien-Abdeckung im Sweep verifiziert (Familie: PASS). Unzusammenhaengende Vereinigungen sind Familien-Ableitung per positiver Monotonie (kompatible Karten komponieren) — Ableitungsschritt liegt beim Konsumenten.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "impl_s1.json",
+    "goals": [
+      "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+      "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+    ]
+  },
+  {
+    "reg_id": "impl_s1.json::g_limits",
+    "claim_id": "g_limits",
+    "statement": "GRENZEN: Stufe 1 ohne Symmetrie-Kollaps (D3=Identitaet) und ohne D6-Seed-Reduktion — Kosten exponentiell, deshalb Test auf 4 Regeln mit je 6 Kanten beschnitten. Referenz ist O(n!) und traegt nur kleine Graphen. Automorphismen (Stufe 2) ungebaut. Kein Anspruch auf Performanz, nur auf Korrektheit der Aufzaehlung.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "impl_s1.json",
+    "goals": [
+      "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+      "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+    ]
+  },
+  {
+    "reg_id": "impl_s1.json::g_bugs",
+    "claim_id": "g_bugs",
+    "statement": "Der Sweep fand zwei echte Vollstaendigkeitsluecken meiner ersten Implementierung, beide Instanzen von Svens Nicht-Monotonie-Satz auf der Kandidatenebene: (1) Kandidaten nur aus der AKTUELLEN Kante gezogen — eine Bindung, die erst ueber eine ANDERE Kante Ertrag bringt, entstand nie (trial 29); (2) Kandidaten auf sofortige Ankerkanten-Realisierung gefiltert — \"kein Ertrag jetzt\" wurde als \"kein Ertrag je\" behandelt. Fix: Kandidaten = ALLE ungebundenen B-Knoten; einziger Filter ist Regime 1 auf Kantenebene (wirkt in _matched).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "impl_s1.json",
+    "goals": [
+      "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+      "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+    ]
+  },
+  {
+    "reg_id": "impl_s1.json::g_dag_inv",
+    "claim_id": "g_dag_inv",
+    "statement": "D7-D10 implementiert (dag_derive.py): sammeln/ordnen/verkabeln/zuordnen als Mengen und Relationen; WL-artige Kanonisierung der Kantenmengen. Auf 4 echten Regeln (Kanten auf 6 beschnitten): Erreichbarkeit ueber 3 geshuffelte Reihenfolgen IDENTISCH, 14 Cores. Der Test prueft primaer den registrierten Implementierungs-Falsifikator (Kanonisierung leckt keinen Zustand), da build_dag per Konstruktion sortiert.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "impl_s1.json",
+    "goals": [
+      "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+      "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+    ]
+  },
+  {
+    "reg_id": "impl_s1.json::ans_s1",
+    "claim_id": "ans_s1",
+    "statement": "Stufe 1 steht und ist verifiziert. PRIMITIV (enum_core2.py): Aufzaehlung aller maximalen Embeddings pro Seed, Verzweigung statt Wahl, einziger Filter Regime 1 auf Kantenebene. Gegen unabhaengige Brute-Force-Referenz: 300/300 randomisiert, 7/7 Haertefaelle — darunter die asymmetrische Kollision (2 Embeddings, wo _grow_from 1 liefert) und Mehrfachvorkommen (beide Stellen). Zwei gefundene und geschlossene Luecken waren beide Instanzen von Svens Nicht-Monotonie-Satz auf Kandidatenebene (\"kein Ertrag jetzt\" != \"kein Ertrag je\"). VERTRAG, beidseitig: pro Seed die Seed-Bindungskomponente; abgetrennte Teile deckt die Familie (verifiziert); Vereinigungen sind Konsumenten-Ableitung per positiver Monotonie. AUFBAU (dag_derive.py, D7-D10): Mengen und Relationen, WL-Kanonisierung; Erreichbarkeit ueber 3 Reihenfolgen auf 4 echten Regeln identisch (14 Cores) — bestaetigt den Kanonisierungs-Falsifikator. GRENZEN: D3=Identitaet (Automorphismen ungebaut), D6 nicht angewandt, exponentielle Kosten, Testgroesse 4 Regeln x 6 Kanten, Referenz O(n!). Korrektheit belegt, Performanz nicht beansprucht.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_ref",
+          "g_bugs",
+          "g_contract",
+          "g_green",
+          "g_dag_inv",
+          "g_limits"
+        ],
+        "rule": "Verifikation gegen ein unabhaengiges Instrument unter explizitem, beidseitig angewandtem Vertrag; Luecken werden auf die Design-Saetze zurueckgefuehrt, die sie verletzten."
+      }
+    ],
+    "source_path": "impl_s1.json",
+    "goals": [
+      "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+      "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+    ]
+  },
+  {
+    "reg_id": "sym_d3.json::g_recon_sound",
+    "claim_id": "g_recon_sound",
+    "statement": "Rekonstruktions-Soundness: ein Kollaps in Tiefe d verschmilzt Kandidaten unter einem phi, das alle DORT gebundenen Knoten fixiert — dieses phi liegt im Seed-Stabilisator (seed_b ist immer gebunden). Anwendung ALLER Seed-Stabilisator-Elemente auf ALLE Repraesentanten-Blaetter ueberdeckt daher jede kollabierte Verzweigung (mit Duplikaten, dedupliziert). Empirisch durch g_exact gestuetzt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "sym_d3.json",
+    "goals": [
+      "D3 bauen: Symmetrie-Kollaps per Automorphismen, mit Rekonstruktionsregel, Vollstaendigkeit erhalten.",
+      "Verifikation: Kollaps + Rekonstruktion == volle Aufzaehlung (Stufe 1), auf Referenzfaellen und randomisiert."
+    ]
+  },
+  {
+    "reg_id": "sym_d3.json::ans_d3",
+    "claim_id": "ans_d3",
+    "statement": "D3 steht und ist exakt: Stabilisator-Kollaps + Seed-Stabilisator-Rekonstruktion == Stufe-1-Vollaufzaehlung, 200/200 randomisiert und 7/7 Haertefaelle, darunter die vorab registrierte Stabilisator-Falle (6->3 Repraesentanten, exakt rekonstruiert) — der Beleg, dass globale Orbits verloren haetten und der Bindungs-Stabilisator die richtige Klasse ist. Soundness der Rekonstruktion per Orbit-Stabilisator-Argument (g_recon_sound). NUTZEN-GRENZE ehrlich: 0 Ersparnis auf Zufallsgraphen (keine Automorphismen — Identitaets-Degeneration live bestaetigt); Symmetrie zahlt nur auf symmetrischen Strukturen, und ob die Regelfamilien das sind, ist Hypothese. KOSTEN: Automorphismen Brute-Force O(n!) einmal pro Graph — fuer kleine Graphen tragbar, fuer grosse braucht Stufe 3 einen echten Algorithmus (z.B. Partition-Refinement). Naechste Ersparnisse in Reihenfolge der Absicherung: Cache gegen den pair_cores-Doppelaufruf (trivial), D6, Transitivitaet.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_impl",
+          "g_exact",
+          "g_zero_random",
+          "g_recon_sound",
+          "g_d3_spec",
+          "g_stab_trap"
+        ],
+        "rule": "Exaktheit gegen die eigene Vollaufzaehlung als Referenz, mit vorab registrierter Falle als gezieltem Testfall; Nutzen und Kosten getrennt von Korrektheit ausgewiesen."
+      }
+    ],
+    "source_path": "sym_d3.json",
+    "goals": [
+      "D3 bauen: Symmetrie-Kollaps per Automorphismen, mit Rekonstruktionsregel, Vollstaendigkeit erhalten.",
+      "Verifikation: Kollaps + Rekonstruktion == volle Aufzaehlung (Stufe 1), auf Referenzfaellen und randomisiert."
+    ]
+  },
+  {
+    "reg_id": "sym_d3.json::g_stab_trap",
+    "claim_id": "g_stab_trap",
+    "statement": "DIE FALLE: zwei B-Knoten sind nur dann austauschbar, wenn ein Automorphismus sie tauscht UND die bereits gebundenen B-Knoten FIXIERT (Stabilisator der Bindung, nicht die volle Gruppe). Ein globaler Orbit reicht nicht: b1,b2 koennen global aequivalent sein, aber nachdem b3 gebunden ist, unterscheidet die Lage zu b3 sie. Kollaps auf globalen Orbits waere UNVOLLSTAENDIG.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "sym_d3.json",
+    "goals": [
+      "D3 bauen: Symmetrie-Kollaps per Automorphismen, mit Rekonstruktionsregel, Vollstaendigkeit erhalten.",
+      "Verifikation: Kollaps + Rekonstruktion == volle Aufzaehlung (Stufe 1), auf Referenzfaellen und randomisiert."
+    ]
+  },
+  {
+    "reg_id": "sym_d3.json::g_d3_spec",
+    "claim_id": "g_d3_spec",
+    "statement": "D3: Kandidaten derselben Automorphismus-Klasse -> ein Repraesentant wird fortgesetzt, Klasse notiert. Rekonstruktionsregel: fehlende Embeddings = Automorphismus-Bilder der Repraesentanten. Leere Symmetrie -> Identitaet. Beidseitig: A- und B-Automorphismen liefern dieselbe Klasseneinteilung (Svens Regime 2).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "sym_d3.json",
+    "goals": [
+      "D3 bauen: Symmetrie-Kollaps per Automorphismen, mit Rekonstruktionsregel, Vollstaendigkeit erhalten.",
+      "Verifikation: Kollaps + Rekonstruktion == volle Aufzaehlung (Stufe 1), auf Referenzfaellen und randomisiert."
+    ]
+  },
+  {
+    "reg_id": "sym_d3.json::g_impl",
+    "claim_id": "g_impl",
+    "statement": "D3 implementiert: Brute-Force-Automorphismen einmal pro Graph; Kollaps per BINDUNGS-Stabilisator (alle gebundenen B-Knoten fixiert, seed_b immer darunter); Rekonstruktion per Seed-Stabilisator-Bildern der Repraesentanten, Dominanz danach. Isolierte Knoten als Fixpunkte (phi.get(b,b)) — gefunden durch Crash im Random-Sweep, seed_b kam in den B-Kanten nicht vor.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "sym_d3.json",
+    "goals": [
+      "D3 bauen: Symmetrie-Kollaps per Automorphismen, mit Rekonstruktionsregel, Vollstaendigkeit erhalten.",
+      "Verifikation: Kollaps + Rekonstruktion == volle Aufzaehlung (Stufe 1), auf Referenzfaellen und randomisiert."
+    ]
+  },
+  {
+    "reg_id": "sym_d3.json::g_exact",
+    "claim_id": "g_exact",
+    "statement": "chk_exact gemessen: 200/200 randomisierte Faelle EXAKT (Kollaps+Rekonstruktion == Stufe-1-Vollaufzaehlung, kanonisch, beidseitig); 7/7 Haertefaelle inkl. der vorab registrierten Stabilisator-Falle (voll=6, reps=3, rekonstruiert=6 — globale Orbits haetten hier verloren).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "sym_d3.json",
+    "goals": [
+      "D3 bauen: Symmetrie-Kollaps per Automorphismen, mit Rekonstruktionsregel, Vollstaendigkeit erhalten.",
+      "Verifikation: Kollaps + Rekonstruktion == volle Aufzaehlung (Stufe 1), auf Referenzfaellen und randomisiert."
+    ]
+  },
+  {
+    "reg_id": "sym_d3.json::g_zero_random",
+    "claim_id": "g_zero_random",
+    "statement": "EHRLICHER NEBENBEFUND: auf Zufallsgraphen 0 Ersparnis (205/205 expandiert) — Zufallsgraphen haben keine Automorphismen, Klassen sind Singletons, o_empty live bestaetigt. Symmetrie zahlt NUR auf symmetrischen Strukturen. Dass Perspective-Regelfamilien symmetrisch genug sind (91% Selbstaehnlichkeit deutet darauf), ist HYPOTHESE, nicht gemessen.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "sym_d3.json",
+    "goals": [
+      "D3 bauen: Symmetrie-Kollaps per Automorphismen, mit Rekonstruktionsregel, Vollstaendigkeit erhalten.",
+      "Verifikation: Kollaps + Rekonstruktion == volle Aufzaehlung (Stufe 1), auf Referenzfaellen und randomisiert."
+    ]
+  },
+  {
+    "reg_id": "auto_filter.json::g_no_sym",
+    "claim_id": "g_no_sym",
+    "statement": "BEFUND: alle 252 Regeln haben |Aut|=1 (max Kandidatenraum nach Filter: 1, kein einziger nichttrivialer Automorphismus). Spine-Strukturen sind Ketten — jede Position ist per WL unterscheidbar. Die 91%-Selbstaehnlichkeit ist ZWISCHEN Regeln, nicht INNERHALB einer Regel.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "auto_filter.json",
+    "goals": [
+      "Svens Frage: kann die Automorphismus-Berechnung durch Filtern des Kantenschemas vereinfacht werden, ohne Exaktheit zu verlieren?",
+      "Nutzen des D3-Kollapses auf dem realen Regelmaterial messen."
+    ]
+  },
+  {
+    "reg_id": "auto_filter.json::g_exact150",
+    "claim_id": "g_exact150",
+    "statement": "Exaktheit gemessen: gefilterte Automorphismen == Brute-Force auf 150/150 randomisierten Graphen (kanonischer Vergleich der vollstaendigen Gruppen).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "auto_filter.json",
+    "goals": [
+      "Svens Frage: kann die Automorphismus-Berechnung durch Filtern des Kantenschemas vereinfacht werden, ohne Exaktheit zu verlieren?",
+      "Nutzen des D3-Kollapses auf dem realen Regelmaterial messen."
+    ]
+  },
+  {
+    "reg_id": "auto_filter.json::ans_af",
+    "claim_id": "ans_af",
+    "statement": "Svens Vereinfachung ist exakt und entscheidend: die Kantenschema-Signatur (1-WL-verfeinert) ist eine NOTWENDIGE Bedingung fuer Automorphie, also duerfen Permutationen ueber Klassengrenzen ungesehen entfallen — verlustfrei (150/150 gegen Brute-Force, definitorisch begruendet). Auf vollen Regeln macht der Filter die Berechnung erst moeglich: n! von 8.7e10 bis 1.3e12 -> 1 Kandidat, <1s pro Regel; meine fruehere Tragbarkeits-Aussage galt nur fuer Beschnitte und ist damit korrigiert. ZWEITER BEFUND, alle 252 Regeln: |Aut|=1 ueberall — Spine-Ketten sind per WL vollstaendig unterscheidbar, die 91%-Selbstaehnlichkeit liegt ZWISCHEN Regeln, nicht innerhalb. Folge: D3 zahlt auf dem aktuellen Material nichts (die sym_d3-Hypothese ist widerlegt), bleibt aber korrekt und nach dem Filter praktisch kostenlos — er zahlt, falls der GA symmetrische Strukturen erzeugt. Aktive Ersparnis-Hebel jetzt: pair_cores-Cache, D6, Transitivitaet.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_necessary",
+          "g_exact150",
+          "g_feasible",
+          "g_no_sym"
+        ],
+        "rule": "Ein Filter ist zulaessig gdw er nur beweisbare Durchfaller entfernt; Nutzen wird unabhaengig von Korrektheit gemessen und auch ein Null-Nutzen wird committed."
+      }
+    ],
+    "source_path": "auto_filter.json",
+    "goals": [
+      "Svens Frage: kann die Automorphismus-Berechnung durch Filtern des Kantenschemas vereinfacht werden, ohne Exaktheit zu verlieren?",
+      "Nutzen des D3-Kollapses auf dem realen Regelmaterial messen."
+    ]
+  },
+  {
+    "reg_id": "auto_filter.json::g_feasible",
+    "claim_id": "g_feasible",
+    "statement": "Auf echten Regeln in VOLLER Groesse: n! waere 8.7e10 bis 1.3e12 Permutationen (Brute-Force unmoeglich — meine fruehere Aussage \"einmal pro Graph tragbar\" galt nur fuer die 6-Kanten-Beschnitte). Der Filter reduziert auf 1 Kandidaten, Laufzeit 0.009-0.7s pro Regel. Svens Filter macht die Berechnung nicht schneller, sondern UEBERHAUPT ERST moeglich.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "auto_filter.json",
+    "goals": [
+      "Svens Frage: kann die Automorphismus-Berechnung durch Filtern des Kantenschemas vereinfacht werden, ohne Exaktheit zu verlieren?",
+      "Nutzen des D3-Kollapses auf dem realen Regelmaterial messen."
+    ]
+  },
+  {
+    "reg_id": "auto_filter.json::g_necessary",
+    "claim_id": "g_necessary",
+    "statement": "Die Kantenschema-Signatur (iterativ per 1-WL verfeinert) ist NOTWENDIG fuer Automorphie: phi(n) muss dieselbe Signatur tragen wie n, sonst verletzt phi die Kantenerhaltung. Permutationen ueber Klassengrenzen fallen beim Kantentest GARANTIERT durch — sie ungesehen wegzulassen ist verlustfrei. Nicht HINREICHEND: gleiche Signatur heisst nicht global austauschbar, der Kantentest bleibt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "auto_filter.json",
+    "goals": [
+      "Svens Frage: kann die Automorphismus-Berechnung durch Filtern des Kantenschemas vereinfacht werden, ohne Exaktheit zu verlieren?",
+      "Nutzen des D3-Kollapses auf dem realen Regelmaterial messen."
+    ]
+  },
+  {
+    "reg_id": "savings.json::g_wall",
+    "claim_id": "g_wall",
+    "statement": "SKALIERUNGSWAND: EIN ungeschnittenes Regelpaar (14-15 Knoten) terminiert nicht in 25min. Ursache: der trial-29-Fix (Kandidaten = ALLE ungebundenen B-Knoten, korrekt wegen Nicht-Monotonie) macht den Verzweigungsgrad ~|B| pro Knoten. Vollstaendigkeit Stufe 1 skaliert nicht auf volle Regeln; Transitivitaets-Warm-Seed priorisiert nur, schneidet den Baum nicht.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "savings.json",
+    "goals": [
+      "Die drei aktiven Hebel einbauen: pair_cores-Cache, D6 (Seed-Redundanz), Transitivitaet — jede mit Aequivalenznachweis gegen die ungesparte Version.",
+      "Messen was die Aufzaehlung auf ungeschnittenen Regeln kostet, vorher/nachher."
+    ]
+  },
+  {
+    "reg_id": "savings.json::g_memo_ok",
+    "claim_id": "g_memo_ok",
+    "statement": "Memo-Cache: exakt (Cores und Members identisch alt/neu auf 4x6-Kanten), Zeit 8.1s -> 4.1s — genau der Doppelaufruf.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "savings.json",
+    "goals": [
+      "Die drei aktiven Hebel einbauen: pair_cores-Cache, D6 (Seed-Redundanz), Transitivitaet — jede mit Aequivalenznachweis gegen die ungesparte Version.",
+      "Messen was die Aufzaehlung auf ungeschnittenen Regeln kostet, vorher/nachher."
+    ]
+  },
+  {
+    "reg_id": "savings.json::g_trans_spec",
+    "claim_id": "g_trans_spec",
+    "statement": "Transitivitaet auf PAAR-Ebene: cores(A,C) sind nicht frei ableitbar aus cores(A,B) und cores(B,C) — die Komposition liefert KANDIDATEN (map_AB o map_BC wo kompatibel), die verifiziert werden muessen; sie ersetzt nicht die Suche nach Cores AUSSERHALB des B-Durchgangs. Als Ersparnis nur nutzbar als WARM-SEED (Kandidaten zuerst pruefen, Rest suchen), nicht als Ersatz. Ein Ersatz waere UNVOLLSTAENDIG: A und C koennen teilen was B nicht hat.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "savings.json",
+    "goals": [
+      "Die drei aktiven Hebel einbauen: pair_cores-Cache, D6 (Seed-Redundanz), Transitivitaet — jede mit Aequivalenznachweis gegen die ungesparte Version.",
+      "Messen was die Aufzaehlung auf ungeschnittenen Regeln kostet, vorher/nachher."
+    ]
+  },
+  {
+    "reg_id": "savings.json::g_d6_dead",
+    "claim_id": "g_d6_dead",
+    "statement": "D6 WIDERLEGT: 8/150 bzw 7/150 Faelle verlieren Cores, auch nach Einschraenkung auf die matched-Komponente (Skip-Quote unveraendert — die Einschraenkung griff nicht). Mechanismus: der Suchbaum eines Seeds enthaelt MEHR als die Embeddings, in denen er gebunden war (Embeddings, die den alten Seed anders binden oder ausschliessen). Der chk_d6_pre-Falsifikator hat exakt an der vorab benannten Stelle gefeuert. default=False, Flag nur noch fuer Tests.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "savings.json",
+    "goals": [
+      "Die drei aktiven Hebel einbauen: pair_cores-Cache, D6 (Seed-Redundanz), Transitivitaet — jede mit Aequivalenznachweis gegen die ungesparte Version.",
+      "Messen was die Aufzaehlung auf ungeschnittenen Regeln kostet, vorher/nachher."
+    ]
+  },
+  {
+    "reg_id": "savings.json::g_cache_spec",
+    "claim_id": "g_cache_spec",
+    "statement": "pair_cores wird in build_dag zweimal pro Paar gerufen (core_set und members). Ein Memo auf (a,b) halbiert exakt — gleiche Funktion, gleicher Input, deterministisch. Kein Aequivalenzrisiko.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "savings.json",
+    "goals": [
+      "Die drei aktiven Hebel einbauen: pair_cores-Cache, D6 (Seed-Redundanz), Transitivitaet — jede mit Aequivalenznachweis gegen die ungesparte Version.",
+      "Messen was die Aufzaehlung auf ungeschnittenen Regeln kostet, vorher/nachher."
+    ]
+  },
+  {
+    "reg_id": "savings.json::ans_sav",
+    "claim_id": "ans_sav",
+    "statement": "Von drei Hebeln ueberlebt einer: der Memo-Cache (exakt, halbiert). D6 ist WIDERLEGT — der vorab registrierte Falsifikator feuerte (8/150, 7/150): ein Seed-Suchbaum enthaelt mehr als die Embeddings seiner Bindungen; Skips verlieren Cores. Damit ist der Design-Punkt D6 aus primitive_design::ans_design revidiert. Transitivitaet darf per Vollstaendigkeitsverbot nur Warm-Seed sein und schneidet den Baum nicht. HAUPTBEFUND: Skalierungswand — ein ungeschnittenes Paar terminiert nicht in 25min; der korrekte Kandidatenraum (alle ungebundenen B-Knoten, erzwungen durch Nicht-Monotonie) macht die Stufe-1-Aufzaehlung auf vollen Regeln praktisch unausfuehrbar. Der naechste Schritt ist kein Hebel, sondern ein BEWEISBAR verlustfreier Baum-Schnitt (Branch-and-Bound mit Dominanz waehrend der Suche statt am Ende) — offen, nicht entworfen.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_memo_ok",
+          "g_d6_dead",
+          "g_wall",
+          "g_cache_spec",
+          "g_d6_spec",
+          "g_trans_spec"
+        ],
+        "rule": "Jeder Hebel einzeln gegen die ungesparte Version; ein gefeuerter Vorab-Falsifikator widerlegt den Design-Punkt statt ihn zu justieren."
+      }
+    ],
+    "source_path": "savings.json",
+    "goals": [
+      "Die drei aktiven Hebel einbauen: pair_cores-Cache, D6 (Seed-Redundanz), Transitivitaet — jede mit Aequivalenznachweis gegen die ungesparte Version.",
+      "Messen was die Aufzaehlung auf ungeschnittenen Regeln kostet, vorher/nachher."
+    ]
+  },
+  {
+    "reg_id": "savings.json::g_d6_spec",
+    "claim_id": "g_d6_spec",
+    "statement": "D6: ein Seed-Paar (a2,b2), das in einem bereits aufgezaehlten Embedding als GEBUNDENES Paar vorkommt, reproduziert dessen Ergebnis-Anteil. Praezisierung noetig: es reproduziert nur die Embeddings, deren Seed-Komponente das Paar enthaelt — der Vertrag (Seed-Komponente) macht Ergebnisse SEED-RELATIV. Falsifikator: ein uebersprungener Seed haette ein Embedding geliefert, dessen Seed-Komponente ANDERS geschnitten ist als beim gefundenen Seed.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "savings.json",
+    "goals": [
+      "Die drei aktiven Hebel einbauen: pair_cores-Cache, D6 (Seed-Redundanz), Transitivitaet — jede mit Aequivalenznachweis gegen die ungesparte Version.",
+      "Messen was die Aufzaehlung auf ungeschnittenen Regeln kostet, vorher/nachher."
+    ]
+  },
+  {
+    "reg_id": "memo_lockstep.json::g_equiv_ok",
+    "claim_id": "g_equiv_ok",
+    "statement": "Verlustfreiheit VERIFIZIERT: beide Hebel zusammen 300/300 Vertrag + Familie PASS + 7/7 Haertefaelle; isoliert je 300/300 gegen enum_core2 (memo only, r1 only). o_lossless, o_not_d6, o_not_t29 erfuellt (Memo skippt nur Zustands-Revisits, R1 nur Typ-Ebene ueber ganz B).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "memo_lockstep.json",
+    "goals": [
+      "Die Skalierungswand brechen ohne Vollstaendigkeitsverlust: Zustands-Memo ueber Suchpfade + Knoten-Regime-1-Kandidatenfilter (Svens Lockstep-Direktive), beide verlustfrei gegen sweep3 + Haertefaelle.",
+      "Das ungeschnittene Regelpaar (14-15 Knoten) erneut messen: terminiert es jetzt?"
+    ]
+  },
+  {
+    "reg_id": "memo_lockstep.json::g_r1_weak",
+    "claim_id": "g_r1_weak",
+    "statement": "Knoten-R1 auf echtem Material schwach: nur 2 Kantensignaturen (STRUCTURAL/OPERATIONAL, typ=None) => admissible-Groessen 5-14 von 15. Korrekt und gratis, zahlt aber erst bei Typ-Diversitaet — analog zum |Aut|=1-Befund fuer D3.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "memo_lockstep.json",
+    "goals": [
+      "Die Skalierungswand brechen ohne Vollstaendigkeitsverlust: Zustands-Memo ueber Suchpfade + Knoten-Regime-1-Kandidatenfilter (Svens Lockstep-Direktive), beide verlustfrei gegen sweep3 + Haertefaelle.",
+      "Das ungeschnittene Regelpaar (14-15 Knoten) erneut messen: terminiert es jetzt?"
+    ]
+  },
+  {
+    "reg_id": "memo_lockstep.json::g_wall_stays",
+    "claim_id": "g_wall_stays",
+    "statement": "WAND STEHT: bit_add_00_c1_cont_cont_2bit x cont_term_2bit terminiert nicht im Budget. Ursache PRAEZISIERT: nicht Pfad-Duplikation, sondern die KARDINALITAET der distinkten Zustaende selbst (~Verzweigung 10-13 hoch Tiefe 14, plus Ausschluss-Zweige). Vollenumeration injektiver Teilabbildungen skaliert nicht; noetig ist Schnitt WAEHREND der Suche (Dominanz/Branch-and-Bound, in savings.json als offen benannt) oder eine andere Zerlegung.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "memo_lockstep.json",
+    "goals": [
+      "Die Skalierungswand brechen ohne Vollstaendigkeitsverlust: Zustands-Memo ueber Suchpfade + Knoten-Regime-1-Kandidatenfilter (Svens Lockstep-Direktive), beide verlustfrei gegen sweep3 + Haertefaelle.",
+      "Das ungeschnittene Regelpaar (14-15 Knoten) erneut messen: terminiert es jetzt?"
+    ]
+  },
+  {
+    "reg_id": "memo_lockstep.json::g_memo_revised",
+    "claim_id": "g_memo_revised",
+    "statement": "Das Zustands-Memo ist verlustfrei, aber auf enum_core2 NUTZLOS (keine Revisits vorhanden) und auf Wandmaterial SCHAEDLICH: es speichert jeden distinkten Zustand (>12M, OOM/Kill nach ~25-90s), verwandelt die Zeitwand in eine Speicherwand. default kuenftig use_memo=False; Flag bleibt fuer Tests.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_zero_revisits",
+          "g_code_state"
+        ],
+        "rule": "eindeutiger Erzeugerpfad => keine Revisits => Memo trifft nie"
+      }
+    ],
+    "source_path": "memo_lockstep.json",
+    "goals": [
+      "Die Skalierungswand brechen ohne Vollstaendigkeitsverlust: Zustands-Memo ueber Suchpfade + Knoten-Regime-1-Kandidatenfilter (Svens Lockstep-Direktive), beide verlustfrei gegen sweep3 + Haertefaelle.",
+      "Das ungeschnittene Regelpaar (14-15 Knoten) erneut messen: terminiert es jetzt?"
+    ]
+  },
+  {
+    "reg_id": "memo_lockstep.json::g_code_state",
+    "claim_id": "g_code_state",
+    "statement": "expand(node_map, node_map_r, excluded) liest nur node_map, dessen Inverse und excluded plus konstante Globals (A_edges, b_set, a_idx, b_nodes). Frontier wird als Liste in Einfuegereihenfolge gesammelt, aber a_node = min(frontier) — die Auswahl ist ordnungsunabhaengig. Kandidaten = ALLE ungebundenen B-Knoten. Leaf-Ergebnisse gehen in ein dict (dedupliziert). Damit ist die von expand erzeugte LEAF-MENGE eine Funktion des Zustands (frozenset(node_map.items()), frozenset(excluded)) — der Suchbaum behandelt den Zustand aber als FOLGE: k gebundene Knoten koennen ueber bis zu k! Pfade denselben Zustand erreichen, jeder wird heute voll expandiert.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "memo_lockstep.json",
+    "goals": [
+      "Die Skalierungswand brechen ohne Vollstaendigkeitsverlust: Zustands-Memo ueber Suchpfade + Knoten-Regime-1-Kandidatenfilter (Svens Lockstep-Direktive), beide verlustfrei gegen sweep3 + Haertefaelle.",
+      "Das ungeschnittene Regelpaar (14-15 Knoten) erneut messen: terminiert es jetzt?"
+    ]
+  },
+  {
+    "reg_id": "memo_lockstep.json::ans_ml",
+    "claim_id": "ans_ml",
+    "statement": "Beide Direktive-Mechanismen sind gebaut und VERLUSTFREI (enum_core3.py, schaltbar; sweep4/test_enum3/isolierte Laeufe alle gruen). Die Wand brechen sie NICHT: enum_core2 kanonisiert die Suchreihenfolge bereits per min(frontier), es gibt strukturell null Zustands-Revisits — die k!-Duplikations-Praemisse der Direktive beschreibt diese Implementierung nicht. Das Memo ist daher nutzlos bis schaedlich (Speicherwand), R1 auf 2-Signatur-Material fast wirkungslos. Die Wand ist die Kardinalitaet der distinkten Zustaende; naechster Schritt ist der in savings.json offen benannte Branch-and-Bound-Entwurf (Dominanz WAEHREND der Suche) — eigener GATE-Zyklus, nicht hier entworfen.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_equiv_ok",
+          "g_memo_revised",
+          "g_r1_weak",
+          "g_wall_stays"
+        ],
+        "rule": "Verifikation + Falsifikation von cand_break => uebrig bleibt cand_insufficient in narrowed Form"
+      }
+    ],
+    "source_path": "memo_lockstep.json",
+    "goals": [
+      "Die Skalierungswand brechen ohne Vollstaendigkeitsverlust: Zustands-Memo ueber Suchpfade + Knoten-Regime-1-Kandidatenfilter (Svens Lockstep-Direktive), beide verlustfrei gegen sweep3 + Haertefaelle.",
+      "Das ungeschnittene Regelpaar (14-15 Knoten) erneut messen: terminiert es jetzt?"
+    ]
+  },
+  {
+    "reg_id": "memo_lockstep.json::g_zero_revisits",
+    "claim_id": "g_zero_revisits",
+    "statement": "2.000.000 distinkte Zustaende in 25s, Revisit-Treffer <0.05% (Anzeige 0.0M). STRUKTURELLER GRUND, kein Sampling: a_node=min(frontier) ist eine Funktion des Zustands, also ist die Entscheidungsfolge jedes erreichbaren Zustands per Replay eindeutig rekonstruierbar — jeder Zustand hat genau EINEN erzeugenden Pfad. Der Suchbaum von enum_core2 IST bereits die zustandskanonische Aufzaehlung.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "memo_lockstep.json",
+    "goals": [
+      "Die Skalierungswand brechen ohne Vollstaendigkeitsverlust: Zustands-Memo ueber Suchpfade + Knoten-Regime-1-Kandidatenfilter (Svens Lockstep-Direktive), beide verlustfrei gegen sweep3 + Haertefaelle.",
+      "Das ungeschnittene Regelpaar (14-15 Knoten) erneut messen: terminiert es jetzt?"
+    ]
+  },
+  {
+    "reg_id": "table_reassembly.json::ans_tr",
+    "claim_id": "ans_tr",
+    "statement": "Zwei verlustfreie Bausteine stehen, einer davon lueckenlos verifiziert, keiner bricht die Wand. (1) ZUSAMMENSETZEN: maximale knotendisjunkte Vereinigung der Seed-Komponenten rekonstruiert exakt die Referenz-Volleinbettungen (300/300 + Teilkomponenten-Konstruktion); Koexistenz = beidseitige Knotendisjunktheit, Konkurrenz = geteilter A- oder B-Knoten. Das ist der Konsumenten-Schritt aus dem Vertrag, jetzt konkret und getestet. (2) CROSS-SEED-TABELLE: verlustfrei NUR wenn der rohe Blatt-node_map gecacht und der Vertragsschnitt pro Seed beim Auslesen angewandt wird (den Schnitt in den Wert zu legen ist ein D6-artiger seed-relativer Fehler, 15/300); aber gegen die Wand inert, weil diese die Kardinalitaet distinkter Zustaende ist (echtes 9x9-Paar: 1.84M Zustaende, Tabelle langsamer). Die Kandidatenregel mode=any ist ein Minimumfilter und schneidet auf 2-Sorten-Material ebenfalls nichts. FAZIT: der Wand-Hebel ist WEDER Kandidatenregel NOCH Memo NOCH Tabelle, sondern muss WAEHREND der Suche schneiden (Branch-and-Bound / Dominanz live, savings.json offen) ODER die Enumeration injektiver Teilabbildungen durch etwas Struktursensitiveres ersetzen. Naechster GATE-Zyklus.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_reasm_ok",
+          "g_table_key_bug",
+          "g_table_inert",
+          "g_cand_min"
+        ],
+        "rule": "Verifikation Zusammensetzen + Falsifikation des schneidenden Tabellenteils => uebrig cand_table_inert"
+      }
+    ],
+    "source_path": "table_reassembly.json",
+    "goals": [
+      "Cross-Seed-Tabelle: identische Teilbindungen, die mehrere Seeds erreichen, nur einmal expandieren — verlustfrei gegen die tabellenlose Vollenumeration, und messbar gegen die Wand.",
+      "Zusammensetzen: aus den per-Seed zusammenhaengenden Komponenten die maximalen (ggf. unzusammenhaengenden) Cores rekonstruieren, verlustfrei gegen die Brute-Force-Referenz."
+    ]
+  },
+  {
+    "reg_id": "table_reassembly.json::g_table_key_bug",
+    "claim_id": "g_table_key_bug",
+    "statement": "FALLE gefunden und behoben: den Vertragsschnitt (_seed_comp_leaf) in den gecachten WERT zu legen macht ihn seed-relativ — ein anderer Seed, der denselben (node_map, excluded)-Zustand erreicht, schneidet die Komponente ANDERS und bekam faelschlich die des Erstsehers (15/300 Verluste). Fix: den ROHEN Blatt-node_map cachen (seed-invariant), den Vertragsschnitt erst beim Auslesen PRO SEED anwenden. Danach 300/300 verlustfrei. Gleiche Fehlerklasse wie D6 (seed-relatives Ergebnis geteilt), eine Ebene subtiler.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "table_reassembly.json",
+    "goals": [
+      "Cross-Seed-Tabelle: identische Teilbindungen, die mehrere Seeds erreichen, nur einmal expandieren — verlustfrei gegen die tabellenlose Vollenumeration, und messbar gegen die Wand.",
+      "Zusammensetzen: aus den per-Seed zusammenhaengenden Komponenten die maximalen (ggf. unzusammenhaengenden) Cores rekonstruieren, verlustfrei gegen die Brute-Force-Referenz."
+    ]
+  },
+  {
+    "reg_id": "table_reassembly.json::g_table_inert",
+    "claim_id": "g_table_inert",
+    "statement": "Tabelle verlustfrei, aber gegen die Wand WIRKUNGSLOS. Auf Zufallsgraphen teilen 14.7% der Zustaende mehr als einen seed_a; auf echten Regeln (add_init 9x9, fast identische Spine-Ketten) speichert die Tabelle 1.84M Rohzustaende und ist LANGSAMER (35s vs 26s ohne) — nicht genug Treffer, um die Speicherkosten hereinzuholen. cand_table_inert bestaetigt: die Wand ist die KARDINALITAET distinkter Zustaende, nicht ihre Wiederholung; ein Memo kann nichts gegen echte Vielfalt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "table_reassembly.json",
+    "goals": [
+      "Cross-Seed-Tabelle: identische Teilbindungen, die mehrere Seeds erreichen, nur einmal expandieren — verlustfrei gegen die tabellenlose Vollenumeration, und messbar gegen die Wand.",
+      "Zusammensetzen: aus den per-Seed zusammenhaengenden Komponenten die maximalen (ggf. unzusammenhaengenden) Cores rekonstruieren, verlustfrei gegen die Brute-Force-Referenz."
+    ]
+  },
+  {
+    "reg_id": "table_reassembly.json::g_cand_min",
+    "claim_id": "g_cand_min",
+    "statement": "Die Kandidatenregel mode=any ist ein MINIMUMFILTER (notwendige Bedingung), nie eine Entscheidung — Natur des Subgraph-Matchings. Sie ueber-generiert; der Match wird am Blatt via _matched bestimmt, Dominanz putzt. Korrektheit ruht auf der Blattberechnung. Konsequenz: auf 2-Sorten-Material schneidet sie nichts (g_cand_weak), das ist erwartungskonform, kein Fehler.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "table_reassembly.json",
+    "goals": [
+      "Cross-Seed-Tabelle: identische Teilbindungen, die mehrere Seeds erreichen, nur einmal expandieren — verlustfrei gegen die tabellenlose Vollenumeration, und messbar gegen die Wand.",
+      "Zusammensetzen: aus den per-Seed zusammenhaengenden Komponenten die maximalen (ggf. unzusammenhaengenden) Cores rekonstruieren, verlustfrei gegen die Brute-Force-Referenz."
+    ]
+  },
+  {
+    "reg_id": "table_reassembly.json::g_reasm_ok",
+    "claim_id": "g_reasm_ok",
+    "statement": "Zusammensetzen VERIFIZIERT verlustfrei: maximale knotendisjunkte Vereinigung der Seed-Komponenten == Referenz-Volleinbettungen, 300/300 + gezielt konstruierte Teilkomponenten-Falle (C1_gross konkurriert um B-Knoten, C1_klein disjunkt) PASS. chk_reasm_pre aufgeloest: das Teilkomponenten-Risiko realisiert sich NICHT — unter dem Vertrag sind die noetigen Teilkomponenten als eigene maximale Seed-Komponenten praesent, weil jeder ihrer Knoten als eigener Seed auftritt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "table_reassembly.json",
+    "goals": [
+      "Cross-Seed-Tabelle: identische Teilbindungen, die mehrere Seeds erreichen, nur einmal expandieren — verlustfrei gegen die tabellenlose Vollenumeration, und messbar gegen die Wand.",
+      "Zusammensetzen: aus den per-Seed zusammenhaengenden Komponenten die maximalen (ggf. unzusammenhaengenden) Cores rekonstruieren, verlustfrei gegen die Brute-Force-Referenz."
+    ]
+  },
+  {
+    "reg_id": "neighbor_lockstep.json::g_wall_gone",
+    "claim_id": "g_wall_gone",
+    "statement": "Wandpaar 15x15 (bit_add_00_c1_cont_cont x cont_term): vorher terminiert nicht in 25min (alle-B); Nachbarn-only 20054 Zustaende in 0.1s. 9x9-Paar: 1.84M -> 1968 Zustaende. 6 echte Regelpaare in 3s. Verzweigungsgrad ist Nachbarschaftsgroesse (2-4), nicht |B|.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "neighbor_lockstep.json",
+    "goals": [
+      "Klaeren, was die Skalierungswand WIRKLICH verursacht hat, und die frühere Konklusion (Kardinalitaet, Branch-and-Bound noetig) revidieren falls widerlegt.",
+      "Nachbarn-only + Zusammensetzen als vollstaendiges, wandfreies Verfahren belegen."
+    ]
+  },
+  {
+    "reg_id": "neighbor_lockstep.json::ans_nl",
+    "claim_id": "ans_nl",
+    "statement": "REVIDIERTE WAND-KONKLUSION: Die Skalierungswand war NICHT die intrinsische Kardinalitaet und braucht KEIN Branch-and-Bound. Ursache war die zu weite Kandidatenregel (alle-B / mode=any), die injektive Teilabbildungen auf ganz B zaehlte (fakultaer). Das korrekte Lockstep-Verfahren: Kandidaten = realisierende Kante zu gebundenem Nachbarn + Self-Loop (Verzweigung ~Nachbarschaft); unzusammenhaengende Cores kommen von ihren eigenen Seeds und werden per maximaler knotendisjunkter Vereinigung zusammengesetzt. Verlustfrei auf Core-Ebene (500/500 + 4/4 Haertefaelle + Teilkomponenten-Konstruktion), wandfrei (Wandpaar 20054 Zustaende/0.1s statt >25min). Damit ist auch die Tabelle als Wand-Hebel gegenstandslos (sie war Antwort auf ein Problem, das die richtige Kandidatenregel gar nicht erst erzeugt). Offen bleibt nur: voller-Registry-DAG-Aufbau messen, und Nachbarn-only in ein sauberes Kernmodul ziehen.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_wall_cause",
+          "g_neigh_complete",
+          "g_wall_gone"
+        ],
+        "rule": "Falsifikation beider Gegenkandidaten => cand_narrow_wins"
+      }
+    ],
+    "source_path": "neighbor_lockstep.json",
+    "goals": [
+      "Klaeren, was die Skalierungswand WIRKLICH verursacht hat, und die frühere Konklusion (Kardinalitaet, Branch-and-Bound noetig) revidieren falls widerlegt.",
+      "Nachbarn-only + Zusammensetzen als vollstaendiges, wandfreies Verfahren belegen."
+    ]
+  },
+  {
+    "reg_id": "neighbor_lockstep.json::g_neigh_complete",
+    "claim_id": "g_neigh_complete",
+    "statement": "Nachbarn-only (Kandidaten = realisierende Kante zu GEBUNDENEM Nachbarn + Self-Loop, KEINE alle-B-Klausel) + Zusammensetzen == Referenz-Volleinbettungen auf CORE-Ebene: 500/500 (bis 5x5, 3 Kantensorten) + 4/4 Haertefaelle. Die frueheren \"Verluste\" von mode=now (290/300) waren auf SEED-KOMPONENTEN-Ebene; die fehlenden Stuecke sind eigene Cores, die ihr eigener Seed liefert und das Zusammensetzen andockt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "neighbor_lockstep.json",
+    "goals": [
+      "Klaeren, was die Skalierungswand WIRKLICH verursacht hat, und die frühere Konklusion (Kardinalitaet, Branch-and-Bound noetig) revidieren falls widerlegt.",
+      "Nachbarn-only + Zusammensetzen als vollstaendiges, wandfreies Verfahren belegen."
+    ]
+  },
+  {
+    "reg_id": "neighbor_lockstep.json::g_wall_cause",
+    "claim_id": "g_wall_cause",
+    "statement": "WAND-URSACHE war die zu weite Kandidatenregel (alle-B / mode=any), die injektive Teilabbildungen auf ALLE B-Knoten zaehlte (Verzweigung ~|B|, fakultaeres Wachstum). NICHT die intrinsische Kardinalitaet distinkter Zustaende: unter der korrekten Lockstep-Kandidatenregel ist die Zustandszahl klein (Faktor ~900 kleiner auf 9x9). Ein zusammenhaengender Match wird Kante fuer Kante gebaut; ein Knoten dockt nur an Nachbarn seines gebundenen Bildes an. Unzusammenhaengende Teile sind Sache ihres eigenen Seeds + Zusammensetzen, nicht eines breiteren Kandidatenraums.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_wall_gone",
+          "g_neigh_complete"
+        ],
+        "rule": "Wenn ein schmalerer, verlustfreier Kandidatenraum die Wand beseitigt, war die Weite die Ursache"
+      }
+    ],
+    "source_path": "neighbor_lockstep.json",
+    "goals": [
+      "Klaeren, was die Skalierungswand WIRKLICH verursacht hat, und die frühere Konklusion (Kardinalitaet, Branch-and-Bound noetig) revidieren falls widerlegt.",
+      "Nachbarn-only + Zusammensetzen als vollstaendiges, wandfreies Verfahren belegen."
+    ]
   }
 ]

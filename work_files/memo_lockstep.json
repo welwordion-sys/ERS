@@ -1,0 +1,512 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Die Skalierungswand brechen ohne Vollstaendigkeitsverlust: Zustands-Memo ueber Suchpfade + Knoten-Regime-1-Kandidatenfilter (Svens Lockstep-Direktive), beide verlustfrei gegen sweep3 + Haertefaelle.",
+    "g2": "Das ungeschnittene Regelpaar (14-15 Knoten) erneut messen: terminiert es jetzt?"
+  },
+  "prep_note": "PRE-CODE Phase. Beide Mechanismen muessen die Ergebnis-Menge exakt erhalten. Waechter: sweep3 (300 randomisiert + Familie) und die 7 Haertefaelle, die D6 fingen.",
+  "prior_candidates": [
+    {
+      "reg_id": "impl_s1.json::ans_s1",
+      "claim_id": "ans_s1",
+      "statement": "Stufe 1 steht und ist verifiziert. PRIMITIV (enum_core2.py): Aufzaehlung aller maximalen Embeddings pro Seed, Verzweigung statt Wahl, einziger Filter Regime 1 auf Kantenebene. Gegen unabhaengige Brute-Force-Referenz: 300/300 randomisiert, 7/7 Haertefaelle — darunter die asymmetrische Kollision (2 Embeddings, wo _grow_from 1 liefert) und Mehrfachvorkommen (beide Stellen). Zwei gefundene und geschlossene Luecken waren beide Instanzen von Svens Nicht-Monotonie-Satz auf Kandidatenebene (\"kein Ertrag jetzt\" != \"kein Ertrag je\"). VERTRAG, beidseitig: pro Seed die Seed-Bindungskomponente; abgetrennte Teile deckt die Familie (verifiziert); Vereinigungen sind Konsumenten-Ableitung per positiver Monotonie. AUFBAU (dag_derive.py, D7-D10): Mengen und Relationen, WL-Kanonisierung; Erreichbarkeit ueber 3 Reihenfolgen auf 4 echten Regeln identisch (14 Cores) — bestaetigt den Kanonisierungs-Falsifikator. GRENZEN: D3=Identitaet (Automorphismen ungebaut), D6 nicht angewandt, exponentielle Kosten, Testgroesse 4 Regeln x 6 Kanten, Referenz O(n!). Korrektheit belegt, Performanz nicht beansprucht.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_ref",
+            "g_bugs",
+            "g_contract",
+            "g_green",
+            "g_dag_inv",
+            "g_limits"
+          ],
+          "rule": "Verifikation gegen ein unabhaengiges Instrument unter explizitem, beidseitig angewandtem Vertrag; Luecken werden auf die Design-Saetze zurueckgefuehrt, die sie verletzten."
+        }
+      ],
+      "source_path": "impl_s1.json",
+      "goals": [
+        "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+        "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+      ]
+    },
+    {
+      "reg_id": "impl_s1.json::g_bugs",
+      "claim_id": "g_bugs",
+      "statement": "Der Sweep fand zwei echte Vollstaendigkeitsluecken meiner ersten Implementierung, beide Instanzen von Svens Nicht-Monotonie-Satz auf der Kandidatenebene: (1) Kandidaten nur aus der AKTUELLEN Kante gezogen — eine Bindung, die erst ueber eine ANDERE Kante Ertrag bringt, entstand nie (trial 29); (2) Kandidaten auf sofortige Ankerkanten-Realisierung gefiltert — \"kein Ertrag jetzt\" wurde als \"kein Ertrag je\" behandelt. Fix: Kandidaten = ALLE ungebundenen B-Knoten; einziger Filter ist Regime 1 auf Kantenebene (wirkt in _matched).",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "impl_s1.json",
+      "goals": [
+        "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+        "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+      ]
+    },
+    {
+      "reg_id": "multiocc.json::ans_occ",
+      "claim_id": "ans_occ",
+      "statement": "Auf der gemessenen Menge (volle Registry 257, 16 Additions-States, range(4)^2) kommt kein Core mehrfach vor: 0 von 16 Regel-Vorkommen haben mehr als eine Match-Stelle. Damit ist die Bindung eines Knotens eindeutig, unabhaengig vom Anmarschweg, und es gibt nichts zu revidieren — Svens Rueckwaerts-Markierung ist auf dieser Menge exakt, nicht lueckenhaft, und meine gegenteilige Behauptung (g_collapse_axis) ist widerlegt. Der Gate1-Fehler hat eine andere, jetzt gemessene Ursache: der Prototyp haengt 112 Regeln mehrfach ein (bei 0 Mehr-Eltern-Knoten), und visited:386 hakt eine Regel beim ersten von mehreren redundanten Aesten ab — konkret add_init_01_term_term bei 2+3, eingehaengt an Tiefe 1 UND 2. Das ist ein Prototyp-Defekt, kein prinzipielles DAG- oder Suchproblem. NICHT BELEGT: dass Eindeutigkeit aus der Spine-Kodierung FOLGT. Gemessen ist eine Eigenschaft von 16 kleinen Additionsgraphen, kein Reachability-Beweis. Fuer Subtraktion (0-n Teilbaeume, Marker-Kanten) ist sie ungemessen, und die Analogie Addition->Subtraktion hat in diesem Projekt bereits 30 Phantom-Regeln erzeugt.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_occ",
+            "g_cause",
+            "g_proto_multi",
+            "g_gate1_fail"
+          ],
+          "rule": "Direkte Zaehlung schlaegt Erschliessung: die Ursachenzuschreibung folgt der gemessenen Vorkommenszahl, nicht der Plausibilitaet des Mechanismus. Reichweite bleibt an die gemessene Menge gebunden."
+        }
+      ],
+      "source_path": "multiocc.json",
+      "goals": [
+        "Kommen Cores in den Test-Graphen MEHRFACH vor? Davon haengt ab, ob Svens Rueckwaerts-Markierung exakt oder lueckenhaft ist.",
+        "Ist Mehrfachvorkommen die Ursache des gemessenen Gate1-Fehlers (3/16), oder hat der eine andere Ursache?"
+      ]
+    },
+    {
+      "reg_id": "regimes.json::ans_regimes",
+      "claim_id": "ans_regimes",
+      "statement": "Sven hat recht auf beiden Punkten. (1) Meine Trichotomie war falsch: \"Fall 3 — kollidierend, nicht-symmetrisch\" existiert nur unter der Injektivitaets-Regel EINER Wachstumsinstanz (_grow_from:104/109), also als Implementierungsartefakt. Im Mengenbild — das Verfahren zaehlt die MENGE der Embeddings auf — ist der B-Knoten keine exklusive Ressource: jeder Kandidat setzt ein eigenes Embedding fort, Verzweigung ist Aufzaehlung, kein Konflikt, keine Wahl, kein Verlust. Es bleibt Svens Dichotomie: ABWESEND (kein Kandidat passiert den Typ-Filter -> terminal, die einzige echte lokale Negativitaet) oder VORHANDEN (jeder Kandidat wird zu einem Embedding; bei exakter Symmetrie sind die Embeddings aequivalent). (2) Bei exakter Symmetrie sind BEIDE Karten nutzbar: A-Automorphismen und B-Automorphismen liefern dieselbe Klasseneinteilung — man kann die billigere Seite rechnen oder beide zur Gegenpruefung verwenden. Meine Fassung hatte nur die B-Seite betrachtet. KONSEQUENZ FUER PUNKT 1 (Vergleichsprimitiv): die Design-Alternative (a) \"alle maximalen Embeddings\" vs (b) \"eines plus Symmetriekarte\" war falsch aufgespannt — sie setzte voraus, dass an Verzweigungen GEWAEHLT werden muss. Muss es nicht: das Primitiv zaehlt auf. Die Kostenfrage bleibt (Aufzaehlung kann gross werden, Symmetrie-Klassen reduzieren sie), aber die KORREKTHEITSFRAGE \"geht ein Fall verloren\" verschwindet: verloren geht nur, was man durch Exklusivitaet verdraengt, und Exklusivitaet ist keine Problemanforderung.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_sven_regimes",
+            "g_inj_impl",
+            "g_my_claim",
+            "g_naive_def"
+          ],
+          "rule": "Ein Fall, der nur unter einer Implementierungsentscheidung existiert, ist kein Problemfall (o_prob_vs_impl). Die Fallunterscheidung ist gegen die Problemdefinition (Mengenbild) zu pruefen, nicht gegen die vorhandene Implementierung."
+        }
+      ],
+      "source_path": "regimes.json",
+      "goals": [
+        "Svens Zwei-Regime-Aussage korrekt fassen: strikter Schnitt bei Kanten-Symmetrie -> \"no match at node\" ist terminal; exakte Symmetrie -> beide Karten (A und B) sind nutzbar.",
+        "Meine Trichotomie pruefen — insbesondere ob \"Fall 3 (kollidierend, nicht-symmetrisch)\" eine Eigenschaft des PROBLEMS ist oder ein Artefakt der Injektivitaets-IMPLEMENTIERUNG."
+      ]
+    },
+    {
+      "reg_id": "auto_filter.json::ans_af",
+      "claim_id": "ans_af",
+      "statement": "Svens Vereinfachung ist exakt und entscheidend: die Kantenschema-Signatur (1-WL-verfeinert) ist eine NOTWENDIGE Bedingung fuer Automorphie, also duerfen Permutationen ueber Klassengrenzen ungesehen entfallen — verlustfrei (150/150 gegen Brute-Force, definitorisch begruendet). Auf vollen Regeln macht der Filter die Berechnung erst moeglich: n! von 8.7e10 bis 1.3e12 -> 1 Kandidat, <1s pro Regel; meine fruehere Tragbarkeits-Aussage galt nur fuer Beschnitte und ist damit korrigiert. ZWEITER BEFUND, alle 252 Regeln: |Aut|=1 ueberall — Spine-Ketten sind per WL vollstaendig unterscheidbar, die 91%-Selbstaehnlichkeit liegt ZWISCHEN Regeln, nicht innerhalb. Folge: D3 zahlt auf dem aktuellen Material nichts (die sym_d3-Hypothese ist widerlegt), bleibt aber korrekt und nach dem Filter praktisch kostenlos — er zahlt, falls der GA symmetrische Strukturen erzeugt. Aktive Ersparnis-Hebel jetzt: pair_cores-Cache, D6, Transitivitaet.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_necessary",
+            "g_exact150",
+            "g_feasible",
+            "g_no_sym"
+          ],
+          "rule": "Ein Filter ist zulaessig gdw er nur beweisbare Durchfaller entfernt; Nutzen wird unabhaengig von Korrektheit gemessen und auch ein Null-Nutzen wird committed."
+        }
+      ],
+      "source_path": "auto_filter.json",
+      "goals": [
+        "Svens Frage: kann die Automorphismus-Berechnung durch Filtern des Kantenschemas vereinfacht werden, ohne Exaktheit zu verlieren?",
+        "Nutzen des D3-Kollapses auf dem realen Regelmaterial messen."
+      ]
+    }
+  ],
+  "claims": {
+    "imported_g_wall": {
+      "id": "imported_g_wall",
+      "statement": "SKALIERUNGSWAND: EIN ungeschnittenes Regelpaar (14-15 Knoten) terminiert nicht in 25min. Ursache: der trial-29-Fix (Kandidaten = ALLE ungebundenen B-Knoten, korrekt wegen Nicht-Monotonie) macht den Verzweigungsgrad ~|B| pro Knoten. Vollstaendigkeit Stufe 1 skaliert nicht auf volle Regeln; Transitivitaets-Warm-Seed priorisiert nur, schneidet den Baum nicht.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_g_d6_dead": {
+      "id": "imported_g_d6_dead",
+      "statement": "D6 WIDERLEGT: 8/150 bzw 7/150 Faelle verlieren Cores, auch nach Einschraenkung auf die matched-Komponente (Skip-Quote unveraendert — die Einschraenkung griff nicht). Mechanismus: der Suchbaum eines Seeds enthaelt MEHR als die Embeddings, in denen er gebunden war (Embeddings, die den alten Seed anders binden oder ausschliessen). Der chk_d6_pre-Falsifikator hat exakt an der vorab benannten Stelle gefeuert. default=False, Flag nur noch fuer Tests.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_g_pos_monotone": {
+      "id": "imported_g_pos_monotone",
+      "statement": "Positive Ergebnisse sind monoton: was als gemeinsam gefunden ist, bleibt gemeinsam. Transitivitaet traegt es, keine spaetere Kante nimmt es weg. Bereits Gefundenes muss nicht erneut getestet werden — nur der Rest.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_g_neg_nonmonotone": {
+      "id": "imported_g_neg_nonmonotone",
+      "statement": "Negative Ergebnisse sind NICHT monoton: jede Kante veraendert zwei Knoten. \"core x geschnitten core y zu klein\" ist eine Momentaufnahme — eine erreichbare Kante kann einen externen Knoten (Kante Core->extern) oder zwei externe (Kante extern-extern) in den Core ziehen und den ratio ueber min_ratio heben. find_core:226 break behandelt \"zu klein\" faelschlich als terminal.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_g_contract": {
+      "id": "imported_g_contract",
+      "statement": "SPEZIFIKATIONSENTSCHEIDUNG (beidseitig angewandt): pro Seed zaehlt die Seed-BINDUNGSKOMPONENTE; ertraglose Zwischenbindungen werden gestrichen und koennen die Bindung zerreissen — abgetrennte Teile findet ihr eigener Seed. Familien-Abdeckung im Sweep verifiziert (Familie: PASS). Unzusammenhaengende Vereinigungen sind Familien-Ableitung per positiver Monotonie (kompatible Karten komponieren) — Ableitungsschritt liegt beim Konsumenten.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_directive": {
+      "id": "g_directive",
+      "statement": "Svens Direktive: A und B im Lockstep wachsen; eine schon probierte a-b-Paarung nicht erneut probieren. Abgeleitet und bestaetigt zu bauen: (1) Zustands-Memo, (2) Kandidaten fuer a_node = B-Knoten, die mindestens eine Kante von a_node UEBERHAUPT IN B typkompatibel realisieren KOENNTEN (Quantor ueber ganz B).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_code_state": {
+      "id": "g_code_state",
+      "statement": "expand(node_map, node_map_r, excluded) liest nur node_map, dessen Inverse und excluded plus konstante Globals (A_edges, b_set, a_idx, b_nodes). Frontier wird als Liste in Einfuegereihenfolge gesammelt, aber a_node = min(frontier) — die Auswahl ist ordnungsunabhaengig. Kandidaten = ALLE ungebundenen B-Knoten. Leaf-Ergebnisse gehen in ein dict (dedupliziert). Damit ist die von expand erzeugte LEAF-MENGE eine Funktion des Zustands (frozenset(node_map.items()), frozenset(excluded)) — der Suchbaum behandelt den Zustand aber als FOLGE: k gebundene Knoten koennen ueber bis zu k! Pfade denselben Zustand erreichen, jeder wird heute voll expandiert.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_memo_spec": {
+      "id": "g_memo_spec",
+      "statement": "Zustands-Memo: seen-Set ueber Schluessel (frozenset(node_map.items()), frozenset(excluded)); bei Revisit sofort return. Verlustfrei, WEIL die Expansion eine Funktion genau dieses Schluessels ist (g_code_state). KEIN D6-Risiko: D6 uebersprang SEEDS (fremde Suchbaeume), das Memo dedupliziert ZUSTAENDE innerhalb EINES Seed-Suchbaums.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_code_state",
+            "g_directive"
+          ],
+          "rule": "Funktion des Zustands => Revisit-Skip aendert die Leaf-Menge nicht"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_r1_spec": {
+      "id": "g_r1_spec",
+      "statement": "Knoten-Regime-1: Signatur eines A-Knotens a = Menge (richtung, kind, typ) seiner inzidenten Kanten; Signatur eines B-Knotens b analog. Kandidat b fuer a nur wenn Schnitt nichtleer. Bindungsunabhaengig (Quantor ueber ganz B), also monoton. Verlustfrei unter dem Vertrag: ist der Schnitt leer, wird NIE eine Kante von a an b realisiert, a liegt in keinem Leaf in der Seed-Komponente; jedes Leaf des geschnittenen Teilbaums existiert identisch im unbedingten Ausschluss-Zweig (der b zudem freilaesst). SCHARF ZU TRENNEN vom widerlegten trial-29-Filter \"realisiert JETZT eine Ankerkante\" — der quantifizierte ueber den Bindungsstand.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_directive",
+            "imported_g_contract"
+          ],
+          "rule": "notwendige Bedingung + Vertrag: kantenlose Bindung liegt nie in der Seed-Komponente"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_equiv_ok": {
+      "id": "g_equiv_ok",
+      "statement": "Verlustfreiheit VERIFIZIERT: beide Hebel zusammen 300/300 Vertrag + Familie PASS + 7/7 Haertefaelle; isoliert je 300/300 gegen enum_core2 (memo only, r1 only). o_lossless, o_not_d6, o_not_t29 erfuellt (Memo skippt nur Zustands-Revisits, R1 nur Typ-Ebene ueber ganz B).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_zero_revisits": {
+      "id": "g_zero_revisits",
+      "statement": "2.000.000 distinkte Zustaende in 25s, Revisit-Treffer <0.05% (Anzeige 0.0M). STRUKTURELLER GRUND, kein Sampling: a_node=min(frontier) ist eine Funktion des Zustands, also ist die Entscheidungsfolge jedes erreichbaren Zustands per Replay eindeutig rekonstruierbar — jeder Zustand hat genau EINEN erzeugenden Pfad. Der Suchbaum von enum_core2 IST bereits die zustandskanonische Aufzaehlung.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_memo_revised": {
+      "id": "g_memo_revised",
+      "statement": "Das Zustands-Memo ist verlustfrei, aber auf enum_core2 NUTZLOS (keine Revisits vorhanden) und auf Wandmaterial SCHAEDLICH: es speichert jeden distinkten Zustand (>12M, OOM/Kill nach ~25-90s), verwandelt die Zeitwand in eine Speicherwand. default kuenftig use_memo=False; Flag bleibt fuer Tests.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_zero_revisits",
+            "g_code_state"
+          ],
+          "rule": "eindeutiger Erzeugerpfad => keine Revisits => Memo trifft nie"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": {
+        "target": "g_memo_spec",
+        "prior_text": "Verlustfrei, WEIL die Expansion eine Funktion genau dieses Schluessels ist (g_code_state). KEIN D6-Risiko: D6 uebersprang SEEDS (fremde Suchbaeume), das Memo dedupliziert ZUSTAENDE innerhalb EINES Seed-Suchbaums.",
+        "why": "Die Verlustfreiheit stand und steht; FALSCH war die implizite Nutzen-Praemisse aus g_directive/HANDOVER (\"bis k! Wiederholungen desselben Zustands\"): sie beschreibt eine Implementierung OHNE kanonische Knotenwahl. enum_core2 kanonisiert bereits per min(frontier)."
+      }
+    },
+    "g_r1_weak": {
+      "id": "g_r1_weak",
+      "statement": "Knoten-R1 auf echtem Material schwach: nur 2 Kantensignaturen (STRUCTURAL/OPERATIONAL, typ=None) => admissible-Groessen 5-14 von 15. Korrekt und gratis, zahlt aber erst bei Typ-Diversitaet — analog zum |Aut|=1-Befund fuer D3.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_wall_stays": {
+      "id": "g_wall_stays",
+      "statement": "WAND STEHT: bit_add_00_c1_cont_cont_2bit x cont_term_2bit terminiert nicht im Budget. Ursache PRAEZISIERT: nicht Pfad-Duplikation, sondern die KARDINALITAET der distinkten Zustaende selbst (~Verzweigung 10-13 hoch Tiefe 14, plus Ausschluss-Zweige). Vollenumeration injektiver Teilabbildungen skaliert nicht; noetig ist Schnitt WAEHREND der Suche (Dominanz/Branch-and-Bound, in savings.json als offen benannt) oder eine andere Zerlegung.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "ans_ml": {
+      "id": "ans_ml",
+      "statement": "Beide Direktive-Mechanismen sind gebaut und VERLUSTFREI (enum_core3.py, schaltbar; sweep4/test_enum3/isolierte Laeufe alle gruen). Die Wand brechen sie NICHT: enum_core2 kanonisiert die Suchreihenfolge bereits per min(frontier), es gibt strukturell null Zustands-Revisits — die k!-Duplikations-Praemisse der Direktive beschreibt diese Implementierung nicht. Das Memo ist daher nutzlos bis schaedlich (Speicherwand), R1 auf 2-Signatur-Material fast wirkungslos. Die Wand ist die Kardinalitaet der distinkten Zustaende; naechster Schritt ist der in savings.json offen benannte Branch-and-Bound-Entwurf (Dominanz WAEHREND der Suche) — eigener GATE-Zyklus, nicht hier entworfen.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_equiv_ok",
+            "g_memo_revised",
+            "g_r1_weak",
+            "g_wall_stays"
+          ],
+          "rule": "Verifikation + Falsifikation von cand_break => uebrig bleibt cand_insufficient in narrowed Form"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "cand_break": {
+      "id": "cand_break",
+      "statement": "Memo + Knoten-R1 sind verlustfrei UND brechen die Wand (Paar terminiert in Minuten statt >25min).",
+      "discriminator": "Gegen cand_insufficient: verlustfrei, aber die Zustandszahl selbst ist zu gross — Wand bleibt, Branch-and-Bound noetig. Gegen cand_lossy: der Memo-Schluessel ist unvollstaendig (Expansion haengt an etwas ausserhalb (node_map, excluded)) oder R1 schneidet doch erreichbare Embeddings."
+    },
+    "cand_insufficient": {
+      "id": "cand_insufficient",
+      "statement": "Beide Mechanismen verlustfrei, aber das Paar terminiert weiterhin nicht — naechster Schritt Branch-and-Bound (Dominanz WAEHREND der Suche).",
+      "discriminator": "Gegen cand_break."
+    },
+    "cand_lossy": {
+      "id": "cand_lossy",
+      "statement": "Mindestens ein Mechanismus aendert die Ergebnismenge; wahrscheinlichste Stelle: Memo-Schluessel ignoriert einen versteckten Zustandsanteil.",
+      "discriminator": "Gegen cand_break; Waechter sweep3+Haertefaelle muessen feuern."
+    }
+  },
+  "checks": {
+    "chk_memo_key": {
+      "id": "chk_memo_key",
+      "kind": "falsifier",
+      "target": "cand_break",
+      "method": "Code-Lesung enum_core2.expand: existiert ein Input der Expansion ausserhalb (node_map, excluded) und der konstanten Globals? Kandidaten: Frontier-REIHENFOLGE, node_map_r, Rekursionskontext.",
+      "result": "pass",
+      "outcome": "Nein: frontier_nodes-Reihenfolge wird durch min() neutralisiert; node_map_r ist reine Inverse von node_map; kein weiterer Zustand. Leaf-Schreibungen sind idempotent (dict-Key). Der Schluessel (bindings, excluded) ist vollstaendig. RESTRISIKO an den Sweep delegiert (o_lossless).",
+      "side_findings": null
+    },
+    "chk_r1_nec": {
+      "id": "chk_r1_nec",
+      "kind": "falsifier",
+      "target": "cand_break",
+      "method": "Kann eine Bindung a->b mit leerem Signatur-Schnitt in irgendeinem Leaf zur Seed-Komponente beitragen? (Das war der Mechanismus, der trial-29 brach: spaetere Bindungen realisieren Kanten nachtraeglich.)",
+      "result": "pass",
+      "outcome": "Nein: nachtraegliche Realisierung einer Kante (a,x,k,y) an (b,bx) setzt voraus, dass B IRGENDEINE (richtung,k,y)-Kante an b hat — genau das schliesst der leere Schnitt aus, unabhaengig vom Bindungsstand. trial-29 scheiterte am Quantor (JETZT realisierbar); R1 quantifiziert ueber ganz B. RESTRISIKO an Sweep delegiert.",
+      "side_findings": null
+    },
+    "chk_wall": {
+      "id": "chk_wall",
+      "kind": "falsifier",
+      "target": "cand_break",
+      "method": "Empirisch: das ungeschnittene Paar (bit_add_00_c1_* 15 Knoten/17 Kanten, addition_tree.json, repo welwordion-sys/perspective) mit Memo+R1 messen.",
+      "result": "open",
+      "outcome": "Offen bis Messung (Phase 2).",
+      "side_findings": null
+    },
+    "chk_wall_res": {
+      "id": "chk_wall_res",
+      "kind": "falsifier",
+      "target": "cand_break",
+      "method": "chk_wall aufgeloest durch Messung (300s Paar-Budget, 90s Einzelseed, Zustandszaehlung).",
+      "result": "pass",
+      "outcome": "cand_break FALSIFIZIERT: verlustfrei ja, Wand gebrochen nein. Nebenbefund mit Disposition FILED (fliesst in den naechsten Designzyklus): Memo verschiebt die Wand von Zeit nach Speicher; R1-Schwaeche ist Materialeigenschaft (2 Signaturen).",
+      "side_findings": null
+    },
+    "chk_alt_head2head": {
+      "id": "chk_alt_head2head",
+      "kind": "falsifier",
+      "target": "cand_insufficient",
+      "method": "Head-to-head gegen cand_lossy: haetten die Waechter gefeuert, waere lossy richtig. Gegen cand_break: Messung. Bleibt eine dritte Erklaerung (Messartefakt: nur 1 Seed, zu kleines Budget)?",
+      "result": "pass",
+      "outcome": "cand_lossy tot (alle Aequivalenztests gruen). Messartefakt ausgeschlossen: die Zustandszaehlung ist strukturell untermauert (Eindeutiger-Pfad-Argument) und der Zustandsraum ~11^14 liegt Groessenordnungen ueber jedem Budget. cand_insufficient ist die ueberlebende Erklaerung — in der NARROWED Form: nicht \"Memo+R1 reichen nicht\", sondern \"das Duplikationsproblem, das Memo loesen sollte, existiert in enum_core2 gar nicht\".",
+      "side_findings": null
+    },
+    "chk_rel_ml": {
+      "id": "chk_rel_ml",
+      "kind": "relevance",
+      "target": "cand_insufficient",
+      "method": "I9: beide Ziele adressiert?",
+      "result": "pass",
+      "outcome": "Ziel 1 (verlustfrei bauen): gebaut, verifiziert 300/300+300/300+300/300+7/7. Ziel 2 (Wand messen): gemessen, steht, Ursache praezisiert und von der falschen k!-Praemisse befreit (g_memo_revised).",
+      "side_findings": null
+    },
+    "chk_f_ans": {
+      "id": "chk_f_ans",
+      "kind": "falsifier",
+      "target": "ans_ml",
+      "method": "Staerkster Angriff: \"null Revisits\" koennte am EINEN vermessenen Seed liegen; andere Seeds/Paare koennten revisit-reich sein und das Memo doch lohnen.",
+      "result": "pass",
+      "outcome": "Haelt nicht: das Eindeutiger-Pfad-Argument ist seed- und paarunabhaengig (es folgt allein aus a_node=min(frontier) als Zustandsfunktion). Revisits sind fuer JEDEN Lauf von enum_core2/3 exakt null moeglich... praeziser: der Replay rekonstruiert den Pfad eindeutig, also null Revisits, ueberall. Die Messung bestaetigt, das Argument traegt.",
+      "side_findings": null
+    },
+    "chk_r_ans": {
+      "id": "chk_r_ans",
+      "kind": "relevance",
+      "target": "ans_ml",
+      "method": "I9: Evidenz->Ziele.",
+      "result": "pass",
+      "outcome": "g_equiv_ok deckt Ziel 1, g_wall_stays+g_memo_revised decken Ziel 2; die Revision ist mit Prior-Text dokumentiert (I8).",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "o_lossless": "Beide Mechanismen: kanonische Ergebnisgleichheit gegen enum_core2 auf sweep3 (300 randomisiert, Vertrag + Familie) UND den 7 Haertefaellen. Jede Abweichung = Verwerfung.",
+    "o_not_d6": "Das Memo ueberspringt niemals Seeds — nur Zustands-Revisits innerhalb eines Seed-Suchbaums.",
+    "o_not_t29": "R1 quantifiziert ausschliesslich ueber ganz B (Typ-Ebene), niemals ueber den aktuellen Bindungsstand.",
+    "o_wall_measured": "Das ungeschnittene 14-15-Knoten-Paar wird mit beiden Mechanismen erneut gemessen (Timeout-bewehrt), Ergebnis dokumentiert."
+  },
+  "committed": {
+    "answer": "ans_ml",
+    "statement": "Beide Direktive-Mechanismen sind gebaut und VERLUSTFREI (enum_core3.py, schaltbar; sweep4/test_enum3/isolierte Laeufe alle gruen). Die Wand brechen sie NICHT: enum_core2 kanonisiert die Suchreihenfolge bereits per min(frontier), es gibt strukturell null Zustands-Revisits — die k!-Duplikations-Praemisse der Direktive beschreibt diese Implementierung nicht. Das Memo ist daher nutzlos bis schaedlich (Speicherwand), R1 auf 2-Signatur-Material fast wirkungslos. Die Wand ist die Kardinalitaet der distinkten Zustaende; naechster Schritt ist der in savings.json offen benannte Branch-and-Bound-Entwurf (Dominanz WAEHREND der Suche) — eigener GATE-Zyklus, nicht hier entworfen.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "imported_g_wall"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_g_d6_dead"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_g_pos_monotone"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_g_neg_nonmonotone"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_g_contract"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "g_directive",
+        "g_code_state",
+        "g_memo_spec",
+        "g_r1_spec"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        "o_lossless",
+        "o_not_d6",
+        "o_not_t29",
+        "o_wall_measured"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "cand_break",
+        "cand_insufficient",
+        "cand_lossy"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_memo_key",
+        "chk_r1_nec",
+        "chk_wall"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "g_equiv_ok",
+        "g_zero_revisits",
+        "g_memo_revised",
+        "g_r1_weak",
+        "g_wall_stays"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_wall_res",
+        "chk_alt_head2head",
+        "chk_rel_ml"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "ans_ml"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_f_ans",
+        "chk_r_ans"
+      ]
+    ],
+    [
+      "commit",
+      "ans_ml"
+    ]
+  ]
+}

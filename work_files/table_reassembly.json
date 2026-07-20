@@ -1,0 +1,516 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Cross-Seed-Tabelle: identische Teilbindungen, die mehrere Seeds erreichen, nur einmal expandieren — verlustfrei gegen die tabellenlose Vollenumeration, und messbar gegen die Wand.",
+    "g2": "Zusammensetzen: aus den per-Seed zusammenhaengenden Komponenten die maximalen (ggf. unzusammenhaengenden) Cores rekonstruieren, verlustfrei gegen die Brute-Force-Referenz."
+  },
+  "prep_note": "PRE-CODE. Kandidatenregel mode=any ist NUR ein Minimumfilter (notwendig, nicht entscheidend); Korrektheit ruht auf der Blatt-_matched-Berechnung. Waechter: Referenz naive_all_max unter Vertrag (300) + 7 Haertefaelle.",
+  "prior_candidates": [
+    {
+      "reg_id": "impl_s1.json::ans_s1",
+      "claim_id": "ans_s1",
+      "statement": "Stufe 1 steht und ist verifiziert. PRIMITIV (enum_core2.py): Aufzaehlung aller maximalen Embeddings pro Seed, Verzweigung statt Wahl, einziger Filter Regime 1 auf Kantenebene. Gegen unabhaengige Brute-Force-Referenz: 300/300 randomisiert, 7/7 Haertefaelle — darunter die asymmetrische Kollision (2 Embeddings, wo _grow_from 1 liefert) und Mehrfachvorkommen (beide Stellen). Zwei gefundene und geschlossene Luecken waren beide Instanzen von Svens Nicht-Monotonie-Satz auf Kandidatenebene (\"kein Ertrag jetzt\" != \"kein Ertrag je\"). VERTRAG, beidseitig: pro Seed die Seed-Bindungskomponente; abgetrennte Teile deckt die Familie (verifiziert); Vereinigungen sind Konsumenten-Ableitung per positiver Monotonie. AUFBAU (dag_derive.py, D7-D10): Mengen und Relationen, WL-Kanonisierung; Erreichbarkeit ueber 3 Reihenfolgen auf 4 echten Regeln identisch (14 Cores) — bestaetigt den Kanonisierungs-Falsifikator. GRENZEN: D3=Identitaet (Automorphismen ungebaut), D6 nicht angewandt, exponentielle Kosten, Testgroesse 4 Regeln x 6 Kanten, Referenz O(n!). Korrektheit belegt, Performanz nicht beansprucht.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_ref",
+            "g_bugs",
+            "g_contract",
+            "g_green",
+            "g_dag_inv",
+            "g_limits"
+          ],
+          "rule": "Verifikation gegen ein unabhaengiges Instrument unter explizitem, beidseitig angewandtem Vertrag; Luecken werden auf die Design-Saetze zurueckgefuehrt, die sie verletzten."
+        }
+      ],
+      "source_path": "impl_s1.json",
+      "goals": [
+        "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+        "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+      ]
+    },
+    {
+      "reg_id": "sym_d3.json::ans_d3",
+      "claim_id": "ans_d3",
+      "statement": "D3 steht und ist exakt: Stabilisator-Kollaps + Seed-Stabilisator-Rekonstruktion == Stufe-1-Vollaufzaehlung, 200/200 randomisiert und 7/7 Haertefaelle, darunter die vorab registrierte Stabilisator-Falle (6->3 Repraesentanten, exakt rekonstruiert) — der Beleg, dass globale Orbits verloren haetten und der Bindungs-Stabilisator die richtige Klasse ist. Soundness der Rekonstruktion per Orbit-Stabilisator-Argument (g_recon_sound). NUTZEN-GRENZE ehrlich: 0 Ersparnis auf Zufallsgraphen (keine Automorphismen — Identitaets-Degeneration live bestaetigt); Symmetrie zahlt nur auf symmetrischen Strukturen, und ob die Regelfamilien das sind, ist Hypothese. KOSTEN: Automorphismen Brute-Force O(n!) einmal pro Graph — fuer kleine Graphen tragbar, fuer grosse braucht Stufe 3 einen echten Algorithmus (z.B. Partition-Refinement). Naechste Ersparnisse in Reihenfolge der Absicherung: Cache gegen den pair_cores-Doppelaufruf (trivial), D6, Transitivitaet.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_impl",
+            "g_exact",
+            "g_zero_random",
+            "g_recon_sound",
+            "g_d3_spec",
+            "g_stab_trap"
+          ],
+          "rule": "Exaktheit gegen die eigene Vollaufzaehlung als Referenz, mit vorab registrierter Falle als gezieltem Testfall; Nutzen und Kosten getrennt von Korrektheit ausgewiesen."
+        }
+      ],
+      "source_path": "sym_d3.json",
+      "goals": [
+        "D3 bauen: Symmetrie-Kollaps per Automorphismen, mit Rekonstruktionsregel, Vollstaendigkeit erhalten.",
+        "Verifikation: Kollaps + Rekonstruktion == volle Aufzaehlung (Stufe 1), auf Referenzfaellen und randomisiert."
+      ]
+    },
+    {
+      "reg_id": "redundancy.json::ans_red",
+      "claim_id": "ans_red",
+      "statement": "Weder dieselbe noch getrennte Redundanz: die beiden Mechanismen ueberlappen teilweise. Gemessen (ein Baum, ein Seed): 640 Regelpaare aus den 12 Core-Differenz-Klassen, 1378 aus cross_reference, Schnittmenge 208 — 32.5% der Klassen-Paare. 432 Paare sieht nur die Klassen-Sicht (strukturgleiche Knoten INNERHALB der Core-Hierarchie), 1170 nur cross_reference (Fragmente AUSSERHALB jedes Cores, laut Docstring nicht durch stepwise growth findbar). Die Bezugsraeume sind verschieden (Core-Differenz gegen Wurzel vs Delta-Region gegen Regel-Core), deshalb ist Ueberlappung statt Deckung erwartbar. ENTSCHEIDENDE EINSCHRAENKUNG: alle Zahlen sind ein Sample. imported_g_spread belegt, dass cross_reference ueber Baumvarianten zwischen 10 und 1378 Entdeckungen schwankt, und g_order (Vorzyklus) belegt, dass die Baumform reihenfolgeabhaengig ist. Die Schnittmenge ist daher NICHT als Konstante belegt. Ein DAG wuerde die 208 gemeinsamen Paare adressieren; ob er die 432 oder die 1170 beseitigt, ist ungemessen.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_overlap",
+            "g_two_spaces",
+            "g_prior_delta",
+            "g_xref_1352",
+            "imported_g_spread"
+          ],
+          "rule": "Mengenvergleich auf gemeinsamer Bezugsgroesse (Regelpaare), plus Einordnung jeder Zahl gegen die bekannte Streuung der erzeugenden Funktion. Wo die erzeugende Funktion nachweislich streut, ist ein Einzelwert ein Sample, keine Eigenschaft."
+        }
+      ],
+      "source_path": "redundancy.json",
+      "goals": [
+        "Sehen die 12 Delta-Klassen und die 1352 cross_reference-Kanten DIESELBE Redundanz, oder zwei verschiedene?",
+        "Feststellen ob eine Deduplizierung/DAG die gemessene Redundanz tatsaechlich beseitigen wuerde."
+      ]
+    },
+    {
+      "reg_id": "primitive_design.json::ans_design",
+      "claim_id": "ans_design",
+      "statement": "ENTWURF DES PRIMITIVS (D1-D6), ERS-geprueft: D1 ZUSTAND: ein Embedding-Zustand ist (node_map, matched, frontier), PRO PFAD im Verzweigungsbaum — keine globale Sperre, kein node_map_r als Exklusivitaet. D2 SCHRITT: an der naechsten Frontier-Kante Kandidaten per Typ/Kind-Filter bestimmen. Leer -> Zweig terminal (einzige lokale Negativitaet, monoton). Sonst: VERZWEIGE ueber alle Kandidaten — Aufzaehlung, keine Wahl, kein Score, kein max. D3 SYMMETRIE-KOLLAPS: Kandidaten derselben Automorphismus-Klasse (beidseitig berechenbar, einmal pro Graph, vorab) -> ein Repraesentant wird fortgesetzt, Klassenzugehoerigkeit notiert. Rekonstruktionsregel: fehlende Embeddings = Automorphismus-Bilder der Repraesentanten. Leere Symmetrie -> Identitaet, volle Aufzaehlung. D4 REPRAESENTATION: Verzweigungsbaum/Trie ueber Bindungsentscheidungen, append-only, Praefix-Teilung. Blaetter = maximale Embeddings (Terminierung: jeder Schritt konsumiert endliche Ressourcen). D5 SCHNITTSTELLE: Rueckgabe ist die Embedding-Menge modulo Symmetrie MIT node_maps und Klassenkarten — daraus Core-Menge (fuer die Halbordnung der Kette) und Karten (fuer positive Transitivitaet). KEIN best-only, KEIN ratio-Gate im Primitiv: min_ratio ist Konsumenten-Politik, nicht Primitiv-Eigenschaft. D6 SEED-REDUNDANZ: Seeds, die in einem bereits aufgezaehlten Embedding als gebundenes Paar vorkommen, reproduzieren dessen Teilbaum — ueberspringbar per Nachschlag in den vorhandenen node_maps (Praemisse liegt VOR der Arbeit, echtes Entailment). VOLLSTAENDIGKEIT: jedes maximale Embedding ist Blatt ODER Automorphismus-Bild eines Blatts (Induktionsargument chk_d_complete). KOSTEN: exponentiell in echten strukturellen Alternativen — unvermeidbar, da die Antwortmenge selbst exponentiell sein kann; Symmetrie reduziert nur automorphe Redundanz, Praefix-Teilung nur Speicher, Seeds nur Startpunkte. OFFEN bleibt aus chain.json: ob der DAG-AUFBAU aus dieser Menge ableitet oder waehlt (chk_multi) — naechster Entwurfsschritt, nicht Teil des Primitivs.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_from_regimes",
+            "g_from_chain",
+            "g_state_shape",
+            "g_share",
+            "g_sym_collapse",
+            "g_termination"
+          ],
+          "rule": "Jede Entwurfsentscheidung ist aus einem committeten Zyklus abgeleitet oder als Repraesentationswahl ohne Korrektheitswirkung markiert; die Vollstaendigkeit steht auf einem Induktionsargument, nicht auf Messung."
+        }
+      ],
+      "source_path": "primitive_design.json",
+      "goals": [
+        "Entwurf des Vergleichsprimitivs: Aufzaehlung aller Embeddings mit Symmetrie-Kollaps, statt Wachstum mit Wahl.",
+        "Der Entwurf muss die Kette tragen (vollstaendiger Vergleich -> eindeutige Core-Menge) und universell sein.",
+        "Jede Entwurfsentscheidung braucht eine Begruendung aus den committeten Zyklen oder ist als offen markiert."
+      ]
+    },
+    {
+      "reg_id": "auto_filter.json::ans_af",
+      "claim_id": "ans_af",
+      "statement": "Svens Vereinfachung ist exakt und entscheidend: die Kantenschema-Signatur (1-WL-verfeinert) ist eine NOTWENDIGE Bedingung fuer Automorphie, also duerfen Permutationen ueber Klassengrenzen ungesehen entfallen — verlustfrei (150/150 gegen Brute-Force, definitorisch begruendet). Auf vollen Regeln macht der Filter die Berechnung erst moeglich: n! von 8.7e10 bis 1.3e12 -> 1 Kandidat, <1s pro Regel; meine fruehere Tragbarkeits-Aussage galt nur fuer Beschnitte und ist damit korrigiert. ZWEITER BEFUND, alle 252 Regeln: |Aut|=1 ueberall — Spine-Ketten sind per WL vollstaendig unterscheidbar, die 91%-Selbstaehnlichkeit liegt ZWISCHEN Regeln, nicht innerhalb. Folge: D3 zahlt auf dem aktuellen Material nichts (die sym_d3-Hypothese ist widerlegt), bleibt aber korrekt und nach dem Filter praktisch kostenlos — er zahlt, falls der GA symmetrische Strukturen erzeugt. Aktive Ersparnis-Hebel jetzt: pair_cores-Cache, D6, Transitivitaet.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_necessary",
+            "g_exact150",
+            "g_feasible",
+            "g_no_sym"
+          ],
+          "rule": "Ein Filter ist zulaessig gdw er nur beweisbare Durchfaller entfernt; Nutzen wird unabhaengig von Korrektheit gemessen und auch ein Null-Nutzen wird committed."
+        }
+      ],
+      "source_path": "auto_filter.json",
+      "goals": [
+        "Svens Frage: kann die Automorphismus-Berechnung durch Filtern des Kantenschemas vereinfacht werden, ohne Exaktheit zu verlieren?",
+        "Nutzen des D3-Kollapses auf dem realen Regelmaterial messen."
+      ]
+    }
+  ],
+  "claims": {
+    "imported_g_d6_dead": {
+      "id": "imported_g_d6_dead",
+      "statement": "D6 WIDERLEGT: 8/150 bzw 7/150 Faelle verlieren Cores, auch nach Einschraenkung auf die matched-Komponente (Skip-Quote unveraendert — die Einschraenkung griff nicht). Mechanismus: der Suchbaum eines Seeds enthaelt MEHR als die Embeddings, in denen er gebunden war (Embeddings, die den alten Seed anders binden oder ausschliessen). Der chk_d6_pre-Falsifikator hat exakt an der vorab benannten Stelle gefeuert. default=False, Flag nur noch fuer Tests.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_g_wall": {
+      "id": "imported_g_wall",
+      "statement": "SKALIERUNGSWAND: EIN ungeschnittenes Regelpaar (14-15 Knoten) terminiert nicht in 25min. Ursache: der trial-29-Fix (Kandidaten = ALLE ungebundenen B-Knoten, korrekt wegen Nicht-Monotonie) macht den Verzweigungsgrad ~|B| pro Knoten. Vollstaendigkeit Stufe 1 skaliert nicht auf volle Regeln; Transitivitaets-Warm-Seed priorisiert nur, schneidet den Baum nicht.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_g_pos_monotone": {
+      "id": "imported_g_pos_monotone",
+      "statement": "Positive Ergebnisse sind monoton: was als gemeinsam gefunden ist, bleibt gemeinsam. Transitivitaet traegt es, keine spaetere Kante nimmt es weg. Bereits Gefundenes muss nicht erneut getestet werden — nur der Rest.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_g_contract": {
+      "id": "imported_g_contract",
+      "statement": "SPEZIFIKATIONSENTSCHEIDUNG (beidseitig angewandt): pro Seed zaehlt die Seed-BINDUNGSKOMPONENTE; ertraglose Zwischenbindungen werden gestrichen und koennen die Bindung zerreissen — abgetrennte Teile findet ihr eigener Seed. Familien-Abdeckung im Sweep verifiziert (Familie: PASS). Unzusammenhaengende Vereinigungen sind Familien-Ableitung per positiver Monotonie (kompatible Karten komponieren) — Ableitungsschritt liegt beim Konsumenten.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "imported_g_zero_revisits": {
+      "id": "imported_g_zero_revisits",
+      "statement": "2.000.000 distinkte Zustaende in 25s, Revisit-Treffer <0.05% (Anzeige 0.0M). STRUKTURELLER GRUND, kein Sampling: a_node=min(frontier) ist eine Funktion des Zustands, also ist die Entscheidungsfolge jedes erreichbaren Zustands per Replay eindeutig rekonstruierbar — jeder Zustand hat genau EINEN erzeugenden Pfad. Der Suchbaum von enum_core2 IST bereits die zustandskanonische Aufzaehlung.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_cand_complete": {
+      "id": "g_cand_complete",
+      "statement": "Vollstaendige Kandidatenregel steht: b ist Kandidat fuer a, wenn IRGENDEINE Kante von a (Self-Loop b->b(k,y); Kante zu gebundenem Nachbarn realisiert JETZT; Kante zu ungebundenem Nachbarn ueber Typ-Existenz (k,y) in B) an b andocken kann. Minimumfilter (notwendig); Match wird am Blatt via _matched entschieden. mode=now (ohne ungebundene-Nachbar-Kante) verliert 10/300.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_cand_weak": {
+      "id": "g_cand_weak",
+      "statement": "Auf echtem Material (2 Kantensorten STRUCTURAL/OPERATIONAL, Typ None) kollabiert mode=any Richtung \"alle B\" — der Filter schneidet nichts, die Wand steht voll. Der schneidende Hebel muss die Tabelle sein, nicht die Kandidatenregel.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_table_spec": {
+      "id": "g_table_spec",
+      "statement": "Tabelle = Cross-Seed-Memo ueber ZUSTAENDE (frozenset(node_map.items()), frozenset(excluded)), geteilt ueber die aeussere Seed-Schleife. Wert = die von diesem Zustand erzeugte Menge maximaler Seed-Komponenten. Innerhalb eines Seeds nutzlos (revisit-frei, memo_lockstep); der Nutzen ist REIN cross-seed: Seed S2 trifft einen Zustand, den S1 schon voll expandiert hat, und uebernimmt dessen Ergebnis statt neu zu expandieren.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_g_zero_revisits",
+            "imported_g_pos_monotone"
+          ],
+          "rule": "Innerhalb EINES Seeds sind Zustaende revisit-frei (min-Frontier); ZWISCHEN Seeds kann dieselbe Teilbindung wiederkehren"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_not_d6": {
+      "id": "g_not_d6",
+      "statement": "SCHARFE D6-ABGRENZUNG: D6 uebersprang ganze SEEDS (fremde Suchbaeume) auf Basis \"war irgendwo gebunden\" — widerlegt (8/150), weil ein Seed-Suchbaum MEHR enthaelt als die Embeddings mit diesem Paar. Die Tabelle ueberspringt keine Seeds und keine Suchbaeume, sondern dedupliziert IDENTISCHE ZUSTAENDE (exakt gleiche node_map UND excluded). Die Expansion ist eine Funktion genau dieses Zustands (memo_lockstep chk_memo_key), also ist die Uebernahme verlustfrei — unabhaengig davon, welcher Seed den Zustand zuerst erreichte.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_g_d6_dead",
+            "g_table_spec"
+          ],
+          "rule": "Abgrenzung per Objekt-Ebene"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_reasm_spec": {
+      "id": "g_reasm_spec",
+      "statement": "Zusammensetzen = Konsumenten-Schritt. Zwei zusammenhaengende Komponenten C1 (A-Knoten S1, B-Knoten T1) und C2 (S2,T2) KOEXISTIEREN in einem Embedding gdw S1∩S2=∅ UND T1∩T2=∅ (Injektivitaet beidseitig); sonst KONKURRIEREN sie. Maximale Cores = maximale knotendisjunkte Vereinigungen von Komponenten. OFFENES RISIKO (vorab benannt): eine maximale disjunkte Vereinigung koennte eine NICHT-maximale Teilkomponente brauchen (C1_gross konkurriert mit C2, aber C1_klein∪C2 hat mehr Kanten) — dann reicht die Vereinigung MAXIMALER Komponenten nicht. Muss gegen die Referenz getestet werden, nicht angenommen.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "imported_g_contract",
+            "imported_g_pos_monotone"
+          ],
+          "rule": "Vertrag liefert Seed-Komponenten; Vereinigung disjunkter Komponenten ist Konsumenten-Ableitung"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_reasm_ok": {
+      "id": "g_reasm_ok",
+      "statement": "Zusammensetzen VERIFIZIERT verlustfrei: maximale knotendisjunkte Vereinigung der Seed-Komponenten == Referenz-Volleinbettungen, 300/300 + gezielt konstruierte Teilkomponenten-Falle (C1_gross konkurriert um B-Knoten, C1_klein disjunkt) PASS. chk_reasm_pre aufgeloest: das Teilkomponenten-Risiko realisiert sich NICHT — unter dem Vertrag sind die noetigen Teilkomponenten als eigene maximale Seed-Komponenten praesent, weil jeder ihrer Knoten als eigener Seed auftritt.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_table_key_bug": {
+      "id": "g_table_key_bug",
+      "statement": "FALLE gefunden und behoben: den Vertragsschnitt (_seed_comp_leaf) in den gecachten WERT zu legen macht ihn seed-relativ — ein anderer Seed, der denselben (node_map, excluded)-Zustand erreicht, schneidet die Komponente ANDERS und bekam faelschlich die des Erstsehers (15/300 Verluste). Fix: den ROHEN Blatt-node_map cachen (seed-invariant), den Vertragsschnitt erst beim Auslesen PRO SEED anwenden. Danach 300/300 verlustfrei. Gleiche Fehlerklasse wie D6 (seed-relatives Ergebnis geteilt), eine Ebene subtiler.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_table_inert": {
+      "id": "g_table_inert",
+      "statement": "Tabelle verlustfrei, aber gegen die Wand WIRKUNGSLOS. Auf Zufallsgraphen teilen 14.7% der Zustaende mehr als einen seed_a; auf echten Regeln (add_init 9x9, fast identische Spine-Ketten) speichert die Tabelle 1.84M Rohzustaende und ist LANGSAMER (35s vs 26s ohne) — nicht genug Treffer, um die Speicherkosten hereinzuholen. cand_table_inert bestaetigt: die Wand ist die KARDINALITAET distinkter Zustaende, nicht ihre Wiederholung; ein Memo kann nichts gegen echte Vielfalt.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_cand_min": {
+      "id": "g_cand_min",
+      "statement": "Die Kandidatenregel mode=any ist ein MINIMUMFILTER (notwendige Bedingung), nie eine Entscheidung — Natur des Subgraph-Matchings. Sie ueber-generiert; der Match wird am Blatt via _matched bestimmt, Dominanz putzt. Korrektheit ruht auf der Blattberechnung. Konsequenz: auf 2-Sorten-Material schneidet sie nichts (g_cand_weak), das ist erwartungskonform, kein Fehler.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "ans_tr": {
+      "id": "ans_tr",
+      "statement": "Zwei verlustfreie Bausteine stehen, einer davon lueckenlos verifiziert, keiner bricht die Wand. (1) ZUSAMMENSETZEN: maximale knotendisjunkte Vereinigung der Seed-Komponenten rekonstruiert exakt die Referenz-Volleinbettungen (300/300 + Teilkomponenten-Konstruktion); Koexistenz = beidseitige Knotendisjunktheit, Konkurrenz = geteilter A- oder B-Knoten. Das ist der Konsumenten-Schritt aus dem Vertrag, jetzt konkret und getestet. (2) CROSS-SEED-TABELLE: verlustfrei NUR wenn der rohe Blatt-node_map gecacht und der Vertragsschnitt pro Seed beim Auslesen angewandt wird (den Schnitt in den Wert zu legen ist ein D6-artiger seed-relativer Fehler, 15/300); aber gegen die Wand inert, weil diese die Kardinalitaet distinkter Zustaende ist (echtes 9x9-Paar: 1.84M Zustaende, Tabelle langsamer). Die Kandidatenregel mode=any ist ein Minimumfilter und schneidet auf 2-Sorten-Material ebenfalls nichts. FAZIT: der Wand-Hebel ist WEDER Kandidatenregel NOCH Memo NOCH Tabelle, sondern muss WAEHREND der Suche schneiden (Branch-and-Bound / Dominanz live, savings.json offen) ODER die Enumeration injektiver Teilabbildungen durch etwas Struktursensitiveres ersetzen. Naechster GATE-Zyklus.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_reasm_ok",
+            "g_table_key_bug",
+            "g_table_inert",
+            "g_cand_min"
+          ],
+          "rule": "Verifikation Zusammensetzen + Falsifikation des schneidenden Tabellenteils => uebrig cand_table_inert"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "cand_both_ok": {
+      "id": "cand_both_ok",
+      "statement": "Tabelle verlustfrei + schneidet cross-seed; Zusammensetzen via maximaler disjunkter Vereinigung verlustfrei.",
+      "discriminator": "Gegen cand_table_inert: die Tabelle trifft cross-seed kaum (Zustaende seed-spezifisch), Wand bleibt. Gegen cand_reasm_gap: das Teilkomponenten-Risiko realisiert sich — maximale Vereinigung verliert Cores."
+    },
+    "cand_table_inert": {
+      "id": "cand_table_inert",
+      "statement": "Die Cross-Seed-Treffer sind selten (Zustaende tragen den Seed implizit ueber die Bindung), Tabelle bringt wenig gegen die Wand.",
+      "discriminator": "Gegen cand_both_ok; messbar an der Trefferquote."
+    },
+    "cand_reasm_gap": {
+      "id": "cand_reasm_gap",
+      "statement": "Vereinigung MAXIMALER Komponenten ist unvollstaendig; es braucht auch Teilkomponenten fuer manche maximale disjunkte Cores.",
+      "discriminator": "Gegen cand_both_ok; der Referenzvergleich feuert."
+    }
+  },
+  "checks": {
+    "chk_notd6": {
+      "id": "chk_notd6",
+      "kind": "falsifier",
+      "target": "cand_both_ok",
+      "method": "Kann die Tabelle einen Core verlieren wie D6? D6 verlor, weil es einen SEED uebersprang, dessen Baum anders schneidet. Tut die Tabelle das?",
+      "result": "pass",
+      "outcome": "Nein: die Tabelle ueberspringt keinen Seed und keinen Ast, sie liefert fuer einen IDENTISCHEN Zustand dasselbe Ergebnis, das die Expansion ohnehin (deterministisch, als Zustandsfunktion) erzeugt haette. Der uebernehmende Seed setzt die Expansion mit demselben Ergebnis fort. RESTRISIKO (Ergebnis haengt doch am Seed) an o_table_lossless delegiert.",
+      "side_findings": null
+    },
+    "chk_reasm_pre": {
+      "id": "chk_reasm_pre",
+      "kind": "falsifier",
+      "target": "cand_both_ok",
+      "method": "Konstruiere den Teilkomponenten-Fall vorab: C1_gross konkurriert mit C2 (teilen einen B-Knoten), aber C1_klein (Submap) ist disjunkt und C1_klein∪C2 hat mehr Kanten als beide einzeln. Liefert die per-Seed-Enumeration C1_klein ueberhaupt (Dominanzfilter entfernt es)?",
+      "result": "open",
+      "outcome": "Offen bis Test. Hypothese: der Dominanzfilter entfernt C1_klein innerhalb des Seeds, also fehlt es dem Zusammensetzen — dann ist die maximale Vereinigung unvollstaendig und cand_reasm_gap trifft. Gegenhypothese: unter dem Vertrag sind alle relevanten Komponenten als eigene maximale Seed-Komponenten praesent. Wird gemessen (o_reasm_subcomp).",
+      "side_findings": null
+    },
+    "chk_reasm_res": {
+      "id": "chk_reasm_res",
+      "kind": "falsifier",
+      "target": "cand_reasm_gap",
+      "method": "chk_reasm_pre aufgeloest: konstruierte Teilkomponenten-Falle + 300 Zufall.",
+      "result": "pass",
+      "outcome": "cand_reasm_gap FALSIFIZIERT: die maximale disjunkte Vereinigung ist vollstaendig. Grund (dispose FIXED): der Vertrag stellt jede benoetigte Teilkomponente als eigene maximale Seed-Komponente bereit (jeder Knoten ist ein Seed).",
+      "side_findings": null
+    },
+    "chk_table_res": {
+      "id": "chk_table_res",
+      "kind": "falsifier",
+      "target": "cand_both_ok",
+      "method": "Tabelle gegen tabellenlos, verlustfrei UND schneidend?",
+      "result": "fail",
+      "outcome": "cand_both_ok FALSIFIZIERT im schneidenden Teil: Tabelle verlustfrei (nach Key-Fix), aber inert gegen die Wand (g_table_inert). Ueberlebt: cand_table_inert. Disposition FILED: Tabelle bleibt als korrekter Baustein (nuetzt bei hoher Cross-Seed-Redundanz), ist aber nicht der Wand-Hebel.",
+      "side_findings": null
+    },
+    "chk_rel_tr": {
+      "id": "chk_rel_tr",
+      "kind": "relevance",
+      "target": "cand_table_inert",
+      "method": "I9: beide Ziele adressiert?",
+      "result": "pass",
+      "outcome": "Ziel 1 (Tabelle verlustfrei + Wand messen): gebaut, verlustfrei 300/300, gemessen — inert. Ziel 2 (Zusammensetzen verlustfrei): gebaut, verifiziert 300/300 + Konstruktion.",
+      "side_findings": null
+    },
+    "chk_f_tr": {
+      "id": "chk_f_tr",
+      "kind": "falsifier",
+      "target": "ans_tr",
+      "method": "Staerkster Angriff: die Tabelle koennte auf ANDEREN Paaren (hohe Symmetrie/Redundanz) doch schneiden — \"inert\" waere dann uebergeneralisiert.",
+      "result": "pass",
+      "outcome": "Eingegrenzt statt widerlegt: die Aussage ist NICHT \"Tabelle nuetzt nie\", sondern \"Tabelle nuetzt nicht gegen DIESE Wand (Kardinalitaet, nicht Redundanz)\". Bei echter Cross-Seed-Redundanz (viele Automorphismen) kann sie zahlen — dann aber zahlt auch D3/Symmetrie-Kollaps, und das Material zeigt |Aut|=1 (auto_filter). Auf DIESEM Material inert; die schwaechere, attributierte Form haelt.",
+      "side_findings": null
+    },
+    "chk_r_tr": {
+      "id": "chk_r_tr",
+      "kind": "relevance",
+      "target": "ans_tr",
+      "method": "I9: Evidenz->Ziele.",
+      "result": "pass",
+      "outcome": "g_reasm_ok deckt Ziel 2, g_table_inert+g_table_key_bug decken Ziel 1; der Wand-Ausblick benennt den naechsten Zyklus (kein stiller Rest).",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "o_table_lossless": "Tabelle: kanonische Core-Gleichheit mit/ohne Tabelle auf sweep + Haertefaellen.",
+    "o_table_notd6": "Tabelle dedupliziert nur identische (node_map, excluded)-Zustaende; ueberspringt nie Seeds.",
+    "o_table_cuts": "Tabelle auf dem Wandpaar messen: sinkt die Arbeit gegen tabellenlos messbar?",
+    "o_reasm_lossless": "Zusammensetzen: rekonstruierte maximale Cores == Referenz-Volleinbettungen (300 + Haertefaelle).",
+    "o_reasm_subcomp": "Das Teilkomponenten-Risiko wird explizit getestet, nicht wegangenommen."
+  },
+  "committed": {
+    "answer": "ans_tr",
+    "statement": "Zwei verlustfreie Bausteine stehen, einer davon lueckenlos verifiziert, keiner bricht die Wand. (1) ZUSAMMENSETZEN: maximale knotendisjunkte Vereinigung der Seed-Komponenten rekonstruiert exakt die Referenz-Volleinbettungen (300/300 + Teilkomponenten-Konstruktion); Koexistenz = beidseitige Knotendisjunktheit, Konkurrenz = geteilter A- oder B-Knoten. Das ist der Konsumenten-Schritt aus dem Vertrag, jetzt konkret und getestet. (2) CROSS-SEED-TABELLE: verlustfrei NUR wenn der rohe Blatt-node_map gecacht und der Vertragsschnitt pro Seed beim Auslesen angewandt wird (den Schnitt in den Wert zu legen ist ein D6-artiger seed-relativer Fehler, 15/300); aber gegen die Wand inert, weil diese die Kardinalitaet distinkter Zustaende ist (echtes 9x9-Paar: 1.84M Zustaende, Tabelle langsamer). Die Kandidatenregel mode=any ist ein Minimumfilter und schneidet auf 2-Sorten-Material ebenfalls nichts. FAZIT: der Wand-Hebel ist WEDER Kandidatenregel NOCH Memo NOCH Tabelle, sondern muss WAEHREND der Suche schneiden (Branch-and-Bound / Dominanz live, savings.json offen) ODER die Enumeration injektiver Teilabbildungen durch etwas Struktursensitiveres ersetzen. Naechster GATE-Zyklus.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "imported_g_d6_dead"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_g_wall"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_g_pos_monotone"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_g_contract"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "imported_g_zero_revisits"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "g_cand_complete",
+        "g_cand_weak",
+        "g_table_spec",
+        "g_not_d6",
+        "g_reasm_spec"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        "o_table_lossless",
+        "o_table_notd6",
+        "o_table_cuts",
+        "o_reasm_lossless",
+        "o_reasm_subcomp"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "cand_both_ok",
+        "cand_table_inert",
+        "cand_reasm_gap"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_notd6",
+        "chk_reasm_pre"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "g_reasm_ok",
+        "g_table_key_bug",
+        "g_table_inert",
+        "g_cand_min"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_reasm_res",
+        "chk_table_res",
+        "chk_rel_tr"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "ans_tr"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_f_tr",
+        "chk_r_tr"
+      ]
+    ],
+    [
+      "commit",
+      "ans_tr"
+    ]
+  ]
+}

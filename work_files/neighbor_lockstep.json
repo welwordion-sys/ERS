@@ -1,0 +1,321 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Klaeren, was die Skalierungswand WIRKLICH verursacht hat, und die frühere Konklusion (Kardinalitaet, Branch-and-Bound noetig) revidieren falls widerlegt.",
+    "g2": "Nachbarn-only + Zusammensetzen als vollstaendiges, wandfreies Verfahren belegen."
+  },
+  "prep_note": "Revidiert table_reassembly::ans_tr. Waechter: Referenz naive_all_max (Core-Ebene) ueber 500 + Haertefaelle; Messung auf echtem Material.",
+  "prior_candidates": [
+    {
+      "reg_id": "savings.json::ans_sav",
+      "claim_id": "ans_sav",
+      "statement": "Von drei Hebeln ueberlebt einer: der Memo-Cache (exakt, halbiert). D6 ist WIDERLEGT — der vorab registrierte Falsifikator feuerte (8/150, 7/150): ein Seed-Suchbaum enthaelt mehr als die Embeddings seiner Bindungen; Skips verlieren Cores. Damit ist der Design-Punkt D6 aus primitive_design::ans_design revidiert. Transitivitaet darf per Vollstaendigkeitsverbot nur Warm-Seed sein und schneidet den Baum nicht. HAUPTBEFUND: Skalierungswand — ein ungeschnittenes Paar terminiert nicht in 25min; der korrekte Kandidatenraum (alle ungebundenen B-Knoten, erzwungen durch Nicht-Monotonie) macht die Stufe-1-Aufzaehlung auf vollen Regeln praktisch unausfuehrbar. Der naechste Schritt ist kein Hebel, sondern ein BEWEISBAR verlustfreier Baum-Schnitt (Branch-and-Bound mit Dominanz waehrend der Suche statt am Ende) — offen, nicht entworfen.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_memo_ok",
+            "g_d6_dead",
+            "g_wall",
+            "g_cache_spec",
+            "g_d6_spec",
+            "g_trans_spec"
+          ],
+          "rule": "Jeder Hebel einzeln gegen die ungesparte Version; ein gefeuerter Vorab-Falsifikator widerlegt den Design-Punkt statt ihn zu justieren."
+        }
+      ],
+      "source_path": "savings.json",
+      "goals": [
+        "Die drei aktiven Hebel einbauen: pair_cores-Cache, D6 (Seed-Redundanz), Transitivitaet — jede mit Aequivalenznachweis gegen die ungesparte Version.",
+        "Messen was die Aufzaehlung auf ungeschnittenen Regeln kostet, vorher/nachher."
+      ]
+    },
+    {
+      "reg_id": "memo_lockstep.json::g_wall_stays",
+      "claim_id": "g_wall_stays",
+      "statement": "WAND STEHT: bit_add_00_c1_cont_cont_2bit x cont_term_2bit terminiert nicht im Budget. Ursache PRAEZISIERT: nicht Pfad-Duplikation, sondern die KARDINALITAET der distinkten Zustaende selbst (~Verzweigung 10-13 hoch Tiefe 14, plus Ausschluss-Zweige). Vollenumeration injektiver Teilabbildungen skaliert nicht; noetig ist Schnitt WAEHREND der Suche (Dominanz/Branch-and-Bound, in savings.json als offen benannt) oder eine andere Zerlegung.",
+      "status": "given",
+      "negation_handling": null,
+      "derived_from": null,
+      "source_path": "memo_lockstep.json",
+      "goals": [
+        "Die Skalierungswand brechen ohne Vollstaendigkeitsverlust: Zustands-Memo ueber Suchpfade + Knoten-Regime-1-Kandidatenfilter (Svens Lockstep-Direktive), beide verlustfrei gegen sweep3 + Haertefaelle.",
+        "Das ungeschnittene Regelpaar (14-15 Knoten) erneut messen: terminiert es jetzt?"
+      ]
+    },
+    {
+      "reg_id": "table_reassembly.json::ans_tr",
+      "claim_id": "ans_tr",
+      "statement": "Zwei verlustfreie Bausteine stehen, einer davon lueckenlos verifiziert, keiner bricht die Wand. (1) ZUSAMMENSETZEN: maximale knotendisjunkte Vereinigung der Seed-Komponenten rekonstruiert exakt die Referenz-Volleinbettungen (300/300 + Teilkomponenten-Konstruktion); Koexistenz = beidseitige Knotendisjunktheit, Konkurrenz = geteilter A- oder B-Knoten. Das ist der Konsumenten-Schritt aus dem Vertrag, jetzt konkret und getestet. (2) CROSS-SEED-TABELLE: verlustfrei NUR wenn der rohe Blatt-node_map gecacht und der Vertragsschnitt pro Seed beim Auslesen angewandt wird (den Schnitt in den Wert zu legen ist ein D6-artiger seed-relativer Fehler, 15/300); aber gegen die Wand inert, weil diese die Kardinalitaet distinkter Zustaende ist (echtes 9x9-Paar: 1.84M Zustaende, Tabelle langsamer). Die Kandidatenregel mode=any ist ein Minimumfilter und schneidet auf 2-Sorten-Material ebenfalls nichts. FAZIT: der Wand-Hebel ist WEDER Kandidatenregel NOCH Memo NOCH Tabelle, sondern muss WAEHREND der Suche schneiden (Branch-and-Bound / Dominanz live, savings.json offen) ODER die Enumeration injektiver Teilabbildungen durch etwas Struktursensitiveres ersetzen. Naechster GATE-Zyklus.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_reasm_ok",
+            "g_table_key_bug",
+            "g_table_inert",
+            "g_cand_min"
+          ],
+          "rule": "Verifikation Zusammensetzen + Falsifikation des schneidenden Tabellenteils => uebrig cand_table_inert"
+        }
+      ],
+      "source_path": "table_reassembly.json",
+      "goals": [
+        "Cross-Seed-Tabelle: identische Teilbindungen, die mehrere Seeds erreichen, nur einmal expandieren — verlustfrei gegen die tabellenlose Vollenumeration, und messbar gegen die Wand.",
+        "Zusammensetzen: aus den per-Seed zusammenhaengenden Komponenten die maximalen (ggf. unzusammenhaengenden) Cores rekonstruieren, verlustfrei gegen die Brute-Force-Referenz."
+      ]
+    },
+    {
+      "reg_id": "multiocc.json::ans_occ",
+      "claim_id": "ans_occ",
+      "statement": "Auf der gemessenen Menge (volle Registry 257, 16 Additions-States, range(4)^2) kommt kein Core mehrfach vor: 0 von 16 Regel-Vorkommen haben mehr als eine Match-Stelle. Damit ist die Bindung eines Knotens eindeutig, unabhaengig vom Anmarschweg, und es gibt nichts zu revidieren — Svens Rueckwaerts-Markierung ist auf dieser Menge exakt, nicht lueckenhaft, und meine gegenteilige Behauptung (g_collapse_axis) ist widerlegt. Der Gate1-Fehler hat eine andere, jetzt gemessene Ursache: der Prototyp haengt 112 Regeln mehrfach ein (bei 0 Mehr-Eltern-Knoten), und visited:386 hakt eine Regel beim ersten von mehreren redundanten Aesten ab — konkret add_init_01_term_term bei 2+3, eingehaengt an Tiefe 1 UND 2. Das ist ein Prototyp-Defekt, kein prinzipielles DAG- oder Suchproblem. NICHT BELEGT: dass Eindeutigkeit aus der Spine-Kodierung FOLGT. Gemessen ist eine Eigenschaft von 16 kleinen Additionsgraphen, kein Reachability-Beweis. Fuer Subtraktion (0-n Teilbaeume, Marker-Kanten) ist sie ungemessen, und die Analogie Addition->Subtraktion hat in diesem Projekt bereits 30 Phantom-Regeln erzeugt.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_occ",
+            "g_cause",
+            "g_proto_multi",
+            "g_gate1_fail"
+          ],
+          "rule": "Direkte Zaehlung schlaegt Erschliessung: die Ursachenzuschreibung folgt der gemessenen Vorkommenszahl, nicht der Plausibilitaet des Mechanismus. Reichweite bleibt an die gemessene Menge gebunden."
+        }
+      ],
+      "source_path": "multiocc.json",
+      "goals": [
+        "Kommen Cores in den Test-Graphen MEHRFACH vor? Davon haengt ab, ob Svens Rueckwaerts-Markierung exakt oder lueckenhaft ist.",
+        "Ist Mehrfachvorkommen die Ursache des gemessenen Gate1-Fehlers (3/16), oder hat der eine andere Ursache?"
+      ]
+    },
+    {
+      "reg_id": "regimes.json::ans_regimes",
+      "claim_id": "ans_regimes",
+      "statement": "Sven hat recht auf beiden Punkten. (1) Meine Trichotomie war falsch: \"Fall 3 — kollidierend, nicht-symmetrisch\" existiert nur unter der Injektivitaets-Regel EINER Wachstumsinstanz (_grow_from:104/109), also als Implementierungsartefakt. Im Mengenbild — das Verfahren zaehlt die MENGE der Embeddings auf — ist der B-Knoten keine exklusive Ressource: jeder Kandidat setzt ein eigenes Embedding fort, Verzweigung ist Aufzaehlung, kein Konflikt, keine Wahl, kein Verlust. Es bleibt Svens Dichotomie: ABWESEND (kein Kandidat passiert den Typ-Filter -> terminal, die einzige echte lokale Negativitaet) oder VORHANDEN (jeder Kandidat wird zu einem Embedding; bei exakter Symmetrie sind die Embeddings aequivalent). (2) Bei exakter Symmetrie sind BEIDE Karten nutzbar: A-Automorphismen und B-Automorphismen liefern dieselbe Klasseneinteilung — man kann die billigere Seite rechnen oder beide zur Gegenpruefung verwenden. Meine Fassung hatte nur die B-Seite betrachtet. KONSEQUENZ FUER PUNKT 1 (Vergleichsprimitiv): die Design-Alternative (a) \"alle maximalen Embeddings\" vs (b) \"eines plus Symmetriekarte\" war falsch aufgespannt — sie setzte voraus, dass an Verzweigungen GEWAEHLT werden muss. Muss es nicht: das Primitiv zaehlt auf. Die Kostenfrage bleibt (Aufzaehlung kann gross werden, Symmetrie-Klassen reduzieren sie), aber die KORREKTHEITSFRAGE \"geht ein Fall verloren\" verschwindet: verloren geht nur, was man durch Exklusivitaet verdraengt, und Exklusivitaet ist keine Problemanforderung.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_sven_regimes",
+            "g_inj_impl",
+            "g_my_claim",
+            "g_naive_def"
+          ],
+          "rule": "Ein Fall, der nur unter einer Implementierungsentscheidung existiert, ist kein Problemfall (o_prob_vs_impl). Die Fallunterscheidung ist gegen die Problemdefinition (Mengenbild) zu pruefen, nicht gegen die vorhandene Implementierung."
+        }
+      ],
+      "source_path": "regimes.json",
+      "goals": [
+        "Svens Zwei-Regime-Aussage korrekt fassen: strikter Schnitt bei Kanten-Symmetrie -> \"no match at node\" ist terminal; exakte Symmetrie -> beide Karten (A und B) sind nutzbar.",
+        "Meine Trichotomie pruefen — insbesondere ob \"Fall 3 (kollidierend, nicht-symmetrisch)\" eine Eigenschaft des PROBLEMS ist oder ein Artefakt der Injektivitaets-IMPLEMENTIERUNG."
+      ]
+    }
+  ],
+  "claims": {
+    "imported_g_reasm_ok": {
+      "id": "imported_g_reasm_ok",
+      "statement": "Zusammensetzen VERIFIZIERT verlustfrei: maximale knotendisjunkte Vereinigung der Seed-Komponenten == Referenz-Volleinbettungen, 300/300 + gezielt konstruierte Teilkomponenten-Falle (C1_gross konkurriert um B-Knoten, C1_klein disjunkt) PASS. chk_reasm_pre aufgeloest: das Teilkomponenten-Risiko realisiert sich NICHT — unter dem Vertrag sind die noetigen Teilkomponenten als eigene maximale Seed-Komponenten praesent, weil jeder ihrer Knoten als eigener Seed auftritt.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_neigh_complete": {
+      "id": "g_neigh_complete",
+      "statement": "Nachbarn-only (Kandidaten = realisierende Kante zu GEBUNDENEM Nachbarn + Self-Loop, KEINE alle-B-Klausel) + Zusammensetzen == Referenz-Volleinbettungen auf CORE-Ebene: 500/500 (bis 5x5, 3 Kantensorten) + 4/4 Haertefaelle. Die frueheren \"Verluste\" von mode=now (290/300) waren auf SEED-KOMPONENTEN-Ebene; die fehlenden Stuecke sind eigene Cores, die ihr eigener Seed liefert und das Zusammensetzen andockt.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_wall_gone": {
+      "id": "g_wall_gone",
+      "statement": "Wandpaar 15x15 (bit_add_00_c1_cont_cont x cont_term): vorher terminiert nicht in 25min (alle-B); Nachbarn-only 20054 Zustaende in 0.1s. 9x9-Paar: 1.84M -> 1968 Zustaende. 6 echte Regelpaare in 3s. Verzweigungsgrad ist Nachbarschaftsgroesse (2-4), nicht |B|.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_wall_cause": {
+      "id": "g_wall_cause",
+      "statement": "WAND-URSACHE war die zu weite Kandidatenregel (alle-B / mode=any), die injektive Teilabbildungen auf ALLE B-Knoten zaehlte (Verzweigung ~|B|, fakultaeres Wachstum). NICHT die intrinsische Kardinalitaet distinkter Zustaende: unter der korrekten Lockstep-Kandidatenregel ist die Zustandszahl klein (Faktor ~900 kleiner auf 9x9). Ein zusammenhaengender Match wird Kante fuer Kante gebaut; ein Knoten dockt nur an Nachbarn seines gebundenen Bildes an. Unzusammenhaengende Teile sind Sache ihres eigenen Seeds + Zusammensetzen, nicht eines breiteren Kandidatenraums.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_wall_gone",
+            "g_neigh_complete"
+          ],
+          "rule": "Wenn ein schmalerer, verlustfreier Kandidatenraum die Wand beseitigt, war die Weite die Ursache"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "ans_nl": {
+      "id": "ans_nl",
+      "statement": "REVIDIERTE WAND-KONKLUSION: Die Skalierungswand war NICHT die intrinsische Kardinalitaet und braucht KEIN Branch-and-Bound. Ursache war die zu weite Kandidatenregel (alle-B / mode=any), die injektive Teilabbildungen auf ganz B zaehlte (fakultaer). Das korrekte Lockstep-Verfahren: Kandidaten = realisierende Kante zu gebundenem Nachbarn + Self-Loop (Verzweigung ~Nachbarschaft); unzusammenhaengende Cores kommen von ihren eigenen Seeds und werden per maximaler knotendisjunkter Vereinigung zusammengesetzt. Verlustfrei auf Core-Ebene (500/500 + 4/4 Haertefaelle + Teilkomponenten-Konstruktion), wandfrei (Wandpaar 20054 Zustaende/0.1s statt >25min). Damit ist auch die Tabelle als Wand-Hebel gegenstandslos (sie war Antwort auf ein Problem, das die richtige Kandidatenregel gar nicht erst erzeugt). Offen bleibt nur: voller-Registry-DAG-Aufbau messen, und Nachbarn-only in ein sauberes Kernmodul ziehen.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_wall_cause",
+            "g_neigh_complete",
+            "g_wall_gone"
+          ],
+          "rule": "Falsifikation beider Gegenkandidaten => cand_narrow_wins"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": {
+        "target": "imported_g_reasm_ok",
+        "prior_text": "(siehe table_reassembly::ans_tr) \"der Wand-Hebel ist WEDER Kandidatenregel NOCH Memo NOCH Tabelle, sondern muss WAEHREND der Suche schneiden (Branch-and-Bound / Dominanz live) ODER die Enumeration injektiver Teilabbildungen durch etwas Struktursensitiveres ersetzen\"",
+        "why": "Widerlegt durch Messung: der Wand-Hebel WAR die Kandidatenregel. Sie war nur zu weit gefasst (alle-B). Die korrekte Lockstep-Regel (Nachbarn-only) macht die Enumeration selbst struktursensitiv; kein B&B noetig."
+      }
+    }
+  },
+  "candidates": {
+    "cand_narrow_wins": {
+      "id": "cand_narrow_wins",
+      "statement": "Nachbarn-only + Zusammensetzen ist vollstaendig UND wandfrei; die frühere B&B-Konklusion ist widerlegt.",
+      "discriminator": "Gegen cand_bb_still: die schmale Regel verliert doch Cores auf groesseren/echten Graphen und B&B bleibt noetig. Gegen cand_narrow_lossy: Nachbarn-only ist unvollstaendig auf Core-Ebene."
+    },
+    "cand_bb_still": {
+      "id": "cand_bb_still",
+      "statement": "Nachbarn-only reicht nicht; auf echtem Vollmaterial bleibt eine Wand, B&B noetig.",
+      "discriminator": "Gegen cand_narrow_wins; Messung echter Paare entscheidet."
+    },
+    "cand_narrow_lossy": {
+      "id": "cand_narrow_lossy",
+      "statement": "Nachbarn-only verliert Cores, die alle-B fand.",
+      "discriminator": "Gegen cand_narrow_wins; Referenz auf Core-Ebene entscheidet."
+    }
+  },
+  "checks": {
+    "chk_narrow_complete": {
+      "id": "chk_narrow_complete",
+      "kind": "falsifier",
+      "target": "cand_narrow_wins",
+      "method": "Kann Nachbarn-only einen Core verlieren, den alle-B fand? Referenz Core-Ebene, 500 + Haertefaelle + Teilkomponenten.",
+      "result": "pass",
+      "outcome": "cand_narrow_lossy FALSIFIZIERT: 500/500 + 4/4 auf Core-Ebene, Zusammensetzen verlustfrei (g_reasm_ok importiert). Verlust nur scheinbar auf Seed-Ebene.",
+      "side_findings": null
+    },
+    "chk_wall_real": {
+      "id": "chk_wall_real",
+      "kind": "falsifier",
+      "target": "cand_narrow_wins",
+      "method": "Bleibt auf ECHTEM Material eine Wand? Wandpaar + 9x9 + 6 Stichproben messen.",
+      "result": "pass",
+      "outcome": "cand_bb_still FALSIFIZIERT: Wandpaar 0.1s, 9x9 Faktor 900, 6 Paare 3s. Kein B&B noetig fuer die Enumeration selbst. (Voller-Registry-Aufbau + DAG bleibt eigene Messung.)",
+      "side_findings": null
+    },
+    "chk_rel_nl": {
+      "id": "chk_rel_nl",
+      "kind": "relevance",
+      "target": "cand_narrow_wins",
+      "method": "I9: beide Ziele.",
+      "result": "pass",
+      "outcome": "Ursache geklaert (g_wall_cause), Verfahren belegt (g_neigh_complete+g_wall_gone).",
+      "side_findings": null
+    },
+    "chk_f_nl": {
+      "id": "chk_f_nl",
+      "kind": "falsifier",
+      "target": "ans_nl",
+      "method": "Staerkster Angriff: die Core-Ebenen-Vollstaendigkeit koennte an der Referenzdefinition haengen (ref_full_cores nimmt maximale matched-Mengen ueber alle Seeds). Ist das die richtige Wahrheit fuer den DAG?",
+      "result": "pass",
+      "outcome": "Haelt: der DAG braucht die Core-MENGE (maximale matched-Kantenmengen des Paares), genau was ref_full_cores liefert. Die per-Seed-Zusammenhangs-Zerlegung ist Mittel, nicht Zweck; das Zusammensetzen stellt die Zweck-Groesse wieder her. Restrisiko: die Referenz ist selbst brute-force und nur auf kleinen Graphen gelaufen — auf echtem Material ist sie nicht ausfuehrbar, dort ruht die Zusicherung auf der Uebereinstimmung bei kleinen + der Struktur des Arguments.",
+      "side_findings": null
+    },
+    "chk_r_nl": {
+      "id": "chk_r_nl",
+      "kind": "relevance",
+      "target": "ans_nl",
+      "method": "I9.",
+      "result": "pass",
+      "outcome": "Deckt beide Ziele; Revision mit Zitat (I8) im revises-Feld.",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "o_revise": "Die frühere Kardinalitaets/B&B-Konklusion wird mit Zitat revidiert, nicht still ersetzt.",
+    "o_core_complete": "Vollstaendigkeit gilt auf CORE-Ebene (mit Zusammensetzen), nicht per-Seed."
+  },
+  "committed": {
+    "answer": "ans_nl",
+    "statement": "REVIDIERTE WAND-KONKLUSION: Die Skalierungswand war NICHT die intrinsische Kardinalitaet und braucht KEIN Branch-and-Bound. Ursache war die zu weite Kandidatenregel (alle-B / mode=any), die injektive Teilabbildungen auf ganz B zaehlte (fakultaer). Das korrekte Lockstep-Verfahren: Kandidaten = realisierende Kante zu gebundenem Nachbarn + Self-Loop (Verzweigung ~Nachbarschaft); unzusammenhaengende Cores kommen von ihren eigenen Seeds und werden per maximaler knotendisjunkter Vereinigung zusammengesetzt. Verlustfrei auf Core-Ebene (500/500 + 4/4 Haertefaelle + Teilkomponenten-Konstruktion), wandfrei (Wandpaar 20054 Zustaende/0.1s statt >25min). Damit ist auch die Tabelle als Wand-Hebel gegenstandslos (sie war Antwort auf ein Problem, das die richtige Kandidatenregel gar nicht erst erzeugt). Offen bleibt nur: voller-Registry-DAG-Aufbau messen, und Nachbarn-only in ein sauberes Kernmodul ziehen.",
+    "evidence_label": "derived",
+    "assumptions_carried": [],
+    "carried_unexplored": []
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "imported_g_reasm_ok"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "g_neigh_complete",
+        "g_wall_gone",
+        "g_wall_cause"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        "o_revise",
+        "o_core_complete"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "cand_narrow_wins",
+        "cand_bb_still",
+        "cand_narrow_lossy"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_narrow_complete",
+        "chk_wall_real",
+        "chk_rel_nl"
+      ]
+    ],
+    [
+      "ground",
+      [
+        "ans_nl"
+      ]
+    ],
+    [
+      "check",
+      [
+        "chk_f_nl",
+        "chk_r_nl"
+      ]
+    ],
+    [
+      "commit",
+      "ans_nl"
+    ]
+  ]
+}
