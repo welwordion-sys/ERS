@@ -1,0 +1,432 @@
+{
+  "stage": "committed",
+  "goals": {
+    "g1": "Welche Aenderungen an reason_setter v0.6 sind fuer v0.7 lizenziert, insbesondere: verweigert I4 einen Commit, dessen Falsifikator gegen die Antwort gescheitert ist (D)?"
+  },
+  "prep_note": "Sitzung 2026-09-26, Befunde A-M aus test_befunde.py",
+  "prior_candidates": [
+    {
+      "reg_id": "sym_d3.json::ans_d3",
+      "claim_id": "ans_d3",
+      "statement": "D3 steht und ist exakt: Stabilisator-Kollaps + Seed-Stabilisator-Rekonstruktion == Stufe-1-Vollaufzaehlung, 200/200 randomisiert und 7/7 Haertefaelle, darunter die vorab registrierte Stabilisator-Falle (6->3 Repraesentanten, exakt rekonstruiert) — der Beleg, dass globale Orbits verloren haetten und der Bindungs-Stabilisator die richtige Klasse ist. Soundness der Rekonstruktion per Orbit-Stabilisator-Argument (g_recon_sound). NUTZEN-GRENZE ehrlich: 0 Ersparnis auf Zufallsgraphen (keine Automorphismen — Identitaets-Degeneration live bestaetigt); Symmetrie zahlt nur auf symmetrischen Strukturen, und ob die Regelfamilien das sind, ist Hypothese. KOSTEN: Automorphismen Brute-Force O(n!) einmal pro Graph — fuer kleine Graphen tragbar, fuer grosse braucht Stufe 3 einen echten Algorithmus (z.B. Partition-Refinement). Naechste Ersparnisse in Reihenfolge der Absicherung: Cache gegen den pair_cores-Doppelaufruf (trivial), D6, Transitivitaet.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_impl",
+            "g_exact",
+            "g_zero_random",
+            "g_recon_sound",
+            "g_d3_spec",
+            "g_stab_trap"
+          ],
+          "rule": "Exaktheit gegen die eigene Vollaufzaehlung als Referenz, mit vorab registrierter Falle als gezieltem Testfall; Nutzen und Kosten getrennt von Korrektheit ausgewiesen."
+        }
+      ],
+      "source_path": "sym_d3.json",
+      "goals": [
+        "D3 bauen: Symmetrie-Kollaps per Automorphismen, mit Rekonstruktionsregel, Vollstaendigkeit erhalten.",
+        "Verifikation: Kollaps + Rekonstruktion == volle Aufzaehlung (Stufe 1), auf Referenzfaellen und randomisiert."
+      ]
+    },
+    {
+      "reg_id": "impl_s1.json::ans_s1",
+      "claim_id": "ans_s1",
+      "statement": "Stufe 1 steht und ist verifiziert. PRIMITIV (enum_core2.py): Aufzaehlung aller maximalen Embeddings pro Seed, Verzweigung statt Wahl, einziger Filter Regime 1 auf Kantenebene. Gegen unabhaengige Brute-Force-Referenz: 300/300 randomisiert, 7/7 Haertefaelle — darunter die asymmetrische Kollision (2 Embeddings, wo _grow_from 1 liefert) und Mehrfachvorkommen (beide Stellen). Zwei gefundene und geschlossene Luecken waren beide Instanzen von Svens Nicht-Monotonie-Satz auf Kandidatenebene (\"kein Ertrag jetzt\" != \"kein Ertrag je\"). VERTRAG, beidseitig: pro Seed die Seed-Bindungskomponente; abgetrennte Teile deckt die Familie (verifiziert); Vereinigungen sind Konsumenten-Ableitung per positiver Monotonie. AUFBAU (dag_derive.py, D7-D10): Mengen und Relationen, WL-Kanonisierung; Erreichbarkeit ueber 3 Reihenfolgen auf 4 echten Regeln identisch (14 Cores) — bestaetigt den Kanonisierungs-Falsifikator. GRENZEN: D3=Identitaet (Automorphismen ungebaut), D6 nicht angewandt, exponentielle Kosten, Testgroesse 4 Regeln x 6 Kanten, Referenz O(n!). Korrektheit belegt, Performanz nicht beansprucht.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_ref",
+            "g_bugs",
+            "g_contract",
+            "g_green",
+            "g_dag_inv",
+            "g_limits"
+          ],
+          "rule": "Verifikation gegen ein unabhaengiges Instrument unter explizitem, beidseitig angewandtem Vertrag; Luecken werden auf die Design-Saetze zurueckgefuehrt, die sie verletzten."
+        }
+      ],
+      "source_path": "impl_s1.json",
+      "goals": [
+        "Stufe-1-Implementierung des Primitivs (D1,D2,D4,D5; D3=Identitaet) gegen die naive Referenz verifizieren.",
+        "D7-D10 als Ableitung implementieren und Reihenfolge-Invarianz der Erreichbarkeit messen."
+      ]
+    },
+    {
+      "reg_id": "dag_proto.json::ans_proto",
+      "claim_id": "ans_proto",
+      "statement": "Der Prototyp ist gescheitert, und zwar auf beiden Achsen. (1) DETERMINISMUS: Weitersuchen statt break beseitigt die Reihenfolgeabhaengigkeit NICHT — vier Seeds, vier verschiedene Baumformen (65/70/50/96 Knoten), waehrend die Kontrolle bei denselben Seeds ebenfalls divergiert (53/64/43/53). Die vorab registrierte Ursache haelt: _insert_into CASE 2 (_lift_prior_into_subgroup) und Fusion bauen den Baum WAEHREND des Einfuegens um und haengen am Baumzustand zum Einfuegezeitpunkt; welche Aeste eine Regel bekommt, ist eine andere Frage als wann geschrumpft/fusioniert wird. Die Streuung wurde sogar groesser. (2) KORREKTHEIT: Gate1 3/16 rot, grouped=0 gegen flat=1 bei 2+3 — der Prototyp verliert Matches. Damit ist Svens acc-Frage empirisch entschieden: der Ein-Weg-Seed schneidet Kombinationen ab (Fall 2), visited auf id(node) allein traegt einen DAG nicht. FOLGERUNG: der DAG ist nicht durch Entfernen von first-match beim Einfuegen zu haben. Reichweite: Baumform ueber volle Registry 257 und 4 Seeds; Gate1 auf Additionsregeln, range(4)^2, ein Baum.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_control",
+            "g_proto_shape",
+            "g_proto_gate1",
+            "g_acc_correct",
+            "g_seed_combo"
+          ],
+          "rule": "Kontrollierter Vergleich: Prototyp gegen unveraenderte Baseline auf identischem Seed-Satz, plus vorab registrierte Vorhersagen. Ein Prototyp, der die vorhergesagte Wirkung verfehlt UND ein Korrektheits-Gate bricht, ist auf beiden Achsen widerlegt."
+        }
+      ],
+      "source_path": "dag_proto.json",
+      "goals": [
+        "Prototyp: insert sucht nach dem ersten Treffer WEITER und haengt alle passenden Aeste an (DAG statt Baum). Beseitigt das die Reihenfolgeabhaengigkeit der Baumform?",
+        "Falls ja: ist der DAG deshalb korrekt, oder ist Determinismus aus anderem Grund eingetreten?",
+        "Bleiben collect_all == flat und die 3 Gates gruen?"
+      ]
+    },
+    {
+      "reg_id": "landscape.json::ans_land",
+      "claim_id": "ans_land",
+      "statement": "Die Landschaft ist WEDER frei NOCH gekoppelt — sie zerfaellt entlang der Frage, ob eine Information vom Primitiv GESEHEN wird. Drei Kostenposten, aus dem Code ablesbar: (a) GRATIS: contested (find_core:225), subgraphs, und die pro Frontier-Schritt verworfenen Kandidaten (_grow_from:129 max ueber cands) sind BEREITS berechnet und werden nur nicht weitergereicht. Sie kosten kein Backtracking, nur Weiterreichen. contested hat 0 Konsumenten. (b) SPEICHER: alle Embeddings pro Runde behalten statt best_size (:201), alle Runden statt break (:226) — find_all_cores tut genau das bereits und ruft dasselbe Primitiv. Kostet Speicher und Seed-Schleife, keine neue Suchtiefe. (c) RECHENZEIT: die MAXIMUM-Struktur pro Seed. Das ist der EINZIGE Posten, der ein anderes Primitiv braucht (Backtracking in _grow_from), weil greedy nie zurueckgeht und die groessere Struktur nie SIEHT. Was der Baumbau davon nutzt: NUR safe_core und ratio (_insert_into:708 Schnittmenge, :711 Ratio-Gate). Die gesamte Struktur-Information (welche Embeddings, welche Alternativen, welche unterschwelligen Funde) wird berechnet und verworfen, bevor der Bau sie sehen koennte. Deshalb kann der Bau keine Wurzeln verschmelzen und keine Kombinationsaeste bilden: nicht weil die Information fehlt, sondern weil sie eine Ebene tiefer weggeworfen wird. Die Kosten-Nutzen-Lage ist derzeit negativ gemessen: grouping 0.60-0.63x gegen flat, also langsamer als keine Gruppierung; frueher 1.33x bei 56% Fehl-Probes (imported_ans_ss). Der einzige Nutzen des ganzen Baus ist der Prune (matcher.py:374, gruppenweite negative Information), und der setzt Bau-Korrektheit voraus. REICHWEITE: alle Messungen dieser Session auf Additionsregeln, range(4)^2, ein Baum, und die erzeugende Funktion streut nachweislich (imported_g_spread: cross_reference 10..1378 ueber Baumvarianten). Fuer Subtraktion ungemessen.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_extract_now",
+            "g_tree_uses",
+            "g_completeness_gap",
+            "g_cost_seedloop",
+            "g_prune_value",
+            "g_measured_slow",
+            "g_law_vs_cache",
+            "imported_ans_ss"
+          ],
+          "rule": "Sortierung der Kosten nach dem Kriterium \"sieht das Primitiv es?\": was gesehen und verworfen wird ist gratis wiederzugewinnen; was gespeichert werden muss kostet Speicher; was nie gesehen wird kostet ein anderes Primitiv. Diese Dreiteilung folgt aus den Fundstellen, nicht aus einer Bewertung."
+        }
+      ],
+      "source_path": "landscape.json",
+      "goals": [
+        "Welche Information am Graph-Vergleich zu extrahieren ist, und was das fuer den Baumbau ermoeglicht bzw verbaut.",
+        "Was Vollstaendigkeit kostet und ob dieser Preis reduzierbar ist.",
+        "Trennen: was ist aus dem Code belegt, was ist gemessen, was ist Spekulation."
+      ]
+    },
+    {
+      "reg_id": "primitive_design.json::ans_design",
+      "claim_id": "ans_design",
+      "statement": "ENTWURF DES PRIMITIVS (D1-D6), ERS-geprueft: D1 ZUSTAND: ein Embedding-Zustand ist (node_map, matched, frontier), PRO PFAD im Verzweigungsbaum — keine globale Sperre, kein node_map_r als Exklusivitaet. D2 SCHRITT: an der naechsten Frontier-Kante Kandidaten per Typ/Kind-Filter bestimmen. Leer -> Zweig terminal (einzige lokale Negativitaet, monoton). Sonst: VERZWEIGE ueber alle Kandidaten — Aufzaehlung, keine Wahl, kein Score, kein max. D3 SYMMETRIE-KOLLAPS: Kandidaten derselben Automorphismus-Klasse (beidseitig berechenbar, einmal pro Graph, vorab) -> ein Repraesentant wird fortgesetzt, Klassenzugehoerigkeit notiert. Rekonstruktionsregel: fehlende Embeddings = Automorphismus-Bilder der Repraesentanten. Leere Symmetrie -> Identitaet, volle Aufzaehlung. D4 REPRAESENTATION: Verzweigungsbaum/Trie ueber Bindungsentscheidungen, append-only, Praefix-Teilung. Blaetter = maximale Embeddings (Terminierung: jeder Schritt konsumiert endliche Ressourcen). D5 SCHNITTSTELLE: Rueckgabe ist die Embedding-Menge modulo Symmetrie MIT node_maps und Klassenkarten — daraus Core-Menge (fuer die Halbordnung der Kette) und Karten (fuer positive Transitivitaet). KEIN best-only, KEIN ratio-Gate im Primitiv: min_ratio ist Konsumenten-Politik, nicht Primitiv-Eigenschaft. D6 SEED-REDUNDANZ: Seeds, die in einem bereits aufgezaehlten Embedding als gebundenes Paar vorkommen, reproduzieren dessen Teilbaum — ueberspringbar per Nachschlag in den vorhandenen node_maps (Praemisse liegt VOR der Arbeit, echtes Entailment). VOLLSTAENDIGKEIT: jedes maximale Embedding ist Blatt ODER Automorphismus-Bild eines Blatts (Induktionsargument chk_d_complete). KOSTEN: exponentiell in echten strukturellen Alternativen — unvermeidbar, da die Antwortmenge selbst exponentiell sein kann; Symmetrie reduziert nur automorphe Redundanz, Praefix-Teilung nur Speicher, Seeds nur Startpunkte. OFFEN bleibt aus chain.json: ob der DAG-AUFBAU aus dieser Menge ableitet oder waehlt (chk_multi) — naechster Entwurfsschritt, nicht Teil des Primitivs.",
+      "status": "derived",
+      "negation_handling": null,
+      "derived_from": [
+        {
+          "parents": [
+            "g_from_regimes",
+            "g_from_chain",
+            "g_state_shape",
+            "g_share",
+            "g_sym_collapse",
+            "g_termination"
+          ],
+          "rule": "Jede Entwurfsentscheidung ist aus einem committeten Zyklus abgeleitet oder als Repraesentationswahl ohne Korrektheitswirkung markiert; die Vollstaendigkeit steht auf einem Induktionsargument, nicht auf Messung."
+        }
+      ],
+      "source_path": "primitive_design.json",
+      "goals": [
+        "Entwurf des Vergleichsprimitivs: Aufzaehlung aller Embeddings mit Symmetrie-Kollaps, statt Wachstum mit Wahl.",
+        "Der Entwurf muss die Kette tragen (vollstaendiger Vergleich -> eindeutige Core-Menge) und universell sein.",
+        "Jede Entwurfsentscheidung braucht eine Begruendung aus den committeten Zyklen oder ist als offen markiert."
+      ]
+    }
+  ],
+  "claims": {
+    "g_repro": {
+      "id": "g_repro",
+      "statement": "test_befunde.py gegen v0.6: A,B,C,D,F,G,H,I,M,T scheitern mit der jeweils benannten Luecke; E und H-Altfall zusaetzlich ueber die Standard-Registry bestaetigt (reuse abgeleitet -> I2-Verweigerung; doppelte reg_id -> still der ERSTE Eintrag). Ausgabe befunde_v06_output.txt.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_crit": {
+      "id": "g_crit",
+      "statement": "KB ers.setter_substrate_design_v0_3.hard_invariants_criterion: harte Invarianten muessen Wahrheitsbedingungen sein - keine legitime Episode darf sie verletzen; alles mit legitimem Gegenbeispiel bleibt beratend.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_scan": {
+      "id": "g_scan",
+      "statement": "Scan von 52 Arbeitsdateien (ERS/work_files + Verfahren): genau eine committete Antwort mit gescheitertem Falsifikator, serialized_grouping_result.json k_mech -> ans_win. Dessen Ergebnis sagt, die Antwort sei nach der Widerlegung umgeschrieben worden; die widerlegte These steht als eigener Anspruch prior_multiply. Der Check traf also eine fruehere Fassung.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_legacy": {
+      "id": "g_legacy",
+      "statement": "Altdateien nutzen outcome-Werte survived, failed, branch_traced, satisfied sowie in drei Dateien (memo_lockstep, neighbor_lockstep, table_reassembly) vertauschte Felder mit result in {pass, fail, open}; 'Offen bis Messung' ging als durchgefuehrter Check durch.",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_callers": {
+      "id": "g_callers",
+      "statement": "Verfahren-Aufrufer: ablauf.abschluss liest das Label aus der Reparatur per Regex use evidence_label='(\\w+)', setzt outcome aus 'ausgang' (Vorgabe survived), nutzt die kinds falsifier und relevance; kein Aufrufer uebergibt negation_handling an ground().",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "g_openitem": {
+      "id": "g_openitem",
+      "statement": "KB ers.setter_substrate_design_v0_3.open_items[0]: 'negation-handled detection: how does setter verify branched status is genuine vs asserted' - im Code v0.6 gar nicht, der Aufrufer kann den Status direkt setzen (Befund A).",
+      "status": "given",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    },
+    "a_noleg": {
+      "id": "a_noleg",
+      "statement": "Keine legitime Episode muss eine Antwort committen, gegen deren AKTUELLE Fassung ein Falsifikator gescheitert ist, ohne diesen Fehlschlag sichtbar zu behandeln.",
+      "status": "assumed",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": "branched",
+      "negation_note": "Ja - der fehlerhafte Falsifikator. Die Negation kippt die einfache Regel (cand_plain) und verlangt den sichtbaren Rueckzug; unter cand_versioned ist der Fall abgedeckt, weil der Fehlschlag behandelt (zurueckgezogen) statt verborgen wird. Polaritaet der Antwort kippt damit nicht, sie wird eingegrenzt.",
+      "revises": null
+    },
+    "a_impl": {
+      "id": "a_impl",
+      "statement": "Die Implementierung wird der hier committeten Regel entsprechen; belegt erst durch test_befunde.py (D, D2, M, R und die uebrigen) gegen v0.7 nach dem Bau.",
+      "status": "assumed",
+      "derived_from": null,
+      "antecedents": null,
+      "negation_handling": "carried",
+      "negation_note": "Kippt, falls test_befunde.py gegen v0.7 nicht vollstaendig PASS ist - dann gilt die Antwort nur fuer den Entwurf, nicht fuer den Code.",
+      "revises": null
+    },
+    "ans": {
+      "id": "ans",
+      "statement": "v0.7 ist lizenziert mit: (1) I4 fassungsgebunden - >=1 ueberlebter Falsifikator gegen die aktuelle Fassung, kein ungezogener gescheiterter gegen sie; Rueckzug nur per retract_check(id, grund), im Commit-Block gelistet. (2) Checks tragen den Aussagetext zum Pruefzeitpunkt; Check-ids nur anhaengbar (M). (3) kind/outcome geschlossenes Vokabular, 'satisfied' als Alias (I). (4) ground() nimmt kein negation_handling vom Aufrufer (A). (5) Aendern der Aussage einer bestehenden id verlangt revises mit woertlichem prior_text (B, I8). (6) I3 und I9 zaehlen nur ueberlebte Checks (C). (7) import/reuse holen die Elternhuelle (E, F). (8) reg_ids je Commit eindeutig, Altdubletten verweigert statt still aufgeloest, reuse achtet registry_path (H, K). (9) utf-8 ueberall (G). Unveraendert: der Reparaturtext fuer evidence_label.",
+      "status": "derived",
+      "derived_from": [
+        {
+          "parents": [
+            "g_repro",
+            "g_crit",
+            "g_scan",
+            "g_legacy",
+            "g_callers",
+            "g_openitem",
+            "a_noleg",
+            "a_impl"
+          ],
+          "rule": "cand_versioned ueberlebte den Falsifikator, cand_plain und cand_warn scheiterten; Einzelposten folgen den Reproduzierern"
+        }
+      ],
+      "antecedents": null,
+      "negation_handling": null,
+      "negation_note": "",
+      "revises": null
+    }
+  },
+  "candidates": {
+    "cand_plain": {
+      "id": "cand_plain",
+      "statement": "I4 verweigert jeden Commit, gegen dessen Antwort-id ein Falsifikator mit outcome failed steht.",
+      "discriminator": "id-gebunden, keine Rueckzugsmoeglichkeit"
+    },
+    "cand_warn": {
+      "id": "cand_warn",
+      "statement": "Commit bleibt erlaubt; ein gescheiterter Falsifikator gegen die Antwort erzeugt nur eine Warnung.",
+      "discriminator": "beratend statt hart"
+    },
+    "cand_versioned": {
+      "id": "cand_versioned",
+      "statement": "I4 verlangt >=1 ueberlebten Falsifikator gegen die AKTUELLE Fassung der Antwort und verweigert, solange ein gescheiterter Falsifikator gegen diese Fassung nicht per retract_check(id, grund) zurueckgezogen ist; Rueckzuege stehen im Commit-Block. Checks binden an den Aussagetext zum Pruefzeitpunkt; Check-ids sind nur anhaengbar.",
+      "discriminator": "fassungsgebunden, sichtbarer Rueckzug"
+    }
+  },
+  "checks": {
+    "k_plain": {
+      "id": "k_plain",
+      "kind": "falsifier",
+      "target": "cand_plain",
+      "method": "o_flawed_falsifier: Episode 'Falsifikator selbst fehlerhaft (falscher Build gemessen), Antwort richtig' gegen die Regel durchgespielt.",
+      "result": "Unter cand_plain bleibt der gescheiterte Check fuer immer an der id; die richtige Antwort ist nie committbar, ausser man vergibt eine neue id und umgeht damit die Regel. Legitime Episode blockiert -> nach g_crit keine Wahrheitsbedingung.",
+      "outcome": "failed",
+      "side_findings": null
+    },
+    "k_warn": {
+      "id": "k_warn",
+      "kind": "falsifier",
+      "target": "cand_warn",
+      "method": "o_scan_case: serialized_grouping-Buchung unter cand_warn nachgespielt.",
+      "result": "Die Fehlbuchung (failed gegen ans_win statt gegen prior_multiply) committet mit einer Warnung, die niemand lesen muss; die genauere Buchung wird nicht erzwungen. Dieselbe Form wie session6_review: der Gate fing es, es ging trotzdem durch.",
+      "outcome": "failed",
+      "side_findings": null
+    },
+    "k_vers": {
+      "id": "k_vers",
+      "kind": "falsifier",
+      "target": "cand_versioned",
+      "method": "Drei Episoden gegen den Regeltext: (1) serialized_grouping, (2) fehlerhafter Falsifikator, (3) Umschreiben derselben id nach Widerlegung; plus Umgehung durch Ueberschreiben der Check-id (Befund M).",
+      "result": "(1) legal genauer buchbar: failed gegen prior_multiply oder gegen die alte Fassung, survived gegen die neue. (2) retract_check mit Grund -> committbar, Rueckzug im Block sichtbar. (3) revises mit woertlichem prior_text aendert die Fassung, alter Fehlschlag zaehlt nicht fuer die neue, neuer Falsifikator noetig. Ueberschreiben der id wird durch Nur-Anhaengen verweigert. Haelt - Bau muss es bestaetigen (a_impl).",
+      "outcome": "survived",
+      "side_findings": [
+        {
+          "finding": "Befund M: check() ueberschreibt eine bestehende Check-id still; damit waere jede Outcome-Regel umgehbar.",
+          "disposition": "fixed"
+        }
+      ]
+    },
+    "k_neg_noleg": {
+      "id": "k_neg_noleg",
+      "kind": "negation",
+      "target": "a_noleg",
+      "method": "Negation verfolgt: gibt es eine legitime Episode, die gegen einen gescheiterten Falsifikator auf der aktuellen Fassung committen MUSS?",
+      "result": "Ja - der fehlerhafte Falsifikator. Die Negation kippt die einfache Regel (cand_plain) und verlangt den sichtbaren Rueckzug; unter cand_versioned ist der Fall abgedeckt, weil der Fehlschlag behandelt (zurueckgezogen) statt verborgen wird. Polaritaet der Antwort kippt damit nicht, sie wird eingegrenzt.",
+      "outcome": "branch_traced",
+      "side_findings": null
+    },
+    "k_obl_legacy": {
+      "id": "k_obl_legacy",
+      "kind": "obligation",
+      "target": "cand_versioned",
+      "method": "o_legacy: Regeltext gegen die Ladefunktionen.",
+      "result": "Neue Felder (target_statement am Check, retracted am Check) haben Vorgaben; Altdateien ohne sie laden. Pruefung des outcome-Vokabulars nur in check(), nicht beim Laden.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k_obl_verf": {
+      "id": "k_obl_verf",
+      "kind": "obligation",
+      "target": "cand_versioned",
+      "method": "o_verfahren: ablauf.abschluss gegen den Regeltext.",
+      "result": "abschluss grounded die Antwort, prueft sie danach mit ausgang=survived und kind relevance/survived; der Reparaturtext fuer das Label bleibt woertlich. Bestaetigung durch lauf.py nach dem Tausch der Setterkopie.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k_rel": {
+      "id": "k_rel",
+      "kind": "relevance",
+      "target": "cand_versioned",
+      "method": "Bezug auf das Ziel",
+      "result": "Das Ziel fragt nach lizenzierten Aenderungen und nach D. cand_versioned beantwortet D (verweigern, mit sichtbarem Rueckzug) und nennt die Aenderungen, die D erst wirksam machen (Fassungsbindung, Nur-Anhaengen, Vokabular); die uebrigen Befunde stuetzen sich auf g_repro.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k_ans_f": {
+      "id": "k_ans_f",
+      "kind": "falsifier",
+      "target": "ans",
+      "method": "Ist die Antwort mehr als cand_versioned plus Einzelposten - schmuggelt sie etwas ein?",
+      "result": "Punkte 3-9 sind je an einen reproduzierten Befund gebunden; Punkt 1-2 ist cand_versioned woertlich. Keine Aenderung ohne Befund, keine Aenderung am Reparaturtext.",
+      "outcome": "survived",
+      "side_findings": null
+    },
+    "k_ans_rel": {
+      "id": "k_ans_rel",
+      "kind": "relevance",
+      "target": "ans",
+      "method": "Bezug auf das Ziel",
+      "result": "Beantwortet D und listet die lizenzierten Aenderungen.",
+      "outcome": "survived",
+      "side_findings": null
+    }
+  },
+  "obligations": {
+    "o_legacy": "Alle Arbeitsdateien in ERS/work_files laden weiter per run()/resume().",
+    "o_verfahren": "ablauf.abschluss committet weiter; lauf.py im Verfahren bleibt ALLES GRUEN.",
+    "o_scan_case": "Die serialized_grouping-Episode hat unter der Regel eine legale, genauere Buchung.",
+    "o_flawed_falsifier": "Eine Episode mit selbst fehlerhaftem Falsifikator kann committen - sichtbar."
+  },
+  "committed": {
+    "answer": "ans",
+    "statement": "v0.7 ist lizenziert mit: (1) I4 fassungsgebunden - >=1 ueberlebter Falsifikator gegen die aktuelle Fassung, kein ungezogener gescheiterter gegen sie; Rueckzug nur per retract_check(id, grund), im Commit-Block gelistet. (2) Checks tragen den Aussagetext zum Pruefzeitpunkt; Check-ids nur anhaengbar (M). (3) kind/outcome geschlossenes Vokabular, 'satisfied' als Alias (I). (4) ground() nimmt kein negation_handling vom Aufrufer (A). (5) Aendern der Aussage einer bestehenden id verlangt revises mit woertlichem prior_text (B, I8). (6) I3 und I9 zaehlen nur ueberlebte Checks (C). (7) import/reuse holen die Elternhuelle (E, F). (8) reg_ids je Commit eindeutig, Altdubletten verweigert statt still aufgeloest, reuse achtet registry_path (H, K). (9) utf-8 ueberall (G). Unveraendert: der Reparaturtext fuer evidence_label.",
+    "evidence_label": "assumed",
+    "assumptions_carried": [
+      "a_impl",
+      "a_noleg"
+    ],
+    "carried_unexplored": [
+      "a_impl"
+    ]
+  },
+  "call_log": [
+    [
+      "ground",
+      [
+        "g_repro",
+        "g_crit",
+        "g_scan",
+        "g_legacy",
+        "g_callers",
+        "g_openitem",
+        "a_noleg",
+        "a_impl"
+      ]
+    ],
+    [
+      "oblige",
+      [
+        "o_legacy",
+        "o_verfahren",
+        "o_scan_case",
+        "o_flawed_falsifier"
+      ]
+    ],
+    [
+      "propose",
+      [
+        "cand_plain",
+        "cand_warn",
+        "cand_versioned"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k_plain",
+        "k_warn",
+        "k_vers",
+        "k_neg_noleg",
+        "k_obl_legacy",
+        "k_obl_verf",
+        "k_rel"
+      ]
+    ],
+    [
+      "carry",
+      "a_impl"
+    ],
+    [
+      "ground",
+      [
+        "ans"
+      ]
+    ],
+    [
+      "check",
+      [
+        "k_ans_f",
+        "k_ans_rel"
+      ]
+    ],
+    [
+      "commit",
+      "ans"
+    ]
+  ]
+}

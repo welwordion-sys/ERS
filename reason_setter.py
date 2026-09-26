@@ -1,6 +1,23 @@
-"""ERS setter substrate v0.6 prototype.
+"""ERS setter substrate v0.7 prototype.
 
 Gatekeeper, not diary: state is mutated only through setter calls.
+
+v0.7 (2026-09-26) closes self-report bypasses found by test_befunde.py, design gated in
+work_files/2026-09-26_setter_v07/decision_setter_v07.json:
+  - checks bind to the target's statement AT CHECK TIME; a check against an earlier
+    version of a claim does not count for the current one (and does not block it)
+  - I4 requires a SURVIVED falsifier against the answer's current version and refuses
+    while an unretracted FAILED one stands against it; retract_check(id, reason) is the
+    only way past a flawed falsifier, and every retraction is listed in the commit block
+  - check ids are append-only; kind/outcome are a closed vocabulary ("satisfied" is an
+    alias of "survived")
+  - ground() refuses caller-supplied negation_handling (only check()/carry() set it)
+  - changing the statement of an existing id requires `revises` quoting it verbatim (I8)
+  - I3 promotion and I9 relevance count only survived, unretracted, current checks
+  - import_prior_commit()/reuse() bring the parent closure along, so derived claims import
+  - registry ids are unique per commit; legacy duplicate ids are refused as ambiguous
+    unless latest=True; reuse() honours registry_path
+  - every file is read and written as UTF-8
 
 v0.6 reuse registry (LF6): commit() auto-appends its answer's claim closure
 to a shared claims_registry.json; prepare() (the sole task-start point)
@@ -13,16 +30,19 @@ invariant, no new check kind.
 Hard invariants (truth conditions, uncircumventable):
   I1 referential integrity      — referenced ids exist
   I2 stated dependencies        — derived claims cite parents+rule
-  I3 no silent promotion        — assumed->given only via an explicit check event
-  I4 refutation attempted       — commit requires >=1 checked falsifier against the answer
+  I3 no silent promotion        — assumed->given only via a SURVIVED check event
+  I4 refutation attempted       — commit requires >=1 survived falsifier against the answer's
+                                  current version and no unretracted failed one (v0.7)
   I5 assumption duality         — every assumed in commit closure: checked | branched | carried
-                                  (carried is always legal, but must be declared; label reflects it)
+                                  (carried is always legal, but must be declared; label reflects it);
+                                  only check()/carry() may set the handling (v0.7)
   I6 commit-last ordering       — enforced by call sequence; state is frozen after commit
   I7 side-finding disposition   — a check result naming a defect must dispose it
                                   (fixed|filed|carried); added v0.4 from licensed failure LF1
   I8 revision provenance        — recharacterizing a prior claim requires quoting its prior
-                                  text verbatim (revises field); added v0.5 from LF5
-  I9 goal relevance              — commit requires a relevance check tying the answer's
+                                  text verbatim (revises field); added v0.5 from LF5; applies to
+                                  re-grounding an existing id with a new statement (v0.7)
+  I9 goal relevance              — commit requires a survived relevance check tying the answer's
                                   evidence to goals; enforces existence of the connection,
                                   not its correctness (semantic truth stays unverifiable
                                   mechanically); added v0.5 from LF3
@@ -39,12 +59,16 @@ ranked inquiry queue. Rejection never loses state — fix and retry.
 
 import json
 import re
+import uuid
 from dataclasses import dataclass, field
 
 
 # ---------------------------------------------------------------- data
 
 VALID_STATUS = ("given", "assumed", "derived")
+VALID_KINDS = ("falsifier", "negation", "obligation", "relevance")
+VALID_OUTCOMES = ("survived", "failed", "branch_traced")
+OUTCOME_ALIASES = {"satisfied": "survived"}
 DEFAULT_REGISTRY = "claims_registry.json"
 
 
@@ -54,7 +78,7 @@ def _tokens(text):
 
 def _load_registry(registry_path):
     try:
-        with open(registry_path) as f:
+        with open(registry_path, encoding="utf-8") as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return []
@@ -63,7 +87,7 @@ def _load_registry(registry_path):
 def _append_registry(registry_path, entries):
     reg = _load_registry(registry_path)
     reg.extend(entries)
-    with open(registry_path, "w") as f:
+    with open(registry_path, "w", encoding="utf-8") as f:
         json.dump(reg, f, indent=2, ensure_ascii=False)
 
 @dataclass
@@ -86,12 +110,14 @@ class Candidate:
 @dataclass
 class CheckEvent:
     id: str
-    kind: str                       # falsifier | negation | obligation
+    kind: str                       # falsifier | negation | obligation | relevance
     target: str                     # claim or candidate id
     method: str
     result: str                     # non-empty = actually performed
     outcome: str                    # survived | failed | branch_traced
     side_findings: list = None      # I7: [{"finding": str, "disposition": fixed|filed|carried}]
+    target_statement: str = None    # v0.7: target's statement at check time (None = legacy file)
+    retracted: str = None           # v0.7: reason, set only by retract_check()
 
 @dataclass
 class Callback:
@@ -136,6 +162,22 @@ class ReasonSetter:
     def _known_ids(self):
         return set(self.claims) | set(self.candidates) | set(self.checks) | set(self.goals)
 
+    def _statement_of(self, tid):
+        if tid in self.claims:
+            return self.claims[tid].statement
+        if tid in self.candidates:
+            return self.candidates[tid].statement
+        return None
+
+    def _current(self, k):
+        """Does check k refer to its target's CURRENT version? Legacy checks (no recorded
+        statement) are taken as current, so old files keep their meaning."""
+        return k.target_statement is None or k.target_statement == self._statement_of(k.target)
+
+    def _live(self, k):
+        """Performed, not retracted, about the current version of its target."""
+        return bool(k.result) and not k.retracted and self._current(k)
+
     def _closure(self, cid):
         """Transitive parent closure of a claim id; returns (all_ids, assumed_ids, missing_ids)."""
         seen, assumed, missing, stack = set(), set(), set(), [cid]
@@ -170,8 +212,12 @@ class ReasonSetter:
                 q.append((rank, f"negation of {c.id} ({c.statement!r}) "
                                 f"{'unhandled' if c.negation_handling is None else 'carried, unexplored'}: {flip}"))
         for cand in self.candidates.values():
-            if not any(k.kind == "falsifier" and k.target == cand.id and k.result
-                       for k in self.checks.values()):
+            live = [k for k in self.checks.values()
+                    if k.kind == "falsifier" and k.target == cand.id and self._live(k)]
+            if any(k.outcome == "failed" for k in live):
+                q.append((1, f"candidate {cand.id} refuted by "
+                             f"{[k.id for k in live if k.outcome == 'failed']} (current version)"))
+            elif not live:
                 q.append((2, f"no checked falsifier against candidate {cand.id}"))
         for c in self.claims.values():
             for a in (c.antecedents or []):
@@ -181,13 +227,15 @@ class ReasonSetter:
         for oid, stmt in self.obligations.items():
             for cand in self.candidates.values():
                 if not any(k.kind == "obligation" and k.target == cand.id and oid in k.method
-                           for k in self.checks.values()):
+                           and self._live(k) for k in self.checks.values()):
                     q.append((4, f"obligation {oid} ({stmt!r}) unchecked against {cand.id}"))
         q.sort(key=lambda t: t[0])
         return [s for _, s in q]
 
     def _checked(self, claim_id):
-        return any(k.target == claim_id and k.result for k in self.checks.values())
+        """A survived, unretracted check against the claim's current version (I3)."""
+        return any(k.target == claim_id and k.outcome == "survived" and self._live(k)
+                   for k in self.checks.values())
 
     def _ledger(self):
         return {
@@ -198,6 +246,7 @@ class ReasonSetter:
             "derived": [c.id for c in self.claims.values() if c.status == "derived"],
             "candidates": list(self.candidates),
             "obligations": list(self.obligations),
+            "retracted_checks": {k.id: k.retracted for k in self.checks.values() if k.retracted},
             "committed": self.committed,
         }
 
@@ -208,11 +257,20 @@ class ReasonSetter:
     # -------- phases
 
     def ground(self, claims):
-        """claims: list of dicts (id, statement, status, derived_from?, antecedents?)."""
+        """claims: list of dicts (id, statement, status, derived_from?, antecedents?, revises?).
+        negation_handling is NOT accepted here — check() and carry() set it (I5)."""
+        return self._ground(claims, trusted=False)
+
+    def _ground(self, claims, trusted):
         fr = self._frozen("ground")
         if fr: return fr
         staged = []
         for d in claims:
+            if not trusted and d.get("negation_handling") is not None:
+                return self._cb(False, "ground",
+                    reason=f"{d['id']}: negation_handling is set by check()/carry(), "
+                           f"not asserted in ground() (I5)",
+                    repair="drop the field; record a negation check() or call carry(id, note)")
             c = Claim(id=d["id"], statement=d["statement"], status=d["status"],
                       derived_from=d.get("derived_from"),
                       antecedents=d.get("antecedents"),
@@ -223,13 +281,25 @@ class ReasonSetter:
                 return self._cb(False, "ground",
                     reason=f"{c.id}: invalid status {c.status!r}",
                     repair=f"use one of {VALID_STATUS}")
-            if c.id in self.claims and self.claims[c.id].status != c.status:
-                old = self.claims[c.id].status
-                # I3: assumed -> given only via a check event
-                if old == "assumed" and c.status == "given" and not self._checked(c.id):
+            old = self.claims.get(c.id)
+            if old is not None and old.statement != c.statement:
+                # I8 on the same id: a new statement is a recharacterization
+                rv = c.revises or {}
+                if rv.get("target") != c.id or rv.get("prior_text") != old.statement:
+                    return self._cb(False, "ground",
+                        reason=f"{c.id}: statement changed without revises quoting it (I8)",
+                        repair=f"add revises={{'target': {c.id!r}, 'prior_text': <current statement "
+                               f"verbatim>, 'why': ...}}, or ground the new claim under a new id")
+            if old is not None and old.status != c.status:
+                # I3: assumed -> given only via a survived check event
+                if old.status == "assumed" and c.status == "given" and not self._checked(c.id):
                     return self._cb(False, "ground",
                         reason=f"{c.id}: silent promotion assumed->given (I3)",
-                        repair=f"record a check event against {c.id} first, or keep it assumed")
+                        repair=f"record a check event against {c.id} that SURVIVED, or keep it assumed")
+            if old is not None and old.statement == c.statement and not trusted:
+                # same version re-grounded: handling earned by checks/carry is kept
+                c.negation_handling = old.negation_handling
+                c.negation_note = old.negation_note
             if c.status == "derived":
                 if not c.derived_from:
                     return self._cb(False, "ground",
@@ -250,6 +320,11 @@ class ReasonSetter:
                     return self._cb(False, "ground",
                         reason=f"{c.id}: revises unknown id {tgt} (I1)",
                         repair="target an existing claim")
+                if tgt in self.claims and tgt != c.id and \
+                        c.revises.get("prior_text") != self.claims[tgt].statement:
+                    return self._cb(False, "ground",
+                        reason=f"{c.id}: revises {tgt} but prior_text is not its statement verbatim (I8)",
+                        repair=f"quote {tgt}'s statement exactly")
             staged.append(c)
         # I1 across the batch (allow intra-batch references)
         known = self._known_ids() | {c.id for c in staged}
@@ -301,23 +376,51 @@ class ReasonSetter:
         return self._cb(True, "oblige")
 
     def check(self, events):
-        """events: list of dicts (id, kind, target, method, result, outcome).
-        kind=falsifier|negation|obligation. A negation check/branch on an assumed
-        claim updates its negation_handling."""
+        """events: list of dicts (id, kind, target, method, result, outcome, side_findings?).
+        kind=falsifier|negation|obligation|relevance; outcome=survived|failed|branch_traced.
+        The batch is validated as a whole before anything is recorded. Check ids are
+        append-only; withdraw a flawed check with retract_check(). A negation check/branch
+        on an assumed claim updates its negation_handling."""
         fr = self._frozen("check")
         if fr: return fr
         known = self._known_ids()
-        _warn = []
+        seen = set()
+        staged = []
         for d in events:
-            if d["target"] not in known:
+            cid = d.get("id")
+            if cid in self.checks or cid in seen:
                 return self._cb(False, "check",
-                    reason=f"check {d['id']} targets unknown id {d['target']} (I1)",
+                    reason=f"check id {cid!r} already recorded — check ids are append-only",
+                    repair="use a new id; to withdraw a flawed check call retract_check(id, reason)")
+            seen.add(cid)
+            if d.get("target") not in known:
+                return self._cb(False, "check",
+                    reason=f"check {cid} targets unknown id {d.get('target')} (I1)",
                     repair="target an existing claim or candidate")
+            if d.get("kind") not in VALID_KINDS:
+                return self._cb(False, "check",
+                    reason=f"check {cid}: unknown kind {d.get('kind')!r}",
+                    repair=f"use one of {VALID_KINDS}")
             if not d.get("result"):
                 return self._cb(False, "check",
-                    reason=f"check {d['id']} has empty result — not actually performed",
+                    reason=f"check {cid} has empty result — not actually performed",
                     repair="perform the check and record what happened, or drop the event")
-            ev = CheckEvent(**d)
+            outcome = OUTCOME_ALIASES.get(d.get("outcome"), d.get("outcome"))
+            if outcome not in VALID_OUTCOMES:
+                res = str(d.get("result", "")).strip().lower()
+                swapped = res in ("pass", "fail", "open", "passed", "failed")
+                return self._cb(False, "check",
+                    reason=f"check {cid}: outcome {str(d.get('outcome'))[:60]!r} is not one of "
+                           f"{VALID_OUTCOMES}" + (" — result and outcome look swapped" if swapped else ""),
+                    repair="result = what happened (prose); outcome = survived | failed | branch_traced"
+                           + ("; a check still open is not performed yet — record it once it ran"
+                              if res == "open" else ""))
+            staged.append({**d, "outcome": outcome})
+        _warn = []
+        for d in staged:
+            ev = CheckEvent(**{k: d.get(k) for k in ("id", "kind", "target", "method", "result",
+                                                      "outcome", "side_findings")},
+                            target_statement=self._statement_of(d["target"]))
             self.checks[ev.id] = ev
             if not ev.side_findings and re.search(
                     r"\b(defect|hazard|stale|contradicts|wrong|missing|unimplemented)\b",
@@ -330,8 +433,38 @@ class ReasonSetter:
                     cl.negation_handling = ("checked" if ev.outcome == "survived"
                                             else "branched")
                     cl.negation_note = ev.result
-        self._log.append(("check", [d["id"] for d in events]))
+        self._log.append(("check", [d["id"] for d in staged]))
         return self._cb(True, "check", warnings=_warn)
+
+    def retract_check(self, check_id, reason):
+        """Withdraw a check that was itself flawed (wrong build measured, wrong target, ...).
+        The event stays in the file, marked retracted with the reason; it no longer counts
+        for or against anything, and commit() lists every retraction. Retracting is legal,
+        hiding the retraction is not — same shape as carry()."""
+        fr = self._frozen("retract_check")
+        if fr: return fr
+        k = self.checks.get(check_id)
+        if k is None:
+            return self._cb(False, "retract_check", reason=f"unknown check {check_id} (I1)",
+                            repair="retract an existing check id")
+        if not (reason or "").strip():
+            return self._cb(False, "retract_check",
+                reason=f"retracting {check_id} without a reason hides the failure",
+                repair="say what was wrong with the check itself")
+        if k.retracted:
+            return self._cb(False, "retract_check", reason=f"{check_id} already retracted",
+                            repair="nothing to do")
+        k.retracted = reason
+        if k.kind == "negation" and k.target in self.claims:
+            cl = self.claims[k.target]
+            if cl.status == "assumed" and cl.negation_handling in ("checked", "branched"):
+                rest = [x for x in self.checks.values() if x.kind == "negation"
+                        and x.target == cl.id and self._live(x)]
+                cl.negation_handling = (None if not rest else
+                                        "checked" if rest[-1].outcome == "survived" else "branched")
+                cl.negation_note = rest[-1].result if rest else f"[negation check {check_id} retracted]"
+        self._log.append(("retract_check", check_id))
+        return self._cb(True, "retract_check")
 
     def carry(self, claim_id, note):
         """Explicitly carry an assumption with negation unexplored. Always legal;
@@ -352,8 +485,8 @@ class ReasonSetter:
         return self._cb(True, "carry")
 
     def commit(self, answer_claim_id, evidence_label, assumptions_carried,
-               registry_path=DEFAULT_REGISTRY):
-        """The gate. Refuses unless I1-I5 hold for the answer's closure.
+               registry_path=None):
+        """The gate. Refuses unless I1-I5, I7, I9 hold for the answer's closure.
         On success state freezes (I6)."""
         fr = self._frozen("commit")
         if fr: return fr
@@ -370,22 +503,32 @@ class ReasonSetter:
                 repair="ground them or fix parent ids")
 
         # I9 — relevance: cited evidence must be tied to the stated goal(s), not just internally coherent
-        if not any(k.kind == "relevance" and k.target in ({answer_claim_id} | closure) and k.result
+        if not any(k.kind == "relevance" and k.target in ({answer_claim_id} | closure)
+                   and k.outcome == "survived" and self._live(k)
                    for k in self.checks.values()):
             return self._cb(False, "commit",
                 reason="no relevance check connecting the answer's evidence to the stated goal(s) (I9)",
                 repair=f"run check(kind='relevance', target={answer_claim_id!r}, "
                        f"result='<how the cited evidence bears on: {list(self.goals.values())}>')")
 
-        # I4 — checked falsifier against the answer (or the candidate it realizes)
+        # I4 — a survived falsifier against the answer's current version (or the candidate it
+        # realizes), and no unretracted failed one against it
         targets = {answer_claim_id} | {c.id for c in self.candidates.values()
                                        if c.statement == cl.statement}
-        if not any(k.kind == "falsifier" and k.target in targets and k.result
-                   for k in self.checks.values()):
+        live_f = [k for k in self.checks.values()
+                  if k.kind == "falsifier" and k.target in targets and self._live(k)]
+        refuted = [k.id for k in live_f if k.outcome == "failed"]
+        if refuted:
+            return self._cb(False, "commit",
+                reason=f"falsifier(s) {refuted} failed against the answer's current version (I4)",
+                repair="revise the answer (revises quoting it) and check the new version; if the "
+                       "falsifier refuted an EARLIER version or another claim, it should target that; "
+                       "if the falsifier itself was flawed, retract_check(id, reason)")
+        if not any(k.outcome == "survived" for k in live_f):
             return self._cb(False, "commit",
                 reason="no checked falsifier against the answer (I4)",
                 repair=f"run check() with kind=falsifier, target={answer_claim_id}, "
-                       "non-empty result")
+                       "non-empty result, outcome=survived")
 
         # I7 — every declared side-finding disposed
         undisposed = [(k.id, f.get("finding","?")) for k in self.checks.values()
@@ -427,16 +570,20 @@ class ReasonSetter:
             "assumptions_carried": sorted(actual),
             "carried_unexplored": sorted(a for a in actual
                 if self.claims[a].negation_handling == "carried"),
+            "retracted_checks": {k.id: k.retracted for k in self.checks.values() if k.retracted},
         }
         self._log.append(("commit", answer_claim_id))
-        _append_registry(registry_path, [
-            {"reg_id": f"{getattr(self, '_path', '<unsaved>')}::{cid}",
+        batch = uuid.uuid4().hex[:8]
+        src = getattr(self, "_path", "<unsaved>")
+        _append_registry(registry_path or getattr(self, "_registry_path", DEFAULT_REGISTRY), [
+            {"reg_id": f"{src}::{cid}::{batch}",
              "claim_id": cid,
              "statement": self.claims[cid].statement,
              "status": self.claims[cid].status,
              "negation_handling": self.claims[cid].negation_handling,
              "derived_from": self.claims[cid].derived_from,
-             "source_path": getattr(self, "_path", "<unsaved>"),
+             "source_path": src,
+             "commit_batch": batch,
              "goals": list(self.goals.values())}
             for cid in ({answer_claim_id} | closure)
         ])
@@ -458,9 +605,11 @@ class ReasonSetter:
         may already exist before it types anything fresh. Judging whether a
         surfaced candidate is actually the same fact is left to the session,
         same epistemic status as I9 (existence of the check is enforced,
-        correctness of the judgment is not)."""
+        correctness of the judgment is not). The registry path is remembered
+        for commit() and reuse()."""
         s = cls(goal_statements)
         s._prep_note = note
+        s._registry_path = registry_path
         goal_words = set()
         for g in s.goals.values():
             goal_words |= _tokens(g)
@@ -481,8 +630,10 @@ class ReasonSetter:
             else "prepared")
         blob = {
             "stage": stage,
+            "setter_version": "v0.7",
             "goals": self.goals,
             "prep_note": getattr(self, "_prep_note", ""),
+            "registry_path": getattr(self, "_registry_path", DEFAULT_REGISTRY),
             "prior_candidates": getattr(self, "_prior_candidates", []),
             "claims": {k: v.__dict__ for k, v in self.claims.items()},
             "candidates": {k: v.__dict__ for k, v in self.candidates.items()},
@@ -491,20 +642,22 @@ class ReasonSetter:
             "committed": self.committed,
             "call_log": self._log,
         }
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(blob, f, indent=2, ensure_ascii=False)
         return stage
 
     @classmethod
     def resume(cls, path):
         """RUN continues from a prepared/in_progress file. Loads goal +
-        whatever state exists; caller proceeds with propose/check/commit."""
-        with open(path) as f:
+        whatever state exists; caller proceeds with propose/check/commit.
+        Files written by older versions load unchanged (no vocabulary check on load)."""
+        with open(path, encoding="utf-8") as f:
             blob = json.load(f)
         s = cls(list(blob["goals"].values()))
         s._path = path
         s.goals = blob["goals"]
         s._prep_note = blob.get("prep_note", "")
+        s._registry_path = blob.get("registry_path", DEFAULT_REGISTRY)
         s._prior_candidates = blob.get("prior_candidates", [])
         for cid, cd in blob.get("claims", {}).items():
             s.claims[cid] = Claim(**cd)
@@ -524,64 +677,123 @@ class ReasonSetter:
         can proceed with ground/propose/check/commit."""
         return cls.resume(path)
 
-    def reuse(self, reg_id, local_id=None):
+    # -------- honest import (LF6)
+
+    def _import_closure(self, src_claims, root_id, prefix, provenance, root_local=None):
+        """Ground root_id and its whole parent closure from src_claims (claim_id -> dict),
+        preserving each claim's true status and negation handling. Parents are grounded
+        first; a claim already imported under the same local id and text is reused.
+        Returns the local id of the root."""
+        order, seen = [], set()
+
+        def visit(cid, path=()):
+            if cid in seen:
+                return
+            if cid in path:
+                raise ValueError(f"derivation cycle at {cid} in {provenance}")
+            src = src_claims.get(cid)
+            if src is None:
+                raise ValueError(f"{cid} not found in {provenance} — cannot import its "
+                                 f"derivation honestly")
+            for d in (src.get("derived_from") or []):
+                for p in d.get("parents", []):
+                    visit(p, path + (cid,))
+            seen.add(cid)
+            order.append(cid)
+
+        visit(root_id)
+        local = {cid: (root_local if cid == root_id and root_local else f"{prefix}{cid}")
+                 for cid in order}
+        batch = []
+        for cid in order:
+            src = src_claims[cid]
+            lid = local[cid]
+            if lid in self.claims:
+                if self.claims[lid].statement != src["statement"]:
+                    raise ValueError(f"local id {lid} already holds a different statement")
+                continue
+            note = src.get("negation_note", "") or ""
+            if src["status"] == "assumed":
+                note = (note + f" [imported from {provenance}]").strip()
+            batch.append({
+                "id": lid,
+                "statement": src["statement"],
+                "status": src["status"],   # honest: given/assumed/derived as it actually was
+                "derived_from": [{"parents": [local[p] for p in d.get("parents", [])],
+                                  "rule": d.get("rule", "") + f" (imported from {provenance})"}
+                                 for d in (src.get("derived_from") or [])] or None,
+                "negation_handling": src.get("negation_handling"),
+                "negation_note": note,
+            })
+        if batch:
+            cb = self._ground(batch, trusted=True)
+            if not cb.ok:
+                raise ValueError(f"import failed: {cb.reason}")
+        return local[root_id]
+
+    def reuse(self, reg_id, local_id=None, registry_path=None, latest=False):
         """The static-interface counterpart to prepare()'s surfacing: pull one
         entry from the shared claims registry in verbatim — by the reg_id
         shown in prepare()'s prior_candidates (or any reg_id in the registry
         file, e.g. from a broader manual look) — preserving its true status
         and negation_handling exactly like import_prior_commit does for a
-        single named file. Generalizes import_prior_commit so a session does
-        not need to already know which file a prior claim lives in; it only
-        needs the registry, which prepare() already showed it.
+        single named file, and bringing its parent closure along (v0.7).
         Nothing about matching/selection is automatic here: the session picks
-        the reg_id. Returns the new local claim id."""
-        entry = next((e for e in _load_registry(DEFAULT_REGISTRY)
-                      if e.get("reg_id") == reg_id), None)
-        if entry is None:
+        the reg_id. Registries written before v0.7 can hold one reg_id several
+        times (every commit to the same path reused it); such an id is refused
+        as ambiguous unless latest=True picks the most recent entry.
+        Returns the new local claim id."""
+        reg = _load_registry(registry_path or getattr(self, "_registry_path", DEFAULT_REGISTRY))
+        hits = [i for i, e in enumerate(reg) if e.get("reg_id") == reg_id]
+        if not hits:
             raise ValueError(f"{reg_id} not found in registry")
-        local_id = local_id or f"reused_{entry['claim_id']}"
-        cb = self.ground([{
-            "id": local_id,
-            "statement": entry["statement"],
-            "status": entry["status"],
-            "negation_handling": entry.get("negation_handling"),
-            "negation_note": f"[reused from {entry['source_path']}::{entry['claim_id']}]",
-        }])
-        if not cb.ok:
-            raise ValueError(f"reuse failed: {cb.reason}")
-        return local_id
+        if len(hits) > 1 and not latest:
+            raise ValueError(f"{reg_id} is ambiguous: {len(hits)} registry entries share it "
+                             f"(registry written before v0.7); pass latest=True for the most "
+                             f"recent, or pick the entry by statement")
+        i = hits[-1]
+        entry = reg[i]
+        batch = entry.get("commit_batch")
+        if batch:
+            pool = [e for e in reg if e.get("commit_batch") == batch]
+        else:
+            # legacy registry: one commit's closure was appended as a contiguous run with
+            # the same source_path; collect that run around the entry
+            pool, names = [], set()
+            for rng in (range(i, -1, -1), range(i + 1, len(reg))):
+                for j in rng:
+                    e = reg[j]
+                    if e.get("source_path") != entry["source_path"] or e["claim_id"] in names:
+                        break
+                    pool.append(e)
+                    names.add(e["claim_id"])
+        src_claims = {e["claim_id"]: e for e in pool}
+        return self._import_closure(src_claims, entry["claim_id"], "reused_",
+                                    f"{entry['source_path']}::{entry['claim_id']}",
+                                    root_local=local_id)
 
     def import_prior_commit(self, source_path, claim_id):
         """LF6 fix: import a claim from a DIFFERENT (already committed) file
         honestly — preserving its actual evidence status and negation
         handling, instead of re-grounding it as a fresh 'given' (which
         silently promotes assumed/derived claims and evades I3 across the
-        file boundary). Returns the new local claim id (prefixed to avoid
-        collision) so it can be used as a revises() target."""
-        with open(source_path) as f:
+        file boundary). Brings the claim's parent closure along (v0.7), so a
+        derived claim imports with its derivation. Returns the new local claim
+        id (prefixed to avoid collision) so it can be used as a revises() target."""
+        with open(source_path, encoding="utf-8") as f:
             src = json.load(f)
-        src_claim = src.get("claims", {}).get(claim_id)
-        if src_claim is None:
+        claims = src.get("claims", {})
+        if claim_id not in claims:
             raise ValueError(f"{claim_id} not found in {source_path}")
-        local_id = f"imported_{claim_id}"
-        was_in_commit = (src.get("committed") or {}).get("answer") == claim_id
-        carried = claim_id in (src.get("committed") or {}).get("assumptions_carried", [])
-        cb = self.ground([{
-            "id": local_id,
-            "statement": src_claim["statement"],
-            "status": src_claim["status"],   # honest: given/assumed/derived as it actually was
-            "derived_from": [{"parents": [f"imported_{p}" for p in d.get("parents", [])],
-                              "rule": d.get("rule", "") + " (imported, parents not re-grounded — "
-                                      "external provenance)"}
-                             for d in (src_claim.get("derived_from") or [])] or None,
-            "negation_handling": src_claim.get("negation_handling"),
-            "negation_note": src_claim.get("negation_note", "") +
-                (f" [imported from {source_path}, was in committed answer: {was_in_commit}, "
-                 f"carried: {carried}]" if src_claim["status"] == "assumed" else ""),
-        }])
-        if not cb.ok:
-            raise ValueError(f"import failed: {cb.reason}")
-        return local_id
+        com = src.get("committed") or {}
+        was_in_commit = com.get("answer") == claim_id
+        carried = claim_id in com.get("assumptions_carried", [])
+        src_claims = {k: dict(v) for k, v in claims.items()}
+        if claims[claim_id]["status"] == "assumed":
+            src_claims[claim_id]["negation_note"] = (
+                (claims[claim_id].get("negation_note", "") or "") +
+                f" [was in committed answer: {was_in_commit}, carried: {carried}]")
+        return self._import_closure(src_claims, claim_id, "imported_", source_path)
 
     @staticmethod
     def audit_incomplete(paths):
@@ -589,7 +801,7 @@ class ReasonSetter:
         incomplete = []
         for p in paths:
             try:
-                with open(p) as f:
+                with open(p, encoding="utf-8") as f:
                     blob = json.load(f)
                 if blob.get("stage") != "committed":
                     incomplete.append((p, blob.get("stage"), blob.get("goals")))
@@ -621,26 +833,28 @@ class ReasonSetter:
                 "Your task is to complete this ERS work file, not to reason "
                 "freely about the goal. Fetch reason_setter.py + PROTOCOL.md "
                 "from https://github.com/welwordion-sys/ERS (verify version "
-                "string, v0.6+ for the reuse registry). Load these given_facts "
+                "string, v0.7+). Load these given_facts "
                 "via ground(), then "
                 "propose() your own candidates — do not accept a pre-formed "
                 "answer from elsewhere as a candidate without discriminating "
                 "it against at least one alternative. check(), then commit()."
             ),
         }
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(blob, f, indent=2, ensure_ascii=False)
 
     @classmethod
     def from_starter(cls, path):
         """Receiving side: load a starter, goal + facts only, ready for propose()."""
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             blob = json.load(f)
         if blob.get("kind") != "ers_starter":
             raise ValueError("not an ers_starter file")
         s = cls(list(blob["goals"].values()))
         s.goals = blob["goals"]
-        cb = s.ground([{**v} for v in blob["given_facts"].values()])
+        facts = [{k: v for k, v in f.items() if k != "negation_handling" or v is not None}
+                 for f in blob["given_facts"].values()]
+        cb = s.ground(facts)
         if not cb.ok:
             raise ValueError(f"starter facts failed to ground: {cb.reason}")
         s.obligations.update(blob.get("obligations", {}))

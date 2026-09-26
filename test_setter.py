@@ -4,7 +4,13 @@ Case A replays the cycle-3 failure shape: correct arithmetic, a load-bearing
 claim asserted but never checked, commit attempted anyway.
 Case B is the honest path through the same problem.
 """
+import os
+import tempfile
+
 from reason_setter import ReasonSetter
+
+# Commits write to the claims registry; a smoke test must not write into the repo.
+REG = os.path.join(tempfile.mkdtemp(prefix="ers_smoke_"), "claims_registry.json")
 
 
 def case_a_false_commit():
@@ -17,9 +23,14 @@ def case_a_false_commit():
          "status": "derived",
          "derived_from": [{"parents": ["c1", "c2", "c3"], "rule": "spine subtraction"}]},
     ])
+    # relevance is recorded up front so that I9 cannot mask what this case tests (I4, I5)
+    assert s.check([{"id": "k0", "kind": "relevance", "target": "c4",
+                     "method": "connect evidence to goal",
+                     "result": "c4 states the single-token result the goal asks for",
+                     "outcome": "survived"}]).ok
     # solver tries to commit WITHOUT ever checking c3 (this is what cycle 3 did)
-    cb = s.commit("c4", "assumed", ["c3"])
-    assert not cb.ok, "setter must refuse: no falsifier on answer"
+    cb = s.commit("c4", "assumed", ["c3"], registry_path=REG)
+    assert not cb.ok and "(I4)" in cb.reason, "setter must refuse: no falsifier on answer (I4)"
     print("A1 refused (no falsifier):", cb.reason)
 
     # solver adds a falsifier on the answer but still never handles c3's negation
@@ -27,8 +38,8 @@ def case_a_false_commit():
                    "method": "recompute value", "result": "value 2 correct",
                    "outcome": "survived"}])
     assert cb.ok
-    cb = s.commit("c4", "assumed", ["c3"])
-    assert not cb.ok, "setter must refuse: c3 negation unhandled"
+    cb = s.commit("c4", "assumed", ["c3"], registry_path=REG)
+    assert not cb.ok and "(I5)" in cb.reason, "setter must refuse: c3 negation unhandled (I5)"
     print("A2 refused (I5):", cb.reason)
     print("A2 queue head:", cb.queue[0])
     return s
@@ -60,7 +71,7 @@ def case_b_honest_path():
          "outcome": "survived"},
     ])
     assert cb.ok
-    cb = s.commit("c4", "assumed", ["c3"])
+    cb = s.commit("c4", "assumed", ["c3"], registry_path=REG)
     assert cb.ok, cb.reason
     print("B committed:", s.committed)
 
@@ -75,7 +86,7 @@ def case_c_silent_promotion():
     s = ReasonSetter("toy")
     s.ground([{"id": "a1", "statement": "X holds", "status": "assumed"}])
     cb = s.ground([{"id": "a1", "statement": "X holds", "status": "given"}])
-    assert not cb.ok, "silent promotion must be refused"
+    assert not cb.ok and "(I3)" in cb.reason, "silent promotion must be refused (I3)"
     print("C refused (I3):", cb.reason)
 
 

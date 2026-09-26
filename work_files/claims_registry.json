@@ -2575,5 +2575,127 @@
       "Klaeren, was die Skalierungswand WIRKLICH verursacht hat, und die frühere Konklusion (Kardinalitaet, Branch-and-Bound noetig) revidieren falls widerlegt.",
       "Nachbarn-only + Zusammensetzen als vollstaendiges, wandfreies Verfahren belegen."
     ]
+  },
+  {
+    "reg_id": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json::g_callers",
+    "claim_id": "g_callers",
+    "statement": "Verfahren-Aufrufer: ablauf.abschluss liest das Label aus der Reparatur per Regex use evidence_label='(\\w+)', setzt outcome aus 'ausgang' (Vorgabe survived), nutzt die kinds falsifier und relevance; kein Aufrufer uebergibt negation_handling an ground().",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json",
+    "goals": [
+      "Welche Aenderungen an reason_setter v0.6 sind fuer v0.7 lizenziert, insbesondere: verweigert I4 einen Commit, dessen Falsifikator gegen die Antwort gescheitert ist (D)?"
+    ]
+  },
+  {
+    "reg_id": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json::g_crit",
+    "claim_id": "g_crit",
+    "statement": "KB ers.setter_substrate_design_v0_3.hard_invariants_criterion: harte Invarianten muessen Wahrheitsbedingungen sein - keine legitime Episode darf sie verletzen; alles mit legitimem Gegenbeispiel bleibt beratend.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json",
+    "goals": [
+      "Welche Aenderungen an reason_setter v0.6 sind fuer v0.7 lizenziert, insbesondere: verweigert I4 einen Commit, dessen Falsifikator gegen die Antwort gescheitert ist (D)?"
+    ]
+  },
+  {
+    "reg_id": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json::g_repro",
+    "claim_id": "g_repro",
+    "statement": "test_befunde.py gegen v0.6: A,B,C,D,F,G,H,I,M,T scheitern mit der jeweils benannten Luecke; E und H-Altfall zusaetzlich ueber die Standard-Registry bestaetigt (reuse abgeleitet -> I2-Verweigerung; doppelte reg_id -> still der ERSTE Eintrag). Ausgabe befunde_v06_output.txt.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json",
+    "goals": [
+      "Welche Aenderungen an reason_setter v0.6 sind fuer v0.7 lizenziert, insbesondere: verweigert I4 einen Commit, dessen Falsifikator gegen die Antwort gescheitert ist (D)?"
+    ]
+  },
+  {
+    "reg_id": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json::a_noleg",
+    "claim_id": "a_noleg",
+    "statement": "Keine legitime Episode muss eine Antwort committen, gegen deren AKTUELLE Fassung ein Falsifikator gescheitert ist, ohne diesen Fehlschlag sichtbar zu behandeln.",
+    "status": "assumed",
+    "negation_handling": "branched",
+    "derived_from": null,
+    "source_path": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json",
+    "goals": [
+      "Welche Aenderungen an reason_setter v0.6 sind fuer v0.7 lizenziert, insbesondere: verweigert I4 einen Commit, dessen Falsifikator gegen die Antwort gescheitert ist (D)?"
+    ]
+  },
+  {
+    "reg_id": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json::g_openitem",
+    "claim_id": "g_openitem",
+    "statement": "KB ers.setter_substrate_design_v0_3.open_items[0]: 'negation-handled detection: how does setter verify branched status is genuine vs asserted' - im Code v0.6 gar nicht, der Aufrufer kann den Status direkt setzen (Befund A).",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json",
+    "goals": [
+      "Welche Aenderungen an reason_setter v0.6 sind fuer v0.7 lizenziert, insbesondere: verweigert I4 einen Commit, dessen Falsifikator gegen die Antwort gescheitert ist (D)?"
+    ]
+  },
+  {
+    "reg_id": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json::g_scan",
+    "claim_id": "g_scan",
+    "statement": "Scan von 52 Arbeitsdateien (ERS/work_files + Verfahren): genau eine committete Antwort mit gescheitertem Falsifikator, serialized_grouping_result.json k_mech -> ans_win. Dessen Ergebnis sagt, die Antwort sei nach der Widerlegung umgeschrieben worden; die widerlegte These steht als eigener Anspruch prior_multiply. Der Check traf also eine fruehere Fassung.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json",
+    "goals": [
+      "Welche Aenderungen an reason_setter v0.6 sind fuer v0.7 lizenziert, insbesondere: verweigert I4 einen Commit, dessen Falsifikator gegen die Antwort gescheitert ist (D)?"
+    ]
+  },
+  {
+    "reg_id": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json::ans",
+    "claim_id": "ans",
+    "statement": "v0.7 ist lizenziert mit: (1) I4 fassungsgebunden - >=1 ueberlebter Falsifikator gegen die aktuelle Fassung, kein ungezogener gescheiterter gegen sie; Rueckzug nur per retract_check(id, grund), im Commit-Block gelistet. (2) Checks tragen den Aussagetext zum Pruefzeitpunkt; Check-ids nur anhaengbar (M). (3) kind/outcome geschlossenes Vokabular, 'satisfied' als Alias (I). (4) ground() nimmt kein negation_handling vom Aufrufer (A). (5) Aendern der Aussage einer bestehenden id verlangt revises mit woertlichem prior_text (B, I8). (6) I3 und I9 zaehlen nur ueberlebte Checks (C). (7) import/reuse holen die Elternhuelle (E, F). (8) reg_ids je Commit eindeutig, Altdubletten verweigert statt still aufgeloest, reuse achtet registry_path (H, K). (9) utf-8 ueberall (G). Unveraendert: der Reparaturtext fuer evidence_label.",
+    "status": "derived",
+    "negation_handling": null,
+    "derived_from": [
+      {
+        "parents": [
+          "g_repro",
+          "g_crit",
+          "g_scan",
+          "g_legacy",
+          "g_callers",
+          "g_openitem",
+          "a_noleg",
+          "a_impl"
+        ],
+        "rule": "cand_versioned ueberlebte den Falsifikator, cand_plain und cand_warn scheiterten; Einzelposten folgen den Reproduzierern"
+      }
+    ],
+    "source_path": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json",
+    "goals": [
+      "Welche Aenderungen an reason_setter v0.6 sind fuer v0.7 lizenziert, insbesondere: verweigert I4 einen Commit, dessen Falsifikator gegen die Antwort gescheitert ist (D)?"
+    ]
+  },
+  {
+    "reg_id": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json::a_impl",
+    "claim_id": "a_impl",
+    "statement": "Die Implementierung wird der hier committeten Regel entsprechen; belegt erst durch test_befunde.py (D, D2, M, R und die uebrigen) gegen v0.7 nach dem Bau.",
+    "status": "assumed",
+    "negation_handling": "carried",
+    "derived_from": null,
+    "source_path": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json",
+    "goals": [
+      "Welche Aenderungen an reason_setter v0.6 sind fuer v0.7 lizenziert, insbesondere: verweigert I4 einen Commit, dessen Falsifikator gegen die Antwort gescheitert ist (D)?"
+    ]
+  },
+  {
+    "reg_id": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json::g_legacy",
+    "claim_id": "g_legacy",
+    "statement": "Altdateien nutzen outcome-Werte survived, failed, branch_traced, satisfied sowie in drei Dateien (memo_lockstep, neighbor_lockstep, table_reassembly) vertauschte Felder mit result in {pass, fail, open}; 'Offen bis Messung' ging als durchgefuehrter Check durch.",
+    "status": "given",
+    "negation_handling": null,
+    "derived_from": null,
+    "source_path": "D:\\Projects\\ERS\\work_files\\2026-09-26_setter_v07\\decision_setter_v07.json",
+    "goals": [
+      "Welche Aenderungen an reason_setter v0.6 sind fuer v0.7 lizenziert, insbesondere: verweigert I4 einen Commit, dessen Falsifikator gegen die Antwort gescheitert ist (D)?"
+    ]
   }
 ]

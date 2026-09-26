@@ -1,4 +1,4 @@
-# ERS Setter Substrate v0.6 — Session Protocol
+# ERS Setter Substrate v0.7 — Session Protocol
 
 Gatekeeper, not diary. State is mutated ONLY through setter calls; the setter
 refuses invalid moves and freezes after commit. Reason freely BETWEEN calls —
@@ -12,7 +12,10 @@ each call is a phase checkpoint, not a per-thought tax.
 3. `s.oblige({...})` — conditions ANY accepted answer must satisfy (optional).
 4. `s.propose(candidates)` — one is fine; several want discriminators (advisory).
 5. Reason. Then `s.check(events)` — falsifier / negation / obligation events.
-   Empty `result` = not performed = refused.
+   Empty `result` = not performed = refused. `kind` is one of falsifier |
+   negation | obligation | relevance; `outcome` is one of survived | failed |
+   branch_traced (`satisfied` is read as survived). Check ids are append-only:
+   a flawed check is withdrawn with `s.retract_check(id, reason)`, never overwritten.
 6. For any assumption you will NOT explore: `s.carry(id, note)` — always legal,
    must be declared, note says what might flip.
 7. `s.commit(answer_id, evidence_label, assumptions_carried)`
@@ -79,8 +82,10 @@ compass half of the substrate.
 ## Hard invariants (cannot be circumvented)
 
 I1 referenced ids exist. I2 derived cites parents+rule. I3 assumed→given only
-via a check event. I4 commit needs a checked falsifier against the answer.
-I5 every assumed in commit closure is checked/branched/carried — skipping a
+via a SURVIVED check event. I4 commit needs a SURVIVED falsifier against the answer's current version and
+no unretracted FAILED one against it (v0.7).
+I5 every assumed in commit closure is checked/branched/carried (set only by
+check()/carry(), never asserted in ground() — v0.7) — skipping a
 negation is legal, hiding the skip is not. I6 commit is last; state freezes.
 I7 a check result naming a defect (in anything, including artifacts outside
 the work file) must declare it as a side_finding and dispose it: fixed |
@@ -99,6 +104,17 @@ Advisory: claims using because/therefore/explains-why get a nudge to test
 the explanation against a case where the property should differ (LF4) —
 not a hard gate; discrimination is semantic and cant be verified mechanically.
 
+## Checks bind to a version (v0.7)
+
+Every check records the target's statement at check time. A check counts — and a
+failed one blocks — only while the target still says that. To correct an answer after
+a falsifier refuted it, re-ground the SAME id with `revises={"target": id,
+"prior_text": <old statement verbatim>, "why": ...}` and check the new version; the old
+failure stays in the file as history but no longer blocks. Changing a statement without
+that quote is refused (I8). If the falsifier ITSELF was wrong (wrong build, wrong
+target), `retract_check(id, reason)`; the commit block lists every retraction.
+Files written before v0.7 carry no recorded statement; their checks count as current.
+
 ## Advisory (warnings, never refusals)
 
 Discriminators when >1 candidate; conditional-looking statements without
@@ -114,7 +130,7 @@ claim stays assumed-and-carried, not silently promoted to given. Re-
 grounding a prior claim's text as a new 'given' claim evades I3 across
 the file boundary — LF6, found 2026-07-08.
 
-## Reuse registry (v0.6)
+## Reuse registry (v0.6, ids unique since v0.7)
 
 `import_prior_commit` requires already knowing which file a prior claim
 lives in. The registry closes that gap: every `commit()` auto-appends its
@@ -134,6 +150,14 @@ matches, pull it in with `reuse(reg_id)`, which behaves like
 `import_prior_commit` but reads from the registry instead of a named file.
 No new hard invariant, no new check kind — deliberately minimal.
 
+v0.7: each commit's registry entries share a `commit_batch`, and reg_ids are
+`<path>::<claim>::<batch>`, so repeated commits to one path no longer collide.
+`reuse()` and `import_prior_commit()` bring the parent closure along, so derived
+claims import with their derivation. A pre-v0.7 reg_id held by several entries is
+refused as ambiguous unless `latest=True`. `prepare(registry_path=...)` is remembered
+for commit() and reuse() — pass it explicitly anywhere a test or probe runs, or the
+registry lands in the working directory.
+
 ## Known limit — I9 gameability
 
 I9 requires a relevance check EXIST connecting the answer to the goal; it
@@ -141,6 +165,12 @@ cannot verify the connection is real. A fabricated relevance claim
 ("directly relevant to goal X") passes I9 exactly like a genuine one —
 worse than I8, whose quoted prior_text is at least glance-checkable by a
 reader. Self-audited 2026-07-08 (workfile_ers_selfaudit_v0_5.json).
+
+## Known limit — versions and retractions are declared, not judged (v0.7)
+
+A revision with a cosmetic change plus a new survived falsifier escapes an earlier
+failure; a retraction's reason is recorded, not verified. Both are on record (the
+quoted prior text, the listed retraction) — glance-checkable like I8, not provable.
 
 ## Known limit — do not overclaim
 

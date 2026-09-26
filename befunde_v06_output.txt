@@ -1,0 +1,17 @@
+FAIL  test_A_negation_handling_from_caller: AssertionError: Aufrufer darf negation_handling nicht selbst setzen
+FAIL  test_B_same_id_rewrite_needs_revises: AssertionError: stilles Umschreiben muss verweigert werden
+FAIL  test_C_promotion_needs_survived_check: AssertionError: ein gescheiterter Check lizenziert keine Befoerderung
+FAIL  test_D_failed_falsifier_blocks_commit: AssertionError: nur gescheiterter Falsifikator -> verweigern
+FAIL  test_D_revision_after_refutation_is_legal: AssertionError: der Falsifikator gegen die ALTE Fassung zaehlt nicht fuer die neue
+FAIL  test_E_reuse_derived: TypeError: ReasonSetter.reuse() got an unexpected keyword argument 'registry_path'
+FAIL  test_F_import_prior_commit_derived: ValueError: import failed: imported_d1: references unknown ids ['imported_g1'] (I1)
+FAIL  test_G_non_ascii_save_roundtrip: UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 6: character maps to <undefined>
+FAIL  test_H_legacy_duplicate_reg_id_is_not_silently_resolved: TypeError: ReasonSetter.reuse() got an unexpected keyword argument 'registry_path'
+FAIL  test_H_reg_ids_unique_across_commits: AssertionError: reg_ids kollidieren: ['C:\\Users\\Sven\\AppData\\Local\\Temp\\ers_befunde_8s75y7k3\\h.json::ans', 'C:\\Users\\Sven\\AppData\\Local\\Temp\\ers_befunde_
+FAIL  test_I_outcome_vocabulary: AssertionError: vertauschte result/outcome-Felder muessen auffallen
+FAIL  test_K_reuse_honours_registry_path: TypeError: ReasonSetter.reuse() got an unexpected keyword argument 'registry_path'
+PASS  test_L_legacy_work_files_still_load
+PASS  test_L_verfahren_label_repair_regex
+FAIL  test_T_smoke_test_checks_what_it_claims: AssertionError: A1 soll an I4 scheitern, nicht: A1 refused (no falsifier): no relevance check connecting the answer's evidence to the stated goal(s) (I9)
+
+2/15 PASS   (tmp: C:\Users\Sven\AppData\Local\Temp\ers_befunde_8s75y7k3)
